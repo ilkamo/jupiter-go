@@ -3,6 +3,7 @@ package jupitergo_test
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/test-go/testify/require"
@@ -35,7 +36,8 @@ func (j jupApiMock) GetQuoteWithResponse(
 	}
 
 	return &openapi.GetQuoteResponse{
-		JSON200: testQuoteResponse,
+		JSON200:      testQuoteResponse,
+		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 	}, nil
 }
 
@@ -49,7 +51,8 @@ func (j jupApiMock) PostSwapWithResponse(
 	}
 
 	return &openapi.PostSwapResponse{
-		JSON200: testSwapResponse,
+		JSON200:      testSwapResponse,
+		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 	}, nil
 }
 
