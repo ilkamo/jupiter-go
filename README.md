@@ -36,7 +36,7 @@ func main() {
 	quote, err := jupClient.GetQuote(ctx, openapi.GetQuoteParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
 		OutputMint:  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-		Amount:      "10000000",
+		Amount:      10000000,
 		SlippageBps: &slippageBps,
 	})
 	if err != nil {
@@ -94,7 +94,10 @@ func main() {
 }
 ```
 
+## TODO
+
+Once a transaction is sent on-chain it doesn't mean that the swap is completed. You should monitor the transaction status and confirm the swap is completed. This library doesn't provide a way to monitor the transaction status yet but it's on the roadmap.
+
 ## License
 
 This library is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```

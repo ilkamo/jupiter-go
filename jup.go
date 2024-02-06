@@ -75,6 +75,10 @@ func (c *JupClient) GetQuote(
 		return openapi.QuoteResponse{}, fmt.Errorf("could not get quote: %w", err)
 	}
 
+	if resp.StatusCode() != 200 {
+		return openapi.QuoteResponse{}, fmt.Errorf("got status code %d: error: %s", resp.StatusCode(), resp.Body)
+	}
+
 	if resp.JSON200 == nil {
 		return openapi.QuoteResponse{}, fmt.Errorf("got nil response")
 	}
@@ -90,6 +94,10 @@ func (c *JupClient) PostSwap(
 	resp, err := c.jup.PostSwapWithResponse(ctx, swapParams)
 	if err != nil {
 		return openapi.SwapResponse{}, fmt.Errorf("could not post swap: %w", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		return openapi.SwapResponse{}, fmt.Errorf("got status code %d: error: %s", resp.StatusCode(), resp.Body)
 	}
 
 	if resp.JSON200 == nil {
