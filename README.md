@@ -1,6 +1,6 @@
-## Go library to interact with [Jupiter](https://jup.ag) and the solana blockchain
+## Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
 
-This library is a Go client for [Jupiter](https://jup.ag). It provides a simple way to interact with the Jupiter API to get quotes and perform swaps.
+This library is an early-stage Go client for [Jupiter](https://jup.ag). It provides a simple way to interact with the Jupiter API to get quotes and perform swaps.
 
 ## Installation
 
