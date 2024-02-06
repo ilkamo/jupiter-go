@@ -11,31 +11,62 @@ const (
 	defaultAPIURL = "https://quote-api.jup.ag/v6"
 )
 
-// JupiterClient is a wrapper client for the Jupiter API
-type JupiterClient struct {
-	jup *openapi.ClientWithResponses
+type JupAPI interface {
+	GetQuoteWithResponse(
+		ctx context.Context,
+		params *openapi.GetQuoteParams,
+		reqEditors ...openapi.RequestEditorFn,
+	) (*openapi.GetQuoteResponse, error)
+	PostSwapWithResponse(
+		ctx context.Context,
+		body openapi.PostSwapJSONRequestBody,
+		reqEditors ...openapi.RequestEditorFn,
+	) (*openapi.PostSwapResponse, error)
 }
 
-// NewJupiterClient creates a new client for the Jupiter API
-func NewJupiterClient(apiURL string) (JupiterClient, error) {
+// JupClient is a wrapper client for the Jupiter API
+type JupClient struct {
+	jup JupAPI
+}
+
+// NewJupClient creates a new client for the Jupiter API
+func NewJupClient(apiURL string, option ...JupClientOption) (JupClient, error) {
 	if apiURL == "" {
 		apiURL = defaultAPIURL
 	}
 
-	jup, err := openapi.NewClientWithResponses(apiURL)
-	if err != nil {
-		return JupiterClient{}, fmt.Errorf("could not create Jupiter client: %w", err)
+	c := &JupClient{}
+
+	for _, opt := range option {
+		if err := opt(c); err != nil {
+			return JupClient{}, fmt.Errorf("could not apply option: %w", err)
+		}
 	}
 
-	c := &JupiterClient{
-		jup: jup,
+	if c.jup == nil {
+		jup, err := openapi.NewClientWithResponses(apiURL)
+		if err != nil {
+			return JupClient{}, fmt.Errorf("could not create Jupiter client: %w", err)
+		}
+		c.jup = jup
 	}
 
 	return *c, nil
 }
 
+// JupClientOption is a function that allows to specify options for the client
+type JupClientOption func(*JupClient) error
+
+// WithJupAPI sets the Jupiter API for the client
+func WithJupAPI(jup JupAPI) JupClientOption {
+	return func(c *JupClient) error {
+		c.jup = jup
+		return nil
+	}
+}
+
 // GetQuote requests a quote from the Jupiter API
-func (c *JupiterClient) GetQuote(
+func (c *JupClient) GetQuote(
 	ctx context.Context,
 	quoteParams openapi.GetQuoteParams,
 ) (openapi.QuoteResponse, error) {
@@ -52,7 +83,7 @@ func (c *JupiterClient) GetQuote(
 }
 
 // PostSwap requests a swap from the Jupiter API
-func (c *JupiterClient) PostSwap(
+func (c *JupClient) PostSwap(
 	ctx context.Context,
 	swapParams openapi.PostSwapJSONRequestBody,
 ) (openapi.SwapResponse, error) {

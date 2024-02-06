@@ -1,7 +1,6 @@
 package gojup_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/ilkamo/go-jup"
@@ -36,5 +35,4 @@ func TestWallet_SignTransaction(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Len(t, signedTx.Signatures, 1)
-	fmt.Printf(signedTx.String())
 }

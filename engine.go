@@ -3,8 +3,8 @@ package gojup
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 
 	"github.com/ilkamo/go-jup/openapi"
@@ -14,11 +14,22 @@ const defaultMaxRetries = uint(20)
 
 type TxID string
 
+type SolanaClientRPC interface {
+	SendTransactionWithOpts(
+		ctx context.Context,
+		transaction *solana.Transaction,
+		opts rpc.TransactionOpts,
+	) (signature solana.Signature, err error)
+	GetLatestBlockhash(
+		ctx context.Context,
+		commitment rpc.CommitmentType,
+	) (out *rpc.GetLatestBlockhashResult, err error)
+}
+
 type SolanaEngine struct {
-	logger              *slog.Logger
-	maxRetries          uint
-	solanaConnectionRPC *rpc.Client
-	wallet              Wallet
+	maxRetries      uint
+	solanaClientRPC SolanaClientRPC
+	wallet          Wallet
 }
 
 func NewSolanaEngine(
@@ -26,15 +37,9 @@ func NewSolanaEngine(
 	rpcEndpoint string,
 	opts ...EngineOption,
 ) (SolanaEngine, error) {
-	if rpcEndpoint == "" {
-		return SolanaEngine{}, fmt.Errorf("rpcEndpoint is empty")
-	}
-
 	e := &SolanaEngine{
-		logger:              slog.Default(),
-		maxRetries:          defaultMaxRetries,
-		solanaConnectionRPC: rpc.New(rpcEndpoint),
-		wallet:              wallet,
+		maxRetries: defaultMaxRetries,
+		wallet:     wallet,
 	}
 
 	for _, opt := range opts {
@@ -43,19 +48,20 @@ func NewSolanaEngine(
 		}
 	}
 
+	if e.solanaClientRPC == nil {
+		if rpcEndpoint == "" {
+			return SolanaEngine{}, fmt.Errorf("rpcEndpoint is required when no SolanaClientRPC is provided")
+		}
+
+		rpcClient := rpc.New(rpcEndpoint)
+		e.solanaClientRPC = rpcClient
+	}
+
 	return *e, nil
 }
 
 // EngineOption is a function that allows to specify options for the client
 type EngineOption func(*SolanaEngine) error
-
-// WithLogger sets the logger for the engine
-func WithLogger(logger *slog.Logger) EngineOption {
-	return func(e *SolanaEngine) error {
-		e.logger = logger
-		return nil
-	}
-}
 
 // WithMaxRetries sets the maximum number of retries for the engine when sending a transaction on-chain
 func WithMaxRetries(maxRetries uint) EngineOption {
@@ -65,9 +71,17 @@ func WithMaxRetries(maxRetries uint) EngineOption {
 	}
 }
 
+// WithSolanaClientRPC sets the Solana client RPC for the engine
+func WithSolanaClientRPC(clientRPC SolanaClientRPC) EngineOption {
+	return func(e *SolanaEngine) error {
+		e.solanaClientRPC = clientRPC
+		return nil
+	}
+}
+
 // SendSwapOnChain sends on-chain a swap transaction retrieved from Jupiter
 func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResponse) (TxID, error) {
-	latestBlockhash, err := e.solanaConnectionRPC.GetLatestBlockhash(ctx, "")
+	latestBlockhash, err := e.solanaClientRPC.GetLatestBlockhash(ctx, "")
 	if err != nil {
 		return "", fmt.Errorf("could not get latest blockhash: %w", err)
 	}
@@ -84,7 +98,7 @@ func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResp
 		return "", fmt.Errorf("could not sign swap transaction: %w", err)
 	}
 
-	sig, err := e.solanaConnectionRPC.SendTransactionWithOpts(ctx, &tx, rpc.TransactionOpts{
+	sig, err := e.solanaClientRPC.SendTransactionWithOpts(ctx, &tx, rpc.TransactionOpts{
 		MaxRetries:          &e.maxRetries,
 		MinContextSlot:      &latestBlockhash.Context.Slot,
 		PreflightCommitment: rpc.CommitmentProcessed,
@@ -92,8 +106,6 @@ func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResp
 	if err != nil {
 		return "", fmt.Errorf("could not send transaction: %w", err)
 	}
-
-	e.logger.Info("sent transaction", "tx", sig.String())
 
 	return TxID(sig.String()), nil
 }
