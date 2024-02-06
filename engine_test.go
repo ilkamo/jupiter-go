@@ -17,7 +17,13 @@ import (
 type rpcMock struct {
 	shouldFailGetLatestBlockhash bool
 	shouldFailSendTransaction    bool
+	shouldFailGetSignatureStatus bool
 }
+
+var (
+	testSignature       = "24jRjMP3medE9iMqVSPRbkwfe9GdPmLfeftKPuwRHZdYTZJ6UyzNMGGKo4BHrTu2zVj4CgFF3CEuzS79QXUo2CMC"
+	processingSignature = "24jRjMP3medE9iMqVSPRbkwfe9GdPmLfeftKPuwRHZdYTZJ6UyzNMGGKo4BHrTu2zVj4CgFF3CEuzS79QXUo2CPC"
+)
 
 func (r rpcMock) SendTransactionWithOpts(
 	_ context.Context,
@@ -28,9 +34,7 @@ func (r rpcMock) SendTransactionWithOpts(
 		return solana.Signature{}, errors.New("mocked error")
 	}
 
-	return solana.MustSignatureFromBase58(
-		"24jRjMP3medE9iMqVSPRbkwfe9GdPmLfeftKPuwRHZdYTZJ6UyzNMGGKo4BHrTu2zVj4CgFF3CEuzS79QXUo2CMC",
-	), nil
+	return solana.MustSignatureFromBase58(testSignature), nil
 }
 
 func (r rpcMock) GetLatestBlockhash(
@@ -45,6 +49,34 @@ func (r rpcMock) GetLatestBlockhash(
 		Value: &rpc.LatestBlockhashResult{
 			LastValidBlockHeight: 123,
 			Blockhash:            solana.MustHashFromBase58("uiYzZ5PCq6C8BRSLSUGBScrXo62bBFbRFP9EkPcaWN9"),
+		},
+	}, nil
+}
+
+func (r rpcMock) GetSignatureStatuses(
+	_ context.Context,
+	_ bool,
+	sign ...solana.Signature,
+) (out *rpc.GetSignatureStatusesResult, err error) {
+	if r.shouldFailGetSignatureStatus {
+		return nil, errors.New("mocked error")
+	}
+
+	if sign[0].Equals(solana.MustSignatureFromBase58(processingSignature)) {
+		return &rpc.GetSignatureStatusesResult{
+			Value: []*rpc.SignatureStatusesResult{
+				{
+					ConfirmationStatus: rpc.ConfirmationStatusProcessed,
+				},
+			},
+		}, nil
+	}
+
+	return &rpc.GetSignatureStatusesResult{
+		Value: []*rpc.SignatureStatusesResult{
+			{
+				ConfirmationStatus: rpc.ConfirmationStatusFinalized,
+			},
 		},
 	}, nil
 }
@@ -96,7 +128,7 @@ func TestNewSolanaEngine(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		expectedTxID := jupitergo.TxID("24jRjMP3medE9iMqVSPRbkwfe9GdPmLfeftKPuwRHZdYTZJ6UyzNMGGKo4BHrTu2zVj4CgFF3CEuzS79QXUo2CMC")
+		expectedTxID := jupitergo.TxID(testSignature)
 		require.Equal(t, expectedTxID, txID)
 	})
 
@@ -114,7 +146,7 @@ func TestNewSolanaEngine(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		expectedTxID := jupitergo.TxID("24jRjMP3medE9iMqVSPRbkwfe9GdPmLfeftKPuwRHZdYTZJ6UyzNMGGKo4BHrTu2zVj4CgFF3CEuzS79QXUo2CMC")
+		expectedTxID := jupitergo.TxID(testSignature)
 		require.Equal(t, expectedTxID, txID)
 	})
 
@@ -146,5 +178,51 @@ func TestNewSolanaEngine(t *testing.T) {
 			SwapTransaction:      testTx,
 		})
 		require.EqualError(t, err, "could not send transaction: mocked error")
+	})
+
+	t.Run("error when getting the signature status", func(t *testing.T) {
+		eng, err := jupitergo.NewSolanaEngine(
+			wallet,
+			"",
+			jupitergo.WithSolanaClientRPC(rpcMock{shouldFailGetSignatureStatus: true}),
+		)
+		require.NoError(t, err)
+
+		_, err = eng.CheckSignature(
+			context.TODO(),
+			jupitergo.TxID(testSignature),
+		)
+		require.EqualError(t, err, "could not get signature status: mocked error")
+	})
+
+	t.Run("transaction still in process when getting signature status", func(t *testing.T) {
+		eng, err := jupitergo.NewSolanaEngine(
+			wallet,
+			"",
+			jupitergo.WithSolanaClientRPC(rpcMock{}),
+		)
+		require.NoError(t, err)
+
+		_, err = eng.CheckSignature(
+			context.TODO(),
+			jupitergo.TxID(processingSignature),
+		)
+		require.EqualError(t, err, "transaction not finalized yet")
+	})
+
+	t.Run("transaction confirmed when getting signature status", func(t *testing.T) {
+		eng, err := jupitergo.NewSolanaEngine(
+			wallet,
+			"",
+			jupitergo.WithSolanaClientRPC(rpcMock{}),
+		)
+		require.NoError(t, err)
+
+		confirmed, err := eng.CheckSignature(
+			context.TODO(),
+			jupitergo.TxID(testSignature),
+		)
+		require.NoError(t, err)
+		require.True(t, confirmed)
 	})
 }

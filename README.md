@@ -60,11 +60,14 @@ func main() {
 ```
 
 Once you have the swap instructions, you can use the [Solana engine](engine.go) to sign and send the transaction.
+Once a transaction is sent on-chain it doesn't mean that the swap is completed. You should monitor the transaction status and confirm the swap is completed.
 
 ```go
 package main
 
 import (
+	"time"
+
 	"github.com/ilkamo/jupiter-go"
 )
 
@@ -80,23 +83,36 @@ func main() {
 		// handle me
 	}
 
-	// Sign and send the transaction
+	// Create a Solana engine
 	eng, err := jupitergo.NewSolanaEngine(wallet, "https://api.mainnet-beta.solana.com")
 	if err != nil {
 		// handle me
 	}
 
-	// Sign the transaction
+	// Sign and send the transaction
 	signedTx, err := eng.SendSwapOnChain(ctx, swap)
 	if err != nil {
 		// handle me
 	}
+
+	// wait a bit to let the transaction propagate to the network - this is just an example and not a best practice
+	// you could use a ticker or wait until we implement the WebSocket monitoring ;)
+	time.Sleep(20 * time.Second)
+
+	// Get the status of the transaction (pull the status from the blockchain at intervals until the transaction is confirmed)
+	confirmed, err := eng.CheckSignature(ctx, signedTx)
+	if err != nil {
+		panic(err)
+	}
 }
+
 ```
 
-## TODO
+## TODOs
 
-Once a transaction is sent on-chain it doesn't mean that the swap is completed. You should monitor the transaction status and confirm the swap is completed. This library doesn't provide a way to monitor the transaction status yet but it's on the roadmap.
+- Add more examples
+- Add more tests
+- Use WebSockets to monitor the transaction status
 
 ## License
 
@@ -104,6 +120,6 @@ This library is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Donate
 
-If you find this library useful, consider donating some JUP or Solana to the following addresses:
+If you find this library useful and want to support its development, consider donating some JUP/Solana to the following address:
 
 `BXzmfHxfEMcMj8hDccUNdrwXVNeybyfb2iV2nktE1VnJ`

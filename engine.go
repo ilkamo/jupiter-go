@@ -24,6 +24,11 @@ type SolanaClientRPC interface {
 		ctx context.Context,
 		commitment rpc.CommitmentType,
 	) (out *rpc.GetLatestBlockhashResult, err error)
+	GetSignatureStatuses(
+		ctx context.Context,
+		searchTransactionHistory bool,
+		transactionSignatures ...solana.Signature,
+	) (out *rpc.GetSignatureStatusesResult, err error)
 }
 
 type SolanaEngine struct {
@@ -108,4 +113,31 @@ func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResp
 	}
 
 	return TxID(sig.String()), nil
+}
+
+// CheckSignature checks if a transaction with the given signature has been confirmed on-chain
+func (e SolanaEngine) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
+	sig, err := solana.SignatureFromBase58(string(tx))
+	if err != nil {
+		return false, fmt.Errorf("could not convert signature from base58: %w", err)
+	}
+
+	status, err := e.solanaClientRPC.GetSignatureStatuses(ctx, false, sig)
+	if err != nil {
+		return false, fmt.Errorf("could not get signature status: %w", err)
+	}
+
+	if len(status.Value) == 0 {
+		return false, fmt.Errorf("could not confirm transaction: no valid status")
+	}
+
+	if status.Value[0].ConfirmationStatus != rpc.ConfirmationStatusFinalized {
+		return false, fmt.Errorf("transaction not finalized yet")
+	}
+
+	if status.Value[0].Err != nil {
+		return true, fmt.Errorf("transaction confirmed with error: %s", status.Value[0].Err)
+	}
+
+	return true, nil
 }
