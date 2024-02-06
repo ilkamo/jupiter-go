@@ -101,3 +101,9 @@ Once a transaction is sent on-chain it doesn't mean that the swap is completed. 
 ## License
 
 This library is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Donate
+
+If you find this library useful, consider donating some JUP or Solana to the following addresses:
+
+`BXzmfHxfEMcMj8hDccUNdrwXVNeybyfb2iV2nktE1VnJ`
