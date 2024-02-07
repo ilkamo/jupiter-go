@@ -2,6 +2,8 @@
 
 This library is an early-stage Go client for [Jupiter](https://jup.ag). It provides a simple way to interact with the Jupiter API to get quotes and perform swaps.
 
+<img align="right" width="200" src="assets/jup-gopher.png">
+
 ## Installation
 
 ```bash
@@ -95,11 +97,13 @@ func main() {
 		// handle me
 	}
 
-	// wait a bit to let the transaction propagate to the network - this is just an example and not a best practice
+	// wait a bit to let the transaction propagate to the network 
+	// this is just an example and not a best practice
 	// you could use a ticker or wait until we implement the WebSocket monitoring ;)
 	time.Sleep(20 * time.Second)
 
-	// Get the status of the transaction (pull the status from the blockchain at intervals until the transaction is confirmed)
+	// Get the status of the transaction (pull the status from the blockchain at intervals 
+	// until the transaction is confirmed)
 	confirmed, err := eng.CheckSignature(ctx, signedTx)
 	if err != nil {
 		panic(err)
