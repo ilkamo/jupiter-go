@@ -1,9 +1,9 @@
 ## Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This library is an early-stage Go client for [Jupiter](https://jup.ag). It provides a simple way to interact with the Jupiter API to get quotes and perform swaps.
+This library provides a simple way to interact with the [Jupiter](https://jup.ag) API to get quotes and perform swaps. It also provides a way to send the swap transaction on-chain using the [Solana client](solana/client.go).
 
 <img align="right" width="200" src="assets/jup-gopher.png">
-
 ## Installation
 
 ```bash
@@ -20,12 +20,11 @@ package main
 import (
 	"context"
 
-	"github.com/ilkamo/jupiter-go"
-	"github.com/ilkamo/jupiter-go/openapi"
+	"github.com/ilkamo/jupiter-go/jupiter"
 )
 
 func main() {
-	jupClient, err := jupitergo.NewJupClient("https://quote-api.jup.ag/v6")
+	jupClient, err := jupiter.NewClientWithResponses(jupiter.DefaultAPIURL)
 	if err != nil {
 		// handle me
 	}
@@ -35,7 +34,7 @@ func main() {
 	slippageBps := 250
 
 	// Get the current quote for a swap
-	quote, err := jupClient.GetQuote(ctx, openapi.GetQuoteParams{
+	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, jupiter.GetQuoteParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
 		OutputMint:  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
 		Amount:      10000000,
@@ -44,12 +43,18 @@ func main() {
 	if err != nil {
 		// handle me
 	}
+	
+	if quoteResponse.JSON200 == nil {
+        // handle me
+    }
+	
+	quote := quoteResponse.JSON200
 
 	// More info: https://station.jup.ag/docs/apis/troubleshooting
 	prioritizationFeeLamports := "auto"
 	dynamicComputeUnitLimit := true
 	// Get instructions for a swap
-	swap, err := jupClient.PostSwap(ctx, openapi.PostSwapJSONRequestBody{
+	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
 		PrioritizationFeeLamports: &prioritizationFeeLamports,
 		QuoteResponse:             quote,
 		UserPublicKey:             "the public key of your wallet",
@@ -58,11 +63,17 @@ func main() {
 	if err != nil {
 		// handle me
 	}
+
+	if swapResponse.JSON200 == nil {
+		// handle me
+	}
+	
+	swap := swapResponse.JSON200
 }
 ```
 
-Once you have the swap instructions, you can use the [Solana engine](engine.go) to sign and send the transaction.
-Once a transaction is sent on-chain it doesn't mean that the swap is completed. You should monitor the transaction status and confirm the swap is completed.
+Once you have the swap instructions, you can use the [Solana engine](solana/client.go) to sign and send the transaction on-chain.
+Please remember, when a transaction is sent on-chain it doesn't mean that the swap is completed. The instruction could error, that's why you should monitor the transaction status and confirm the transaction is finalized without errors.
 
 ```go
 package main
@@ -70,29 +81,29 @@ package main
 import (
 	"time"
 
-	"github.com/ilkamo/jupiter-go"
+	"github.com/ilkamo/jupiter-go/jupiter"
+	"github.com/ilkamo/jupiter-go/solana"
 )
 
 func main() {
-	// ...
-	// swap, err := jupClient.PostSwap(ctx, openapi.PostSwapJSONRequestBody{...})
-	// ...
+	// ... previous code
+	// swap := swapResponse.JSON200
 
 	// Create a wallet from private key
 	walletPrivateKey := "your private key"
-	wallet, err := jupitergo.NewWalletFromPrivateKeyBase58(walletPrivateKey)
+	wallet, err := solana.NewWalletFromPrivateKeyBase58(walletPrivateKey)
 	if err != nil {
 		// handle me
 	}
 
 	// Create a Solana engine
-	eng, err := jupitergo.NewSolanaEngine(wallet, "https://api.mainnet-beta.solana.com")
+	solanaClient, err := solana.NewClient(wallet, "https://api.mainnet-beta.solana.com")
 	if err != nil {
 		// handle me
 	}
 
 	// Sign and send the transaction
-	signedTx, err := eng.SendSwapOnChain(ctx, swap)
+	signedTx, err := solanaClient.SendTransactionOnChain(ctx, swap.SwapTransaction)
 	if err != nil {
 		// handle me
 	}
@@ -104,12 +115,84 @@ func main() {
 
 	// Get the status of the transaction (pull the status from the blockchain at intervals 
 	// until the transaction is confirmed)
-	confirmed, err := eng.CheckSignature(ctx, signedTx)
+	confirmed, err := solanaClient.CheckSignature(ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
 }
 
+```
+
+## Jupiter client
+
+The Jupiter client is generated from the official Jupiter openapi definition and provides the following methods to interact with the Jupiter API:
+
+```go
+// GetIndexedRouteMapWithResponse request
+GetIndexedRouteMapWithResponse(
+	ctx context.Context, 
+	params *GetIndexedRouteMapParams, 
+	reqEditors ...RequestEditorFn, 
+) (*GetIndexedRouteMapResponse, error)
+
+// GetProgramIdToLabelWithResponse request
+GetProgramIdToLabelWithResponse(
+	ctx context.Context, 
+	reqEditors ...RequestEditorFn,
+) (*GetProgramIdToLabelResponse, error)
+
+// GetQuoteWithResponse request
+GetQuoteWithResponse(
+	ctx context.Context, 
+	params *GetQuoteParams, 
+	reqEditors ...RequestEditorFn, 
+) (*GetQuoteResponse, error)
+
+// PostSwapWithBodyWithResponse request with any body
+PostSwapWithBodyWithResponse(
+	ctx context.Context, 
+	contentType string, 
+	body io.Reader, 
+	reqEditors ...RequestEditorFn, 
+) (*PostSwapResponse, error)
+
+PostSwapWithResponse(
+	ctx context.Context, 
+	body PostSwapJSONRequestBody, 
+	reqEditors ...RequestEditorFn,
+) (*PostSwapResponse, error)
+
+// PostSwapInstructionsWithBodyWithResponse request with any body
+PostSwapInstructionsWithBodyWithResponse(
+	ctx context.Context, 
+	contentType string, 
+	body io.Reader, 
+	reqEditors ...RequestEditorFn,
+) (*PostSwapInstructionsResponse, error)
+
+PostSwapInstructionsWithResponse(
+	ctx context.Context, 
+	body PostSwapInstructionsJSONRequestBody, 
+	reqEditors ...RequestEditorFn, 
+) (*PostSwapInstructionsResponse, error)
+```
+
+## Solana client
+
+The Solana client provides the following methods to interact with the Solana blockchain:
+
+```go
+// SendTransactionOnChain signs and sends a transaction on-chain
+SendTransactionOnChain(
+	ctx context.Context, 
+	txBase64 string,
+) (TxID, error)
+
+// CheckSignature checks the status of a transaction on-chain
+CheckSignature(
+	ctx context.Context, 
+	tx TxID,
+) (bool, error)
 ```
 
 ## TODOs
