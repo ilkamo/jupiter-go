@@ -4,6 +4,7 @@
 This library provides a simple way to interact with the [Jupiter](https://jup.ag) API to get quotes and perform swaps. It also provides a way to send the swap transaction on-chain using the [Solana client](solana/client.go).
 
 <img align="right" width="200" src="assets/jup-gopher.png">
+
 ## Installation
 
 ```bash
