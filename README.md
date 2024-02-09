@@ -72,7 +72,7 @@ func main() {
 }
 ```
 
-Once you have the swap instructions, you can use the [Solana engine](solana/client.go) to sign and send the transaction on-chain.
+Once you have the swap instructions, you can use the [Solana client](solana/client.go) to sign and send the transaction on-chain.
 Please remember, when a transaction is sent on-chain it doesn't mean that the swap is completed. The instruction could error, that's why you should monitor the transaction status and confirm the transaction is finalized without errors.
 
 ```go
@@ -96,7 +96,7 @@ func main() {
 		// handle me
 	}
 
-	// Create a Solana engine
+	// Create a Solana client
 	solanaClient, err := solana.NewClient(wallet, "https://api.mainnet-beta.solana.com")
 	if err != nil {
 		// handle me
