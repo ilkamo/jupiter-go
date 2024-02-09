@@ -1,4 +1,4 @@
-package jupitergo
+package solana
 
 import (
 	"context"
@@ -6,15 +6,13 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-
-	"github.com/ilkamo/jupiter-go/openapi"
 )
 
 const defaultMaxRetries = uint(20)
 
 type TxID string
 
-type SolanaClientRPC interface {
+type ClientRPC interface {
 	SendTransactionWithOpts(
 		ctx context.Context,
 		transaction *solana.Transaction,
@@ -31,67 +29,67 @@ type SolanaClientRPC interface {
 	) (out *rpc.GetSignatureStatusesResult, err error)
 }
 
-type SolanaEngine struct {
-	maxRetries      uint
-	solanaClientRPC SolanaClientRPC
-	wallet          Wallet
+type Client struct {
+	maxRetries uint
+	clientRPC  ClientRPC
+	wallet     Wallet
 }
 
-func NewSolanaEngine(
+func NewClient(
 	wallet Wallet,
 	rpcEndpoint string,
-	opts ...EngineOption,
-) (SolanaEngine, error) {
-	e := &SolanaEngine{
+	opts ...ClientOption,
+) (Client, error) {
+	e := &Client{
 		maxRetries: defaultMaxRetries,
 		wallet:     wallet,
 	}
 
 	for _, opt := range opts {
 		if err := opt(e); err != nil {
-			return SolanaEngine{}, fmt.Errorf("could not apply option: %w", err)
+			return Client{}, fmt.Errorf("could not apply option: %w", err)
 		}
 	}
 
-	if e.solanaClientRPC == nil {
+	if e.clientRPC == nil {
 		if rpcEndpoint == "" {
-			return SolanaEngine{}, fmt.Errorf("rpcEndpoint is required when no SolanaClientRPC is provided")
+			return Client{}, fmt.Errorf("rpcEndpoint is required when no ClientRPC is provided")
 		}
 
 		rpcClient := rpc.New(rpcEndpoint)
-		e.solanaClientRPC = rpcClient
+		e.clientRPC = rpcClient
 	}
 
 	return *e, nil
 }
 
-// EngineOption is a function that allows to specify options for the client
-type EngineOption func(*SolanaEngine) error
+// ClientOption is a function that allows to specify options for the client
+type ClientOption func(*Client) error
 
 // WithMaxRetries sets the maximum number of retries for the engine when sending a transaction on-chain
-func WithMaxRetries(maxRetries uint) EngineOption {
-	return func(e *SolanaEngine) error {
+func WithMaxRetries(maxRetries uint) ClientOption {
+	return func(e *Client) error {
 		e.maxRetries = maxRetries
 		return nil
 	}
 }
 
-// WithSolanaClientRPC sets the Solana client RPC for the engine
-func WithSolanaClientRPC(clientRPC SolanaClientRPC) EngineOption {
-	return func(e *SolanaEngine) error {
-		e.solanaClientRPC = clientRPC
+// WithClientRPC sets the Solana client RPC for the engine
+func WithClientRPC(clientRPC ClientRPC) ClientOption {
+	return func(e *Client) error {
+		e.clientRPC = clientRPC
 		return nil
 	}
 }
 
-// SendSwapOnChain sends on-chain a swap transaction retrieved from Jupiter
-func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResponse) (TxID, error) {
-	latestBlockhash, err := e.solanaClientRPC.GetLatestBlockhash(ctx, "")
+// SendTransactionOnChain sends on-chain a transaction
+func (e Client) SendTransactionOnChain(ctx context.Context, txBase64 string) (TxID, error) {
+	latestBlockhash, err := e.clientRPC.GetLatestBlockhash(ctx, "")
 	if err != nil {
 		return "", fmt.Errorf("could not get latest blockhash: %w", err)
 	}
 
-	tx, err := NewTransactionFromBase64(swap.SwapTransaction)
+	tx, err := NewTransactionFromBase64(txBase64)
 	if err != nil {
 		return "", fmt.Errorf("could not deserialize swap transaction: %w", err)
 	}
@@ -103,7 +101,7 @@ func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResp
 		return "", fmt.Errorf("could not sign swap transaction: %w", err)
 	}
 
-	sig, err := e.solanaClientRPC.SendTransactionWithOpts(ctx, &tx, rpc.TransactionOpts{
+	sig, err := e.clientRPC.SendTransactionWithOpts(ctx, &tx, rpc.TransactionOpts{
 		MaxRetries:          &e.maxRetries,
 		MinContextSlot:      &latestBlockhash.Context.Slot,
 		PreflightCommitment: rpc.CommitmentProcessed,
@@ -116,13 +114,13 @@ func (e SolanaEngine) SendSwapOnChain(ctx context.Context, swap openapi.SwapResp
 }
 
 // CheckSignature checks if a transaction with the given signature has been confirmed on-chain
-func (e SolanaEngine) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
+func (e Client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 	sig, err := solana.SignatureFromBase58(string(tx))
 	if err != nil {
 		return false, fmt.Errorf("could not convert signature from base58: %w", err)
 	}
 
-	status, err := e.solanaClientRPC.GetSignatureStatuses(ctx, false, sig)
+	status, err := e.clientRPC.GetSignatureStatuses(ctx, false, sig)
 	if err != nil {
 		return false, fmt.Errorf("could not get signature status: %w", err)
 	}

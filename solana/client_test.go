@@ -1,17 +1,15 @@
-package jupitergo_test
+package solana_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/ilkamo/jupiter-go/openapi"
-
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/test-go/testify/require"
 
-	jupitergo "github.com/ilkamo/jupiter-go"
+	jupSolana "github.com/ilkamo/jupiter-go/solana"
 )
 
 type rpcMock struct {
@@ -81,146 +79,134 @@ func (r rpcMock) GetSignatureStatuses(
 	}, nil
 }
 
-func TestNewSolanaEngine(t *testing.T) {
+func TestNewClient(t *testing.T) {
 	testPk := "5473ZnvEhn35BdcCcPLKnzsyP6TsgqQrNFpn4i2gFegFiiJLyWginpa9GoFn2cy6Aq2EAuxLt2u2bjFDBPvNY6nw"
 
-	wallet, err := jupitergo.NewWalletFromPrivateKeyBase58(testPk)
+	wallet, err := jupSolana.NewWalletFromPrivateKeyBase58(testPk)
 	require.NoError(t, err)
 
-	t.Run("create new solana engine", func(t *testing.T) {
-		_, err := jupitergo.NewSolanaEngine(
+	t.Run("create new solana client", func(t *testing.T) {
+		_, err := jupSolana.NewClient(
 			wallet,
 			"http://localhost:8899",
-			jupitergo.WithMaxRetries(10),
+			jupSolana.WithMaxRetries(10),
 		)
 		require.NoError(t, err)
 	})
 
-	t.Run("solana engine without rpc endpoint", func(t *testing.T) {
-		_, err := jupitergo.NewSolanaEngine(
+	t.Run("solana client without rpc endpoint", func(t *testing.T) {
+		_, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithMaxRetries(10),
+			jupSolana.WithMaxRetries(10),
 		)
-		require.EqualError(t, err, "rpcEndpoint is required when no SolanaClientRPC is provided")
+		require.EqualError(t, err, "rpcEndpoint is required when no ClientRPC is provided")
 	})
 
-	t.Run("solana engine with rpc endpoint", func(t *testing.T) {
-		_, err := jupitergo.NewSolanaEngine(
+	t.Run("solana client with rpc endpoint", func(t *testing.T) {
+		_, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{}),
+			jupSolana.WithClientRPC(rpcMock{}),
 		)
 		require.NoError(t, err)
 	})
 
 	t.Run("execute valid swap", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{}),
+			jupSolana.WithClientRPC(rpcMock{}),
 		)
 		require.NoError(t, err)
 
-		txID, err := eng.SendSwapOnChain(context.TODO(), openapi.SwapResponse{
-			LastValidBlockHeight: 123,
-			SwapTransaction:      testTx,
-		})
+		txID, err := c.SendTransactionOnChain(context.TODO(), testTx)
 		require.NoError(t, err)
 
-		expectedTxID := jupitergo.TxID(testSignature)
+		expectedTxID := jupSolana.TxID(testSignature)
 		require.Equal(t, expectedTxID, txID)
 	})
 
 	t.Run("execute valid swap", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{}),
+			jupSolana.WithClientRPC(rpcMock{}),
 		)
 		require.NoError(t, err)
 
-		txID, err := eng.SendSwapOnChain(context.TODO(), openapi.SwapResponse{
-			LastValidBlockHeight: 123,
-			SwapTransaction:      testTx,
-		})
+		txID, err := c.SendTransactionOnChain(context.TODO(), testTx)
 		require.NoError(t, err)
 
-		expectedTxID := jupitergo.TxID(testSignature)
+		expectedTxID := jupSolana.TxID(testSignature)
 		require.Equal(t, expectedTxID, txID)
 	})
 
 	t.Run("error when getting the blockhash", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{shouldFailGetLatestBlockhash: true}),
+			jupSolana.WithClientRPC(rpcMock{shouldFailGetLatestBlockhash: true}),
 		)
 		require.NoError(t, err)
 
-		_, err = eng.SendSwapOnChain(context.TODO(), openapi.SwapResponse{
-			LastValidBlockHeight: 123,
-			SwapTransaction:      testTx,
-		})
+		_, err = c.SendTransactionOnChain(context.TODO(), testTx)
 		require.EqualError(t, err, "could not get latest blockhash: mocked error")
 	})
 
 	t.Run("error when sending the transaction on chain", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{shouldFailSendTransaction: true}),
+			jupSolana.WithClientRPC(rpcMock{shouldFailSendTransaction: true}),
 		)
 		require.NoError(t, err)
 
-		_, err = eng.SendSwapOnChain(context.TODO(), openapi.SwapResponse{
-			LastValidBlockHeight: 123,
-			SwapTransaction:      testTx,
-		})
+		_, err = c.SendTransactionOnChain(context.TODO(), testTx)
 		require.EqualError(t, err, "could not send transaction: mocked error")
 	})
 
 	t.Run("error when getting the signature status", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{shouldFailGetSignatureStatus: true}),
+			jupSolana.WithClientRPC(rpcMock{shouldFailGetSignatureStatus: true}),
 		)
 		require.NoError(t, err)
 
-		_, err = eng.CheckSignature(
+		_, err = c.CheckSignature(
 			context.TODO(),
-			jupitergo.TxID(testSignature),
+			jupSolana.TxID(testSignature),
 		)
 		require.EqualError(t, err, "could not get signature status: mocked error")
 	})
 
 	t.Run("transaction still in process when getting signature status", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{}),
+			jupSolana.WithClientRPC(rpcMock{}),
 		)
 		require.NoError(t, err)
 
-		_, err = eng.CheckSignature(
+		_, err = c.CheckSignature(
 			context.TODO(),
-			jupitergo.TxID(processingSignature),
+			jupSolana.TxID(processingSignature),
 		)
 		require.EqualError(t, err, "transaction not finalized yet")
 	})
 
 	t.Run("transaction confirmed when getting signature status", func(t *testing.T) {
-		eng, err := jupitergo.NewSolanaEngine(
+		c, err := jupSolana.NewClient(
 			wallet,
 			"",
-			jupitergo.WithSolanaClientRPC(rpcMock{}),
+			jupSolana.WithClientRPC(rpcMock{}),
 		)
 		require.NoError(t, err)
 
-		confirmed, err := eng.CheckSignature(
+		confirmed, err := c.CheckSignature(
 			context.TODO(),
-			jupitergo.TxID(testSignature),
+			jupSolana.TxID(testSignature),
 		)
 		require.NoError(t, err)
 		require.True(t, confirmed)

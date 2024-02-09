@@ -1,4 +1,4 @@
-package jupitergo_test
+package solana_test
 
 import (
 	"testing"
@@ -6,13 +6,13 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/test-go/testify/require"
 
-	"github.com/ilkamo/jupiter-go"
+	jupSolana "github.com/ilkamo/jupiter-go/solana"
 )
 
 const testTx = "AAEAAQPrM+1WcczVrvBstwqcH1lXpPpbHuKVFpSj9kZOi1GITD6KBh4ENmDzZ4cG9x+7s1w6q77AoogJbaz28WWsI0elAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANgS9CVZkT3oU8ECpERHXI92vwg8ofvcIVgdQtcOK3NgECAgABDAIAAACghgEAAAAAAA=="
 
 func TestNewTransactionFromBase64(t *testing.T) {
-	tx, err := jupitergo.NewTransactionFromBase64(testTx)
+	tx, err := jupSolana.NewTransactionFromBase64(testTx)
 	require.NoError(t, err)
 
 	require.Equal(t, "uiYzZ5PCq6C8BRSLSUGBScrXo62bBFbRFP9EkPcaWN9", tx.Message.RecentBlockhash.String())
@@ -21,7 +21,7 @@ func TestNewTransactionFromBase64(t *testing.T) {
 }
 
 func generateTestNotSignedTx(t *testing.T) solana.Transaction {
-	tx, err := jupitergo.NewTransactionFromBase64(testTx)
+	tx, err := jupSolana.NewTransactionFromBase64(testTx)
 	require.NoError(t, err)
 
 	return tx

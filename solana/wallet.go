@@ -1,4 +1,4 @@
-package jupitergo
+package solana
 
 import (
 	"fmt"
