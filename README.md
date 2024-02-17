@@ -126,7 +126,7 @@ func main() {
 
 ## Jupiter client
 
-The Jupiter client is generated from the official Jupiter openapi definition and provides the following methods to interact with the Jupiter API:
+The Jupiter client is generated from the [official Jupiter openapi definition](https://github.com/jup-ag/jupiter-quote-api-node/blob/main/swagger.yaml) and provides the following methods to interact with the Jupiter API:
 
 ```go
 // GetIndexedRouteMapWithResponse request
