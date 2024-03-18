@@ -35,10 +35,10 @@ func main() {
 	slippageBps := 250
 
 	// Get the current quote for a swap
-	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, jupiter.GetQuoteParams{
+	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, &jupiter.GetQuoteParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
-		OutputMint:  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-		Amount:      10000000,
+		OutputMint:  "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk",
+		Amount:      100000,
 		SlippageBps: &slippageBps,
 	})
 	if err != nil {
@@ -52,12 +52,16 @@ func main() {
 	quote := quoteResponse.JSON200
 
 	// More info: https://station.jup.ag/docs/apis/troubleshooting
-	prioritizationFeeLamports := "auto"
+	prioritizationFeeLamports := jupiter.SwapRequest_PrioritizationFeeLamports{}
+	if err = prioritizationFeeLamports.UnmarshalJSON([]byte(`"auto"`)); err != nil {
+		// handle me
+	}
+
 	dynamicComputeUnitLimit := true
 	// Get instructions for a swap
 	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
 		PrioritizationFeeLamports: &prioritizationFeeLamports,
-		QuoteResponse:             quote,
+		QuoteResponse:             *quote,
 		UserPublicKey:             "the public key of your wallet",
 		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,
 	})
