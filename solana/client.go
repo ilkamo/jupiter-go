@@ -129,7 +129,7 @@ func (e Client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 		return false, fmt.Errorf("could not confirm transaction: no valid status")
 	}
 
-	if status.Value[0].ConfirmationStatus != rpc.ConfirmationStatusFinalized {
+	if status.Value[0] == nil || status.Value[0].ConfirmationStatus != rpc.ConfirmationStatusFinalized {
 		return false, fmt.Errorf("transaction not finalized yet")
 	}
 

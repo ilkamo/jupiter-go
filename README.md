@@ -46,8 +46,8 @@ func main() {
 	}
 	
 	if quoteResponse.JSON200 == nil {
-        // handle me
-    }
+        // handle me 
+	}
 	
 	quote := quoteResponse.JSON200
 
@@ -125,8 +125,9 @@ func main() {
 		panic(err)
 	}
 }
-
 ```
+
+A full swap example is available in the [examples](_examples) folder.
 
 ## Jupiter client
 
