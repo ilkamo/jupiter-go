@@ -1,4 +1,6 @@
-## Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
+# Jupiter-go
+
+### Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This library provides a simple way to interact with the [Jupiter](https://jup.ag) API to get quotes and perform swaps. It also provides a way to send the swap transaction on-chain using the [Solana client](solana/client.go).
@@ -26,52 +28,41 @@ import (
 
 func main() {
 	jupClient, err := jupiter.NewClientWithResponses(jupiter.DefaultAPIURL)
-	if err != nil {
-		// handle me
-	}
+	// handle the error
 
 	ctx := context.TODO()
 
 	slippageBps := 250
 
-	// Get the current quote for a swap
+	// Get the current quote for a swap.
+	// Ensure that the input and output mints are valid.
+	// The amount is the smallest unit of the input token.
 	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, &jupiter.GetQuoteParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
 		OutputMint:  "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk",
 		Amount:      100000,
 		SlippageBps: &slippageBps,
 	})
-	if err != nil {
-		// handle me
-	}
-	
-	if quoteResponse.JSON200 == nil {
-        // handle me 
-	}
+	// handle the error
 	
 	quote := quoteResponse.JSON200
 
 	// More info: https://station.jup.ag/docs/apis/troubleshooting
 	prioritizationFeeLamports := jupiter.SwapRequest_PrioritizationFeeLamports{}
 	if err = prioritizationFeeLamports.UnmarshalJSON([]byte(`"auto"`)); err != nil {
-		// handle me
+		// handle the error
 	}
 
 	dynamicComputeUnitLimit := true
-	// Get instructions for a swap
+	// Get instructions for a swap.
+	// Ensure your public key is valid.
 	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
 		PrioritizationFeeLamports: &prioritizationFeeLamports,
 		QuoteResponse:             *quote,
-		UserPublicKey:             "the public key of your wallet",
+		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
 		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,
 	})
-	if err != nil {
-		// handle me
-	}
-
-	if swapResponse.JSON200 == nil {
-		// handle me
-	}
+	// handle the error
 	
 	swap := swapResponse.JSON200
 }
@@ -95,35 +86,27 @@ func main() {
 	// swap := swapResponse.JSON200
 
 	// Create a wallet from private key
-	walletPrivateKey := "your private key"
+	walletPrivateKey := "{YOUR_PRIVATE_KEY}"
 	wallet, err := solana.NewWalletFromPrivateKeyBase58(walletPrivateKey)
-	if err != nil {
-		// handle me
-	}
+	// handle the error
 
-	// Create a Solana client
+	// Create a Solana client. Change the URL to the desired Solana node.
 	solanaClient, err := solana.NewClient(wallet, "https://api.mainnet-beta.solana.com")
-	if err != nil {
-		// handle me
-	}
+	// handle the error
 
-	// Sign and send the transaction
+	// Sign and send the transaction.
 	signedTx, err := solanaClient.SendTransactionOnChain(ctx, swap.SwapTransaction)
-	if err != nil {
-		// handle me
-	}
+	// handle the error
 
-	// wait a bit to let the transaction propagate to the network 
-	// this is just an example and not a best practice
-	// you could use a ticker or wait until we implement the WebSocket monitoring ;)
+	// Wait a bit to let the transaction propagate to the network.
+	// This is just an example and not a best practice.
+	// You could use a ticker or wait until we implement the WebSocket monitoring ;)
 	time.Sleep(20 * time.Second)
 
 	// Get the status of the transaction (pull the status from the blockchain at intervals 
-	// until the transaction is confirmed)
+	// until the transaction is confirmed).
 	confirmed, err := solanaClient.CheckSignature(ctx, signedTx)
-	if err != nil {
-		panic(err)
-	}
+	// handle the error
 }
 ```
 
@@ -181,6 +164,11 @@ PostSwapInstructionsWithResponse(
 	body PostSwapInstructionsJSONRequestBody, 
 	reqEditors ...RequestEditorFn, 
 ) (*PostSwapInstructionsResponse, error)
+
+GetTokensWithResponse(
+	ctx context.Context, 
+	reqEditors ...RequestEditorFn, 
+) (*GetTokensResponse, error)
 ```
 
 ## Solana client
@@ -188,13 +176,13 @@ PostSwapInstructionsWithResponse(
 The Solana client provides the following methods to interact with the Solana blockchain:
 
 ```go
-// SendTransactionOnChain signs and sends a transaction on-chain
+// SendTransactionOnChain signs and sends a transaction on-chain.
 SendTransactionOnChain(
 	ctx context.Context, 
 	txBase64 string,
 ) (TxID, error)
 
-// CheckSignature checks the status of a transaction on-chain
+// CheckSignature checks the status of a transaction on-chain.
 CheckSignature(
 	ctx context.Context, 
 	tx TxID,
