@@ -29,7 +29,7 @@ func main() {
 	}
 
 	if quoteResponse.JSON200 == nil {
-		panic("invalid response")
+		panic("invalid GetQuoteWithResponse response")
 	}
 
 	quote := quoteResponse.JSON200
