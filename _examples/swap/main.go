@@ -77,7 +77,7 @@ func main() {
 		panic(err)
 	}
 
-	// Sign and send the transaction
+	// Sign and send the transaction.
 	signedTx, err := solanaClient.SendTransactionOnChain(ctx, swap.SwapTransaction)
 	if err != nil {
 		panic(err)
