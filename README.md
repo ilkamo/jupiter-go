@@ -193,6 +193,8 @@ CheckSignature(
 	ctx context.Context, 
 	tx TxID,
 ) (bool, error)
+// Close closes the client.
+Close() error
 ```
 
 ## Solana monitor
