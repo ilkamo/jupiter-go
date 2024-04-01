@@ -116,7 +116,7 @@ func main() {
 
 A full swap example is available in the [examples/swap](_examples/swap) folder.
 
-A transaction monitoring example using websocket is available in the [_examples/txmonitor](_examples/txmonitor) folder.
+A transaction monitoring example using websocket is available in the [examples/txmonitor](_examples/txmonitor) folder.
 
 ## Jupiter client
 
@@ -193,6 +193,7 @@ CheckSignature(
 	ctx context.Context, 
 	tx TxID,
 ) (bool, error)
+
 // Close closes the client.
 Close() error
 ```
