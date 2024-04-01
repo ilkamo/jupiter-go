@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	txID := "2JehHv9a31i2PS1hpkTfXJs7u4ydPmUgkAgecSgYJj8YNJjMjsmLcTHco6grmecyj4kzuz4NoBe11CiF5LhYRS5i"
+	txID := "{TX_ID_TO_MONITOR}"
 
 	monitor, err := solana.NewMonitor(
 		"wss://api.mainnet-beta.solana.com",

@@ -3,7 +3,11 @@
 ### Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This library provides a simple way to interact with the [Jupiter](https://jup.ag) API to get quotes and perform swaps. It also provides a way to send the swap transaction on-chain using the [Solana client](solana/client.go).
+This library provides a simple way to interact with the [Jupiter](https://jup.ag) API to get quotes and perform swaps. 
+
+It also provides: 
+- A [solana client](solana/client.go) to send the swap transaction on-chain and check its status.
+- A [solana monitor](solana/monitor.go) to wait for a transaction to reach a specific commitment status.
 
 <img align="right" width="200" src="assets/jup-gopher.png">
 
@@ -68,8 +72,8 @@ func main() {
 }
 ```
 
-Once you have the swap instructions, you can use the [Solana client](solana/client.go) to sign and send the transaction on-chain.
-Please remember, when a transaction is sent on-chain it doesn't mean that the swap is completed. The instruction could error, that's why you should monitor the transaction status and confirm the transaction is finalized without errors.
+Once you have the swap instructions, you can use the [solana client](solana/client.go) to sign and send the transaction on-chain.
+Please remember, when a transaction is sent on-chain it doesn't mean that the swap is completed. The instruction could error, that's why you [should monitor the transaction status](_examples/txmonitor/main.go) and confirm the transaction is finalized without errors.
 
 ```go
 package main
@@ -100,7 +104,7 @@ func main() {
 
 	// Wait a bit to let the transaction propagate to the network.
 	// This is just an example and not a best practice.
-	// You could use a ticker or wait until we implement the WebSocket monitoring ;)
+	// You could use a ticker or initialize a monitor to wait for the transaction to be confirmed.
 	time.Sleep(20 * time.Second)
 
 	// Get the status of the transaction (pull the status from the blockchain at intervals 
@@ -110,7 +114,9 @@ func main() {
 }
 ```
 
-A full swap example is available in the [examples](_examples) folder.
+A full swap example is available in the [examples/swap](_examples/swap) folder.
+
+A transaction monitoring example using websocket is available in the [_examples/txmonitor](_examples/txmonitor) folder.
 
 ## Jupiter client
 
@@ -189,11 +195,18 @@ CheckSignature(
 ) (bool, error)
 ```
 
-## TODOs
+## Solana monitor
 
-- Add more examples
-- Add more tests
-- Use WebSockets to monitor the transaction status
+The Solana monitor provides the following methods to monitor the Solana blockchain:
+
+```go
+// WaitForCommitmentStatus waits for a transaction to reach a specific commitment status.
+WaitForCommitmentStatus(
+    context.Context, 
+    TxID, 
+    CommitmentStatus,
+) (MonitorResponse, error)
+```
 
 ## License
 
