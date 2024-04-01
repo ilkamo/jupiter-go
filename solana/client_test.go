@@ -79,6 +79,10 @@ func (r rpcMock) GetSignatureStatuses(
 	}, nil
 }
 
+func (r rpcMock) Close() error {
+	return nil
+}
+
 func TestNewClient(t *testing.T) {
 	testPk := "5473ZnvEhn35BdcCcPLKnzsyP6TsgqQrNFpn4i2gFegFiiJLyWginpa9GoFn2cy6Aq2EAuxLt2u2bjFDBPvNY6nw"
 
@@ -100,7 +104,7 @@ func TestNewClient(t *testing.T) {
 			"",
 			jupSolana.WithMaxRetries(10),
 		)
-		require.EqualError(t, err, "rpcEndpoint is required when no ClientRPC is provided")
+		require.EqualError(t, err, "rpcEndpoint is required when no RPC service is provided")
 	})
 
 	t.Run("solana client with rpc endpoint", func(t *testing.T) {

@@ -12,78 +12,52 @@ const defaultMaxRetries = uint(20)
 
 type TxID string
 
-type ClientRPC interface {
-	SendTransactionWithOpts(
-		ctx context.Context,
-		transaction *solana.Transaction,
-		opts rpc.TransactionOpts,
-	) (signature solana.Signature, err error)
-	GetLatestBlockhash(
-		ctx context.Context,
-		commitment rpc.CommitmentType,
-	) (out *rpc.GetLatestBlockhashResult, err error)
-	GetSignatureStatuses(
-		ctx context.Context,
-		searchTransactionHistory bool,
-		transactionSignatures ...solana.Signature,
-	) (out *rpc.GetSignatureStatusesResult, err error)
-}
-
-type Client struct {
+type client struct {
 	maxRetries uint
-	clientRPC  ClientRPC
+	clientRPC  rpcService
 	wallet     Wallet
 }
 
-func NewClient(
+func newClient(
 	wallet Wallet,
 	rpcEndpoint string,
 	opts ...ClientOption,
-) (Client, error) {
-	e := &Client{
+) (*client, error) {
+	c := &client{
 		maxRetries: defaultMaxRetries,
 		wallet:     wallet,
 	}
 
 	for _, opt := range opts {
-		if err := opt(e); err != nil {
-			return Client{}, fmt.Errorf("could not apply option: %w", err)
+		if err := opt(c); err != nil {
+			return nil, fmt.Errorf("could not apply option: %w", err)
 		}
 	}
 
-	if e.clientRPC == nil {
+	if c.clientRPC == nil {
 		if rpcEndpoint == "" {
-			return Client{}, fmt.Errorf("rpcEndpoint is required when no ClientRPC is provided")
+			return nil, fmt.Errorf("rpcEndpoint is required when no RPC service is provided")
 		}
 
 		rpcClient := rpc.New(rpcEndpoint)
-		e.clientRPC = rpcClient
+		c.clientRPC = rpcClient
 	}
 
-	return *e, nil
+	return c, nil
 }
 
-// ClientOption is a function that allows to specify options for the client
-type ClientOption func(*Client) error
-
-// WithMaxRetries sets the maximum number of retries for the engine when sending a transaction on-chain
-func WithMaxRetries(maxRetries uint) ClientOption {
-	return func(e *Client) error {
-		e.maxRetries = maxRetries
-		return nil
-	}
+// NewClient creates a new Solana client with the given wallet and RPC endpoint.
+// If you want to monitor your transactions using a websocket endpoint, use NewClientWithWS.
+func NewClient(
+	wallet Wallet,
+	rpcEndpoint string,
+	opts ...ClientOption,
+) (Client, error) {
+	return newClient(wallet, rpcEndpoint, opts...)
 }
 
-// WithClientRPC sets the Solana client RPC for the engine
-func WithClientRPC(clientRPC ClientRPC) ClientOption {
-	return func(e *Client) error {
-		e.clientRPC = clientRPC
-		return nil
-	}
-}
-
-// SendTransactionOnChain sends on-chain a transaction
-func (e Client) SendTransactionOnChain(ctx context.Context, txBase64 string) (TxID, error) {
+// SendTransactionOnChain sends a transaction on-chain.
+func (e client) SendTransactionOnChain(ctx context.Context, txBase64 string) (TxID, error) {
 	latestBlockhash, err := e.clientRPC.GetLatestBlockhash(ctx, "")
 	if err != nil {
 		return "", fmt.Errorf("could not get latest blockhash: %w", err)
@@ -113,8 +87,8 @@ func (e Client) SendTransactionOnChain(ctx context.Context, txBase64 string) (Tx
 	return TxID(sig.String()), nil
 }
 
-// CheckSignature checks if a transaction with the given signature has been confirmed on-chain
-func (e Client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
+// CheckSignature checks if a transaction with the given signature has been confirmed on-chain.
+func (e client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 	sig, err := solana.SignatureFromBase58(string(tx))
 	if err != nil {
 		return false, fmt.Errorf("could not convert signature from base58: %w", err)
@@ -138,4 +112,13 @@ func (e Client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// Close closes the client.
+func (e client) Close() error {
+	if e.clientRPC != nil {
+		return e.clientRPC.Close()
+	}
+
+	return nil
 }
