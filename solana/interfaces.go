@@ -5,7 +5,6 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/gagliardetto/solana-go/rpc/ws"
 )
 
 type rpcService interface {
@@ -26,20 +25,19 @@ type rpcService interface {
 	Close() error
 }
 
-type wsService interface {
-	SignatureSubscribe(
-		signature solana.Signature, // Transaction Signature.
-		commitment rpc.CommitmentType, // (optional)
-	) (sub *ws.SignatureSubscription, err error)
-	Close()
-}
-
-type DefaultClient interface {
+type Client interface {
 	SendTransactionOnChain(context.Context, string) (TxID, error)
 	CheckSignature(context.Context, TxID) (bool, error)
 }
 
-type ClientWithWS interface {
-	DefaultClient
-	WaitForCommitmentStatus(context.Context, TxID, CommitmentStatus) (bool, error)
+type subscriberService interface {
+	Pull(
+		ctx context.Context,
+		txID TxID,
+		status CommitmentStatus,
+	) (SubResponse, error)
+}
+
+type Monitor interface {
+	WaitForCommitmentStatus(context.Context, TxID, CommitmentStatus) (MonitorResponse, error)
 }

@@ -1,6 +1,6 @@
 package solana
 
-// ClientOption is a function that allows to specify options for the client
+// ClientOption is a function that allows to specify options for the client.
 type ClientOption func(*client) error
 
 // WithMaxRetries sets the maximum number of retries for the engine when sending a transaction on-chain
@@ -11,7 +11,7 @@ func WithMaxRetries(maxRetries uint) ClientOption {
 	}
 }
 
-// WithClientRPC sets the Solana client RPC for the engine
+// WithClientRPC sets the RPC service for the client.
 func WithClientRPC(clientRPC rpcService) ClientOption {
 	return func(e *client) error {
 		e.clientRPC = clientRPC
@@ -19,10 +19,13 @@ func WithClientRPC(clientRPC rpcService) ClientOption {
 	}
 }
 
-// WithClientWS sets the Solana client WS for the engine
-func WithClientWS(clientWS wsService) ClientOption {
-	return func(e *client) error {
-		e.clientWS = clientWS
+// MonitorOption is a function that allows to specify options for the monitor.
+type MonitorOption func(*monitor) error
+
+// WithMonitorSubscriber sets the subscriber service for the monitor.
+func WithMonitorSubscriber(subscriber subscriberService) MonitorOption {
+	return func(m *monitor) error {
+		m.sub = subscriber
 		return nil
 	}
 }

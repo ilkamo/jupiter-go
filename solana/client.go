@@ -6,7 +6,6 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/gagliardetto/solana-go/rpc/ws"
 )
 
 const defaultMaxRetries = uint(20)
@@ -16,7 +15,6 @@ type TxID string
 type client struct {
 	maxRetries uint
 	clientRPC  rpcService
-	clientWS   wsService
 	wallet     Wallet
 }
 
@@ -48,40 +46,13 @@ func newClient(
 	return c, nil
 }
 
-func newClientWithWS(
-	wallet Wallet,
-	rpcEndpoint string,
-	wsEndpoint string,
-	opts ...ClientOption,
-) (*client, error) {
-	c, err := newClient(wallet, rpcEndpoint, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.clientWS == nil {
-		if wsEndpoint == "" {
-			return nil, fmt.Errorf("wsEndpoint is required when no WS service is provided")
-		}
-
-		wsClient, err := ws.Connect(context.Background(), wsEndpoint)
-		if err != nil {
-			return nil, fmt.Errorf("could not connect to ws: %w", err)
-		}
-
-		c.clientWS = wsClient
-	}
-
-	return c, nil
-}
-
 // NewClient creates a new Solana client with the given wallet and RPC endpoint.
 // If you want to monitor your transactions using a websocket endpoint, use NewClientWithWS.
 func NewClient(
 	wallet Wallet,
 	rpcEndpoint string,
 	opts ...ClientOption,
-) (DefaultClient, error) {
+) (Client, error) {
 	return newClient(wallet, rpcEndpoint, opts...)
 }
 
@@ -147,76 +118,6 @@ func (e client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 func (e client) Close() error {
 	if e.clientRPC != nil {
 		return e.clientRPC.Close()
-	}
-
-	return nil
-}
-
-type clientWithWS struct {
-	*client
-}
-
-// NewClientWithWS creates a new Solana client with the given wallet, RPC and WebSocket endpoints.
-func NewClientWithWS(
-	wallet Wallet,
-	rpcEndpoint string,
-	wsEndpoint string,
-	opts ...ClientOption,
-) (ClientWithWS, error) {
-	defaultClient, err := newClientWithWS(wallet, rpcEndpoint, wsEndpoint, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return clientWithWS{defaultClient}, nil
-}
-
-// WaitForCommitmentStatus waits for a transaction to reach a specific commitment status.
-func (c clientWithWS) WaitForCommitmentStatus(
-	ctx context.Context,
-	txID TxID,
-	status CommitmentStatus,
-) (bool, error) {
-	tx, err := solana.SignatureFromBase58(string(txID))
-	if err != nil {
-		return false, fmt.Errorf("invalid txID: %w", err)
-	}
-
-	ct, err := mapToCommitmentType(status)
-	if err != nil {
-		return false, err
-	}
-
-	sub, err := c.clientWS.SignatureSubscribe(tx, ct)
-	if err != nil {
-		return false, fmt.Errorf("could not subscribe to signature: %w", err)
-	}
-
-	defer sub.Unsubscribe()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return false, fmt.Errorf("context cancelled")
-		case res := <-sub.Response():
-			if res.Value.Err != nil {
-				return false, fmt.Errorf("transaction confirmed with error: %s", res.Value.Err)
-			}
-			return true, nil
-		case subErr := <-sub.Err():
-			return false, fmt.Errorf("subscription error: %w", subErr)
-		}
-	}
-}
-
-// Close closes the client.
-func (c clientWithWS) Close() error {
-	if err := c.client.Close(); err != nil {
-		return err
-	}
-
-	if c.client.clientWS != nil {
-		c.client.clientWS.Close()
 	}
 
 	return nil
