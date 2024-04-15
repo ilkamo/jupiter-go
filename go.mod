@@ -6,6 +6,7 @@ require (
 	github.com/gagliardetto/binary v0.7.9
 	github.com/gagliardetto/solana-go v1.9.3
 	github.com/oapi-codegen/runtime v1.1.1
+	github.com/shopspring/decimal v1.3.1
 	github.com/test-go/testify v1.1.4
 )
 

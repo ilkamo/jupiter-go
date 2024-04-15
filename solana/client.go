@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 )
@@ -11,6 +13,11 @@ import (
 const defaultMaxRetries = uint(20)
 
 type TxID string
+
+type TokenAccount struct {
+	Amount   decimal.Decimal
+	Decimals uint8
+}
 
 type client struct {
 	maxRetries uint
@@ -112,6 +119,33 @@ func (e client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetTokenAccountBalance returns the balance of an SPL token account.
+func (e client) GetTokenAccountBalance(ctx context.Context, tokenAccount string) (TokenAccount, error) {
+	tokenAccountPk, err := solana.PublicKeyFromBase58(tokenAccount)
+	if err != nil {
+		return TokenAccount{}, fmt.Errorf("could not convert token mint to PublicKey: %w", err)
+	}
+
+	resp, err := e.clientRPC.GetTokenAccountBalance(ctx, tokenAccountPk, rpc.CommitmentFinalized)
+	if err != nil {
+		return TokenAccount{}, fmt.Errorf("could not get token account balance: %w", err)
+	}
+
+	if resp.Value == nil {
+		return TokenAccount{}, fmt.Errorf("could not get token account balance: response value is nil")
+	}
+
+	value, err := decimal.NewFromString(resp.Value.Amount)
+	if err != nil {
+		return TokenAccount{}, fmt.Errorf("could not convert token account balance to decimal: %w", err)
+	}
+
+	return TokenAccount{
+		Amount:   value,
+		Decimals: resp.Value.Decimals,
+	}, nil
 }
 
 // Close closes the client.

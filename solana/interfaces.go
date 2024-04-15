@@ -22,12 +22,18 @@ type rpcService interface {
 		searchTransactionHistory bool,
 		transactionSignatures ...solana.Signature,
 	) (out *rpc.GetSignatureStatusesResult, err error)
+	GetTokenAccountBalance(
+		ctx context.Context,
+		account solana.PublicKey,
+		commitment rpc.CommitmentType, // optional
+	) (out *rpc.GetTokenAccountBalanceResult, err error)
 	Close() error
 }
 
 type Client interface {
 	SendTransactionOnChain(context.Context, string) (TxID, error)
 	CheckSignature(context.Context, TxID) (bool, error)
+	GetTokenAccountBalance(context.Context, string) (TokenAccount, error)
 }
 
 type subscriberService interface {
