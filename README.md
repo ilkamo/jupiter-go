@@ -196,6 +196,12 @@ CheckSignature(
 	tx TxID,
 ) (bool, error)
 
+// GetTokenAccountBalance returns the balance of an SPL token account.
+GetTokenAccountBalance(
+	ctx context.Context, 
+	tokenAccount string, 
+) (TokenAccount, error)
+
 // Close closes the client.
 Close() error
 ```

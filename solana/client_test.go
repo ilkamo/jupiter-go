@@ -16,6 +16,7 @@ type rpcMock struct {
 	shouldFailGetLatestBlockhash bool
 	shouldFailSendTransaction    bool
 	shouldFailGetSignatureStatus bool
+	shoultFailGetTokenBalance    bool
 }
 
 var (
@@ -75,6 +76,23 @@ func (r rpcMock) GetSignatureStatuses(
 			{
 				ConfirmationStatus: rpc.ConfirmationStatusFinalized,
 			},
+		},
+	}, nil
+}
+
+func (r rpcMock) GetTokenAccountBalance(
+	_ context.Context,
+	_ solana.PublicKey,
+	_ rpc.CommitmentType,
+) (out *rpc.GetTokenAccountBalanceResult, err error) {
+	if r.shoultFailGetTokenBalance {
+		return nil, errors.New("mocked error")
+	}
+
+	return &rpc.GetTokenAccountBalanceResult{
+		Value: &rpc.UiTokenAmount{
+			Amount:   "1000000000",
+			Decimals: 9,
 		},
 	}, nil
 }
@@ -214,5 +232,45 @@ func TestNewClient(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.True(t, confirmed)
+	})
+
+	t.Run("error when getting token balance", func(t *testing.T) {
+		c, err := jupSolana.NewClient(
+			wallet,
+			"",
+			jupSolana.WithClientRPC(rpcMock{shoultFailGetTokenBalance: true}),
+		)
+		require.NoError(t, err)
+
+		_, err = c.GetTokenAccountBalance(
+			context.TODO(),
+			"invalid token account address",
+		)
+		require.EqualError(t, err,
+			"could not parse token account public key: decode: invalid base58 digit ('l')",
+		)
+
+		_, err = c.GetTokenAccountBalance(
+			context.TODO(),
+			"9K4NT8o4VyXv8RiHWfr7tchGEbsrV7KHYwMQDSgt1pnZ",
+		)
+		require.EqualError(t, err, "could not get token account balance: mocked error")
+	})
+
+	t.Run("get token account balance", func(t *testing.T) {
+		c, err := jupSolana.NewClient(
+			wallet,
+			"",
+			jupSolana.WithClientRPC(rpcMock{}),
+		)
+		require.NoError(t, err)
+
+		balance, err := c.GetTokenAccountBalance(
+			context.TODO(),
+			"9K4NT8o4VyXv8RiHWfr7tchGEbsrV7KHYwMQDSgt1pnZ",
+		)
+		require.NoError(t, err)
+		require.Equal(t, "1000000000", balance.Amount.String())
+		require.Equal(t, uint8(9), balance.Decimals)
 	})
 }
