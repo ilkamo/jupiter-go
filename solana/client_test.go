@@ -244,6 +244,14 @@ func TestNewClient(t *testing.T) {
 
 		_, err = c.GetTokenAccountBalance(
 			context.TODO(),
+			"invalid token account address",
+		)
+		require.EqualError(t, err,
+			"could not parse token account public key: decode: invalid base58 digit ('l')",
+		)
+
+		_, err = c.GetTokenAccountBalance(
+			context.TODO(),
 			"9K4NT8o4VyXv8RiHWfr7tchGEbsrV7KHYwMQDSgt1pnZ",
 		)
 		require.EqualError(t, err, "could not get token account balance: mocked error")

@@ -125,7 +125,7 @@ func (e client) CheckSignature(ctx context.Context, tx TxID) (bool, error) {
 func (e client) GetTokenAccountBalance(ctx context.Context, tokenAccount string) (TokenAccount, error) {
 	tokenAccountPk, err := solana.PublicKeyFromBase58(tokenAccount)
 	if err != nil {
-		return TokenAccount{}, fmt.Errorf("could not convert token mint to PublicKey: %w", err)
+		return TokenAccount{}, fmt.Errorf("could not parse token account public key: %w", err)
 	}
 
 	resp, err := e.clientRPC.GetTokenAccountBalance(ctx, tokenAccountPk, rpc.CommitmentFinalized)
