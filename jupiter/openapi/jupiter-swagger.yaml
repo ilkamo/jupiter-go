@@ -28,6 +28,10 @@ paths:
         - $ref: '#/components/parameters/OutputMintParameter'
         - $ref: '#/components/parameters/AmountParameter'
         - $ref: '#/components/parameters/SlippageParameter'
+        - $ref: '#/components/parameters/AutoSlippageParameter'
+        - $ref: '#/components/parameters/AutoSlippageCollisionValueParameter'
+        - $ref: '#/components/parameters/ComputeAutoSlippageParameter'
+        - $ref: '#/components/parameters/MaxAutoSlippageBpsParameter'
         - $ref: '#/components/parameters/SwapModeParameter'
         - $ref: '#/components/parameters/DexesParameter'
         - $ref: '#/components/parameters/ExcludeDexesParameter'
@@ -36,6 +40,7 @@ paths:
         - $ref: '#/components/parameters/AsLegacyTransactionParameter'
         - $ref: '#/components/parameters/PlatformFeeBpsParameter'
         - $ref: '#/components/parameters/MaxAccountsParameter'
+        - $ref: '#/components/parameters/MinimizeSlippage'
       responses:
         '200':
           description: Successful response
@@ -183,6 +188,9 @@ components:
         slippageBps:
           type: integer
           format: int32
+        computedAutoSlippage:
+          type: integer
+          format: int32
         platformFee:
           $ref: '#/components/schemas/PlatformFee'
         priceImpactPct:
@@ -300,6 +308,9 @@ components:
         skipUserAccountsRpcCalls:
           description: When enabled, it will not do any rpc calls check on user's accounts. Enable it only when you already setup all the accounts needed for the trasaction, like wrapping or unwrapping sol, destination account is already created.
           type: boolean
+        programAuthorityId:
+          description: The program authority id [0;7], load balanced across the available set by default
+          type: integer
         quoteResponse:
           $ref: '#/components/schemas/QuoteResponse'
 
@@ -405,6 +416,30 @@ components:
       in: query
       schema:
         type: integer
+    AutoSlippageParameter:
+      name: autoSlippage
+      description: Automatically calculate the slippage based on pairs.
+      in: query
+      schema:
+        type: boolean
+    AutoSlippageCollisionValueParameter:
+      name: autoSlippageCollisionUsdValue
+      description: Automatic slippage collision value.
+      in: query
+      schema:
+        type: integer
+    MaxAutoSlippageBpsParameter:
+      name: maxAutoSlippageBps
+      description: Max slippage in basis points for auto slippage calculation. Default is 400.
+      in: query
+      schema:
+        type: integer
+    ComputeAutoSlippageParameter:
+      name: computeAutoSlippage
+      description: Compute auto slippage value without using it.
+      in: query
+      schema:
+        type: boolean
     SwapModeParameter:
       name: swapMode
       description: (ExactIn or ExactOut) Defaults to ExactIn. ExactOut is for supporting use cases where you need an exact token amount, like payments. In this case the slippage is on the input token.
@@ -458,3 +493,9 @@ components:
       in: query
       schema:
         type: integer
+    MinimizeSlippage:
+      name: minimizeSlippage
+      description: Default is false. Miminize slippage attempts to find routes with lower slippage.
+      in: query
+      schema:
+        type: boolean
