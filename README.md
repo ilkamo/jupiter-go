@@ -219,7 +219,7 @@ WaitForCommitmentStatus(
 ) (MonitorResponse, error)
 ```
 
-## API Urls
+## API URLs
 
 This library provides two options to leverage for Jupiter APIs. 
 
@@ -227,7 +227,9 @@ The default Jupiter API provided by the official Jupiter team can be used via `j
 
 The second Jupiter API option leverages [jupiterapi.com](https://www.jupiterapi.com/) (Community Project). This endpoint provides higher rate limits, but *includes a small 0.2% platform fee*. This API can be used via `jupiter.JupiterAPIURL`.
 
+## Contribute
 
+Contributions are welcome! Feel free to open an issue or submit a pull request if you find a bug or want to add a new feature.
 
 ## License
 
