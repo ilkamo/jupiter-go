@@ -223,9 +223,11 @@ WaitForCommitmentStatus(
 
 This library provides two options to leverage for Jupiter APIs. 
 
-The default API leverages [jupiterapi.com](https://www.jupiterapi.com/) (Community Project). This endpoint provides higher rate limits, but includes a small 0.2% platform fee. This API can be used via `jupiter.DefaultAPIURL`.
+The default Jupiter API provided by the official Jupiter team can be used via `jupiter.DefaultAPIURL`.
 
-The Jupiter API provided by the official Jupiter team can be used via `jupiter.JupiterAPIURL`.
+The second Jupiter API option leverages [jupiterapi.com](https://www.jupiterapi.com/) (Community Project). This endpoint provides higher rate limits, but *includes a small 0.2% platform fee*. This API can be used via `jupiter.JupiterAPIURL`.
+
+
 
 ## License
 
