@@ -219,6 +219,16 @@ WaitForCommitmentStatus(
 ) (MonitorResponse, error)
 ```
 
+## API Urls
+
+This library provides two options to leverage for Jupiter APIs. 
+
+The default Jupiter API provided by the official Jupiter team can be used via `jupiter.DefaultAPIURL`.
+
+The second Jupiter API option leverages [jupiterapi.com](https://www.jupiterapi.com/) (Community Project). This endpoint provides higher rate limits, but *includes a small 0.2% platform fee*. This API can be used via `jupiter.JupiterAPIURL`.
+
+
+
 ## License
 
 This library is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
