@@ -237,6 +237,9 @@ type OutputMintParameter = string
 // PlatformFeeBpsParameter defines model for PlatformFeeBpsParameter.
 type PlatformFeeBpsParameter = int
 
+// PreferLiquidDexes defines model for PreferLiquidDexes.
+type PreferLiquidDexes = bool
+
 // RestrictIntermediateTokensParameter defines model for RestrictIntermediateTokensParameter.
 type RestrictIntermediateTokensParameter = bool
 
@@ -304,6 +307,9 @@ type GetQuoteParams struct {
 
 	// MinimizeSlippage Default is false. Miminize slippage attempts to find routes with lower slippage.
 	MinimizeSlippage *MinimizeSlippage `form:"minimizeSlippage,omitempty" json:"minimizeSlippage,omitempty"`
+
+	// PreferLiquidDexes Default is false. Enabling it would only consider markets with high liquidity to reduce slippage.
+	PreferLiquidDexes *PreferLiquidDexes `form:"preferLiquidDexes,omitempty" json:"preferLiquidDexes,omitempty"`
 }
 
 // GetQuoteParamsSwapMode defines parameters for GetQuote.
@@ -976,6 +982,22 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 		if params.MinimizeSlippage != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "minimizeSlippage", runtime.ParamLocationQuery, *params.MinimizeSlippage); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PreferLiquidDexes != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "preferLiquidDexes", runtime.ParamLocationQuery, *params.PreferLiquidDexes); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
