@@ -128,6 +128,9 @@ type SwapMode string
 
 // SwapRequest defines model for SwapRequest.
 type SwapRequest struct {
+	// AllowOptimizedWrappedSolTokenAccount Default is false. Enabling it would reduce use an optimized way to open WSOL that reduce compute unit.
+	AllowOptimizedWrappedSolTokenAccount *bool `json:"allowOptimizedWrappedSolTokenAccount,omitempty"`
+
 	// AsLegacyTransaction Default is false. Request a legacy transaction rather than the default versioned transaction, needs to be paired with a quote using asLegacyTransaction otherwise the transaction might be too large.
 	AsLegacyTransaction *bool `json:"asLegacyTransaction,omitempty"`
 
@@ -139,11 +142,15 @@ type SwapRequest struct {
 
 	// DynamicComputeUnitLimit When enabled, it will do a swap simulation to get the compute unit used and set it in ComputeBudget's compute unit limit. This will increase latency slightly since there will be one extra RPC call to simulate this. Default is `false`.
 	DynamicComputeUnitLimit *bool `json:"dynamicComputeUnitLimit,omitempty"`
+	DynamicSlippage         *struct {
+		MaxBps *int `json:"maxBps,omitempty"`
+		MinBps *int `json:"minBps,omitempty"`
+	} `json:"dynamicSlippage,omitempty"`
 
 	// FeeAccount Fee token account, same as the output token for ExactIn and as the input token for ExactOut, it is derived using the seeds = ["referral_ata", referral_account, mint] and the `REFER4ZgmyYx9c6He5XfaTMiGfdLwRnkV4RPp9t9iF3` referral contract (only pass in if you set a feeBps and make sure that the feeAccount has been created).
 	FeeAccount *string `json:"feeAccount,omitempty"`
 
-	// PrioritizationFeeLamports Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
+	// PrioritizationFeeLamports \* PriorityFeeWithMaxLamports is impossible to be typed. Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
 	PrioritizationFeeLamports *SwapRequest_PrioritizationFeeLamports `json:"prioritizationFeeLamports,omitempty"`
 
 	// ProgramAuthorityId The program authority id [0;7], load balanced across the available set by default
@@ -183,13 +190,19 @@ type SwapRequestPrioritizationFeeLamports0 = int
 // SwapRequestPrioritizationFeeLamports1 defines model for SwapRequest.PrioritizationFeeLamports.1.
 type SwapRequestPrioritizationFeeLamports1 string
 
-// SwapRequest_PrioritizationFeeLamports Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
+// SwapRequest_PrioritizationFeeLamports \* PriorityFeeWithMaxLamports is impossible to be typed. Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
 type SwapRequest_PrioritizationFeeLamports struct {
 	union json.RawMessage
 }
 
 // SwapResponse defines model for SwapResponse.
 type SwapResponse struct {
+	DynamicSlippageReport *struct {
+		AmplificationRatio           *string `json:"amplificationRatio,omitempty"`
+		OtherAmount                  *int    `json:"otherAmount,omitempty"`
+		SimulatedIncurredSlippageBps *int    `json:"simulatedIncurredSlippageBps,omitempty"`
+		SlippageBps                  *int    `json:"slippageBps,omitempty"`
+	} `json:"dynamicSlippageReport,omitempty"`
 	LastValidBlockHeight      float32  `json:"lastValidBlockHeight"`
 	PrioritizationFeeLamports *float32 `json:"prioritizationFeeLamports,omitempty"`
 	SwapTransaction           string   `json:"swapTransaction"`
