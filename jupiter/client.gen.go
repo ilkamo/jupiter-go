@@ -134,8 +134,14 @@ type SwapRequest struct {
 	// AsLegacyTransaction Default is false. Request a legacy transaction rather than the default versioned transaction, needs to be paired with a quote using asLegacyTransaction otherwise the transaction might be too large.
 	AsLegacyTransaction *bool `json:"asLegacyTransaction,omitempty"`
 
+	// BlockhashSlotsToExpiry Optional. When passed in, Swap object will be returned with your desired slots to epxiry.
+	BlockhashSlotsToExpiry *float32 `json:"blockhashSlotsToExpiry,omitempty"`
+
 	// ComputeUnitPriceMicroLamports The compute unit price to prioritize the transaction, the additional fee will be `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
 	ComputeUnitPriceMicroLamports *SwapRequest_ComputeUnitPriceMicroLamports `json:"computeUnitPriceMicroLamports,omitempty"`
+
+	// CorrectLastValidBlockHeight Optional. Default to false. Request Swap object to be returned with the correct blockhash prior to Agave 2.0.
+	CorrectLastValidBlockHeight *bool `json:"correctLastValidBlockHeight,omitempty"`
 
 	// DestinationTokenAccount Public key of the token account that will be used to receive the token out of the swap. If not provided, the user's ATA will be used. If provided, we assume that the token account is already initialized.
 	DestinationTokenAccount *string `json:"destinationTokenAccount,omitempty"`
