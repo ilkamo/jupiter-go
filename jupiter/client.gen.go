@@ -32,6 +32,14 @@ const (
 	SwapRequestPrioritizationFeeLamports1Auto SwapRequestPrioritizationFeeLamports1 = "auto"
 )
 
+// Defines values for SwapResponseDynamicSlippageReportCategoryName.
+const (
+	Bluechip SwapResponseDynamicSlippageReportCategoryName = "bluechip"
+	Lst      SwapResponseDynamicSlippageReportCategoryName = "lst"
+	Stable   SwapResponseDynamicSlippageReportCategoryName = "stable"
+	Verified SwapResponseDynamicSlippageReportCategoryName = "verified"
+)
+
 // Defines values for SwapModeParameter.
 const (
 	SwapModeParameterExactIn  SwapModeParameter = "ExactIn"
@@ -204,15 +212,20 @@ type SwapRequest_PrioritizationFeeLamports struct {
 // SwapResponse defines model for SwapResponse.
 type SwapResponse struct {
 	DynamicSlippageReport *struct {
-		AmplificationRatio           *string `json:"amplificationRatio,omitempty"`
-		OtherAmount                  *int    `json:"otherAmount,omitempty"`
-		SimulatedIncurredSlippageBps *int    `json:"simulatedIncurredSlippageBps,omitempty"`
-		SlippageBps                  *int    `json:"slippageBps,omitempty"`
+		AmplificationRatio           *string                                        `json:"amplificationRatio,omitempty"`
+		CategoryName                 *SwapResponseDynamicSlippageReportCategoryName `json:"categoryName,omitempty"`
+		HeuristicMaxSlippageBps      *int                                           `json:"heuristicMaxSlippageBps,omitempty"`
+		OtherAmount                  *int                                           `json:"otherAmount,omitempty"`
+		SimulatedIncurredSlippageBps *int                                           `json:"simulatedIncurredSlippageBps,omitempty"`
+		SlippageBps                  *int                                           `json:"slippageBps,omitempty"`
 	} `json:"dynamicSlippageReport,omitempty"`
 	LastValidBlockHeight      float32  `json:"lastValidBlockHeight"`
 	PrioritizationFeeLamports *float32 `json:"prioritizationFeeLamports,omitempty"`
 	SwapTransaction           string   `json:"swapTransaction"`
 }
+
+// SwapResponseDynamicSlippageReportCategoryName defines model for SwapResponse.DynamicSlippageReport.CategoryName.
+type SwapResponseDynamicSlippageReportCategoryName string
 
 // AmountParameter defines model for AmountParameter.
 type AmountParameter = int
