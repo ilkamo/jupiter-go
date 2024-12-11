@@ -42,6 +42,7 @@ paths:
         - $ref: "#/components/parameters/MaxAccountsParameter"
         - $ref: "#/components/parameters/MinimizeSlippage"
         - $ref: "#/components/parameters/PreferLiquidDexes"
+        - $ref: "#/components/parameters/TokenCategoryBasedIntermediateTokensParameter"
       responses:
         "200":
           description: Successful response
@@ -553,3 +554,10 @@ components:
       in: query
       schema:
         type: boolean
+    TokenCategoryBasedIntermediateTokensParameter:
+      name: tokenCategoryBasedIntermediateTokens
+      description: Default is false. Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list. This helps achieve better pricing while maintaining route reliability.
+      in: query
+      schema:
+        type: boolean
+        
