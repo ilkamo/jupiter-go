@@ -228,7 +228,7 @@ type SwapResponse struct {
 type SwapResponseDynamicSlippageReportCategoryName string
 
 // AmountParameter defines model for AmountParameter.
-type AmountParameter = int
+type AmountParameter = int64
 
 // AsLegacyTransactionParameter defines model for AsLegacyTransactionParameter.
 type AsLegacyTransactionParameter = bool
@@ -244,6 +244,9 @@ type ComputeAutoSlippageParameter = bool
 
 // DexesParameter defines model for DexesParameter.
 type DexesParameter = []string
+
+// DynamicSlippageParameter defines model for DynamicSlippageParameter.
+type DynamicSlippageParameter = bool
 
 // ExcludeDexesParameter defines model for ExcludeDexesParameter.
 type ExcludeDexesParameter = []string
@@ -303,6 +306,9 @@ type GetQuoteParams struct {
 
 	// SlippageBps The slippage in basis points, 1 basis point is 0.01%. If the output token amount exceeds the slippage then the swap transaction will fail.
 	SlippageBps *SlippageParameter `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
+
+	// DynamicSlippage Set to true to indicate the usage of dynamic slippage.
+	DynamicSlippage *DynamicSlippageParameter `form:"dynamicSlippage,omitempty" json:"dynamicSlippage,omitempty"`
 
 	// AutoSlippage Automatically calculate the slippage based on pairs.
 	AutoSlippage *AutoSlippageParameter `form:"autoSlippage,omitempty" json:"autoSlippage,omitempty"`
@@ -812,6 +818,22 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 		if params.SlippageBps != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "slippageBps", runtime.ParamLocationQuery, *params.SlippageBps); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DynamicSlippage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "dynamicSlippage", runtime.ParamLocationQuery, *params.DynamicSlippage); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
