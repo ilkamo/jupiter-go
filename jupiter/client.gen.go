@@ -77,8 +77,8 @@ type Instruction struct {
 
 // PlatformFee defines model for PlatformFee.
 type PlatformFee struct {
-	Amount *string `json:"amount,omitempty"`
-	FeeBps *int32  `json:"feeBps,omitempty"`
+	Amount string `json:"amount"`
+	FeeBps int32  `json:"feeBps"`
 }
 
 // QuoteResponse defines model for QuoteResponse.
@@ -106,14 +106,14 @@ type RoutePlanStep struct {
 
 // SwapInfo defines model for SwapInfo.
 type SwapInfo struct {
-	AmmKey     string  `json:"ammKey"`
-	FeeAmount  string  `json:"feeAmount"`
-	FeeMint    string  `json:"feeMint"`
-	InAmount   string  `json:"inAmount"`
-	InputMint  string  `json:"inputMint"`
-	Label      *string `json:"label,omitempty"`
-	OutAmount  string  `json:"outAmount"`
-	OutputMint string  `json:"outputMint"`
+	AmmKey     string `json:"ammKey"`
+	FeeAmount  string `json:"feeAmount"`
+	FeeMint    string `json:"feeMint"`
+	InAmount   string `json:"inAmount"`
+	InputMint  string `json:"inputMint"`
+	Label      string `json:"label"`
+	OutAmount  string `json:"outAmount"`
+	OutputMint string `json:"outputMint"`
 }
 
 // SwapInstructionsResponse defines model for SwapInstructionsResponse.
@@ -163,6 +163,9 @@ type SwapRequest struct {
 
 	// FeeAccount Fee token account, same as the output token for ExactIn and as the input token for ExactOut, it is derived using the seeds = ["referral_ata", referral_account, mint] and the `REFER4ZgmyYx9c6He5XfaTMiGfdLwRnkV4RPp9t9iF3` referral contract (only pass in if you set a feeBps and make sure that the feeAccount has been created).
 	FeeAccount *string `json:"feeAccount,omitempty"`
+
+	// Payer Allow a custom payer to pay for the transaction.
+	Payer *string `json:"payer,omitempty"`
 
 	// PrioritizationFeeLamports \* PriorityFeeWithMaxLamports is impossible to be typed. Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
 	PrioritizationFeeLamports *SwapRequest_PrioritizationFeeLamports `json:"prioritizationFeeLamports,omitempty"`
@@ -219,9 +222,20 @@ type SwapResponse struct {
 		SimulatedIncurredSlippageBps *int                                           `json:"simulatedIncurredSlippageBps,omitempty"`
 		SlippageBps                  *int                                           `json:"slippageBps,omitempty"`
 	} `json:"dynamicSlippageReport,omitempty"`
-	LastValidBlockHeight      float32  `json:"lastValidBlockHeight"`
-	PrioritizationFeeLamports *float32 `json:"prioritizationFeeLamports,omitempty"`
-	SwapTransaction           string   `json:"swapTransaction"`
+	LastValidBlockHeight      float32 `json:"lastValidBlockHeight"`
+	PrioritizationFeeLamports float32 `json:"prioritizationFeeLamports"`
+
+	// PrioritizationType The type of prioritization used for the swap, either Jito or ComputeBudget.
+	PrioritizationType *struct {
+		ComputeBudget *struct {
+			EstimatedMicroLamports *int `json:"estimatedMicroLamports,omitempty"`
+			MicroLamports          *int `json:"microLamports,omitempty"`
+		} `json:"computeBudget,omitempty"`
+		Jito *struct {
+			Lamports *int `json:"lamports,omitempty"`
+		} `json:"jito,omitempty"`
+	} `json:"prioritizationType,omitempty"`
+	SwapTransaction string `json:"swapTransaction"`
 }
 
 // SwapResponseDynamicSlippageReportCategoryName defines model for SwapResponse.DynamicSlippageReport.CategoryName.
@@ -352,7 +366,7 @@ type GetQuoteParams struct {
 	// PreferLiquidDexes Default is false. Enabling it would only consider markets with high liquidity to reduce slippage.
 	PreferLiquidDexes *PreferLiquidDexes `form:"preferLiquidDexes,omitempty" json:"preferLiquidDexes,omitempty"`
 
-	// TokenCategoryBasedIntermediateTokens Default is false. Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list. This helps achieve better pricing while maintaining route reliability.
+	// TokenCategoryBasedIntermediateTokens Default is true. Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list. This helps achieve better pricing while maintaining route reliability.
 	TokenCategoryBasedIntermediateTokens *TokenCategoryBasedIntermediateTokensParameter `form:"tokenCategoryBasedIntermediateTokens,omitempty" json:"tokenCategoryBasedIntermediateTokens,omitempty"`
 }
 
