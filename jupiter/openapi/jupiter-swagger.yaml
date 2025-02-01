@@ -206,6 +206,8 @@ components:
           type: number
         timeTaken:
           type: number
+        swapUsdValue:
+          type: string
       required:
         - inputMint
         - outputMint
@@ -348,6 +350,9 @@ components:
           type: number
         correctLastValidBlockHeight:
           description: Optional. Default to false. Request Swap object to be returned with the correct blockhash prior to Agave 2.0.
+          type: boolean
+        addConsensusAccount:
+          description: Optional. Default to false. Add consensus account to (hopefully) prevent MEV attacks
           type: boolean
         quoteResponse:
           $ref: '#/components/schemas/QuoteResponse'
