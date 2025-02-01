@@ -3,7 +3,7 @@ package solana_test
 import (
 	"testing"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	jupSolana "github.com/ilkamo/jupiter-go/solana"
 )

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	jupSolana "github.com/ilkamo/jupiter-go/solana"
 )

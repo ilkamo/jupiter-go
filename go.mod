@@ -7,7 +7,7 @@ require (
 	github.com/gagliardetto/solana-go v1.12.0
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/shopspring/decimal v1.3.1
-	github.com/test-go/testify v1.1.4
+	github.com/stretchr/testify v1.8.4
 )
 
 require (
@@ -34,7 +34,6 @@ require (
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/streamingfast/logging v0.0.0-20230608130331-f22c91403091 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	go.mongodb.org/mongo-driver v1.12.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
