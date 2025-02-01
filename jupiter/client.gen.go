@@ -95,6 +95,7 @@ type QuoteResponse struct {
 	RoutePlan            []RoutePlanStep `json:"routePlan"`
 	SlippageBps          int32           `json:"slippageBps"`
 	SwapMode             SwapMode        `json:"swapMode"`
+	SwapUsdValue         *string         `json:"swapUsdValue,omitempty"`
 	TimeTaken            *float32        `json:"timeTaken,omitempty"`
 }
 
@@ -136,6 +137,9 @@ type SwapMode string
 
 // SwapRequest defines model for SwapRequest.
 type SwapRequest struct {
+	// AddConsensusAccount Optional. Default to false. Add consensus account to (hopefully) prevent MEV attacks
+	AddConsensusAccount *bool `json:"addConsensusAccount,omitempty"`
+
 	// AllowOptimizedWrappedSolTokenAccount Default is false. Enabling it would reduce use an optimized way to open WSOL that reduce compute unit.
 	AllowOptimizedWrappedSolTokenAccount *bool `json:"allowOptimizedWrappedSolTokenAccount,omitempty"`
 
