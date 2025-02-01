@@ -3,7 +3,7 @@ package solana
 import (
 	"testing"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithMaxRetries(t *testing.T) {

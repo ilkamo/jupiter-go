@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_mapToCommitmentType(t *testing.T) {
