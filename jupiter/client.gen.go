@@ -93,6 +93,7 @@ type QuoteResponse struct {
 	PlatformFee          *PlatformFee    `json:"platformFee,omitempty"`
 	PriceImpactPct       string          `json:"priceImpactPct"`
 	RoutePlan            []RoutePlanStep `json:"routePlan"`
+	SimplerRouteUsed     *bool           `json:"simplerRouteUsed,omitempty"`
 	SlippageBps          int32           `json:"slippageBps"`
 	SwapMode             SwapMode        `json:"swapMode"`
 	SwapUsdValue         *string         `json:"swapUsdValue,omitempty"`
@@ -293,6 +294,9 @@ type PlatformFeeBpsParameter = int
 // PreferLiquidDexes defines model for PreferLiquidDexes.
 type PreferLiquidDexes = bool
 
+// PreferSimpleRoutingParameter defines model for PreferSimpleRoutingParameter.
+type PreferSimpleRoutingParameter = bool
+
 // RestrictIntermediateTokensParameter defines model for RestrictIntermediateTokensParameter.
 type RestrictIntermediateTokensParameter = bool
 
@@ -372,6 +376,9 @@ type GetQuoteParams struct {
 
 	// TokenCategoryBasedIntermediateTokens Default is true. Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list. This helps achieve better pricing while maintaining route reliability.
 	TokenCategoryBasedIntermediateTokens *TokenCategoryBasedIntermediateTokensParameter `form:"tokenCategoryBasedIntermediateTokens,omitempty" json:"tokenCategoryBasedIntermediateTokens,omitempty"`
+
+	// PreferSimpleRouting Default is false. Prefers simpler routing with less splits if the quoted amount is within an acceptable range.
+	PreferSimpleRouting *PreferSimpleRoutingParameter `form:"preferSimpleRouting,omitempty" json:"preferSimpleRouting,omitempty"`
 }
 
 // GetQuoteParamsSwapMode defines parameters for GetQuote.
@@ -1092,6 +1099,22 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 		if params.TokenCategoryBasedIntermediateTokens != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "tokenCategoryBasedIntermediateTokens", runtime.ParamLocationQuery, *params.TokenCategoryBasedIntermediateTokens); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PreferSimpleRouting != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "preferSimpleRouting", runtime.ParamLocationQuery, *params.PreferSimpleRouting); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
