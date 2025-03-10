@@ -38,7 +38,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	slippageBps := 250
+	slippageBps := float32(250.0)
 
 	// Get the current quote for a swap.
 	// Ensure that the input and output mints are valid.
