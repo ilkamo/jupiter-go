@@ -16,7 +16,7 @@ info:
     - raw data such as Vec<u8\> are base64 encoded strings
 
 servers:
-  - url: https://api.jup.ag/swap/v1/quote
+  - url: https://api.jup.ag/swap/v1
 
 paths:
   /quote:
