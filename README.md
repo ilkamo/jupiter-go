@@ -53,17 +53,34 @@ func main() {
 	
 	quote := quoteResponse.JSON200
 
-	// More info: https://station.jup.ag/docs/apis/troubleshooting
-	prioritizationFeeLamports := jupiter.SwapRequest_PrioritizationFeeLamports{}
-	if err = prioritizationFeeLamports.UnmarshalJSON([]byte(`"auto"`)); err != nil {
-		// handle the error
+	// Define the prioritization fee in lamports.
+	prioritizationFeeLamports := &struct {
+		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+		PriorityLevelWithMaxLamports *struct {
+			MaxLamports   *int    `json:"maxLamports,omitempty"`
+			PriorityLevel *string `json:"priorityLevel,omitempty"`
+		} `json:"priorityLevelWithMaxLamports,omitempty"`
+	}{
+		PriorityLevelWithMaxLamports: &struct {
+			MaxLamports   *int    `json:"maxLamports,omitempty"`
+			PriorityLevel *string `json:"priorityLevel,omitempty"`
+		}{
+			MaxLamports:   new(int),
+			PriorityLevel: new(string),
+		},
 	}
+
+	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
+	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = "high"
+
+	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
+	// *prioritizationFeeLamports.JitoTipLamports = 1000
 
 	dynamicComputeUnitLimit := true
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
 	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
-		PrioritizationFeeLamports: &prioritizationFeeLamports,
+		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
 		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,
@@ -125,13 +142,6 @@ A transaction monitoring example using websocket is available in the [examples/t
 The Jupiter client is generated from the [official Jupiter openapi definition](https://github.com/jup-ag/jupiter-quote-api-node/blob/main/swagger.yaml) and provides the following methods to interact with the Jupiter API:
 
 ```go
-// GetIndexedRouteMapWithResponse request
-GetIndexedRouteMapWithResponse(
-	ctx context.Context, 
-	params *GetIndexedRouteMapParams, 
-	reqEditors ...RequestEditorFn, 
-) (*GetIndexedRouteMapResponse, error)
-
 // GetProgramIdToLabelWithResponse request
 GetProgramIdToLabelWithResponse(
 	ctx context.Context, 
@@ -172,11 +182,6 @@ PostSwapInstructionsWithResponse(
 	body PostSwapInstructionsJSONRequestBody, 
 	reqEditors ...RequestEditorFn, 
 ) (*PostSwapInstructionsResponse, error)
-
-GetTokensWithResponse(
-	ctx context.Context, 
-	reqEditors ...RequestEditorFn, 
-) (*GetTokensResponse, error)
 ```
 
 ## Solana client
