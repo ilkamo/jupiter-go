@@ -17,7 +17,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	slippageBps := 250
+	slippageBps := float32(250.0)
 
 	// Get the current quote for a swap.
 	// Ensure that the input and output mints are valid.
@@ -38,17 +38,35 @@ func main() {
 
 	quote := quoteResponse.JSON200
 
-	// More info: https://station.jup.ag/docs/apis/troubleshooting
-	prioritizationFeeLamports := jupiter.SwapRequest_PrioritizationFeeLamports{}
-	if err = prioritizationFeeLamports.UnmarshalJSON([]byte(`"auto"`)); err != nil {
-		panic(err)
+	dynamicComputeUnitLimit := true
+
+	// Define the prioritization fee in lamports.
+	prioritizationFeeLamports := &struct {
+		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+		PriorityLevelWithMaxLamports *struct {
+			MaxLamports   *int    `json:"maxLamports,omitempty"`
+			PriorityLevel *string `json:"priorityLevel,omitempty"`
+		} `json:"priorityLevelWithMaxLamports,omitempty"`
+	}{
+		PriorityLevelWithMaxLamports: &struct {
+			MaxLamports   *int    `json:"maxLamports,omitempty"`
+			PriorityLevel *string `json:"priorityLevel,omitempty"`
+		}{
+			MaxLamports:   new(int),
+			PriorityLevel: new(string),
+		},
 	}
 
-	dynamicComputeUnitLimit := true
+	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
+	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = "high"
+
+	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
+	// *prioritizationFeeLamports.JitoTipLamports = 1000
+
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
 	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
-		PrioritizationFeeLamports: &prioritizationFeeLamports,
+		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
 		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,

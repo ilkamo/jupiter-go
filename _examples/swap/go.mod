@@ -2,7 +2,7 @@ module main.go
 
 go 1.22.1
 
-require github.com/ilkamo/jupiter-go v0.0.19
+require github.com/ilkamo/jupiter-go v0.1.0
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -12,8 +12,8 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/gagliardetto/binary v0.7.9 // indirect
-	github.com/gagliardetto/solana-go v1.9.3 // indirect
+	github.com/gagliardetto/binary v0.8.0 // indirect
+	github.com/gagliardetto/solana-go v1.12.0 // indirect
 	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/rpc v1.2.0 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/streamingfast/logging v0.0.0-20230608130331-f22c91403091 // indirect
-	go.mongodb.org/mongo-driver v1.11.0 // indirect
+	go.mongodb.org/mongo-driver v1.12.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect

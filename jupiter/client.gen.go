@@ -18,38 +18,8 @@ import (
 
 // Defines values for SwapMode.
 const (
-	SwapModeExactIn  SwapMode = "ExactIn"
-	SwapModeExactOut SwapMode = "ExactOut"
-)
-
-// Defines values for SwapRequestComputeUnitPriceMicroLamports1.
-const (
-	SwapRequestComputeUnitPriceMicroLamports1Auto SwapRequestComputeUnitPriceMicroLamports1 = "auto"
-)
-
-// Defines values for SwapRequestPrioritizationFeeLamports1.
-const (
-	SwapRequestPrioritizationFeeLamports1Auto SwapRequestPrioritizationFeeLamports1 = "auto"
-)
-
-// Defines values for SwapResponseDynamicSlippageReportCategoryName.
-const (
-	Bluechip SwapResponseDynamicSlippageReportCategoryName = "bluechip"
-	Lst      SwapResponseDynamicSlippageReportCategoryName = "lst"
-	Stable   SwapResponseDynamicSlippageReportCategoryName = "stable"
-	Verified SwapResponseDynamicSlippageReportCategoryName = "verified"
-)
-
-// Defines values for SwapModeParameter.
-const (
-	SwapModeParameterExactIn  SwapModeParameter = "ExactIn"
-	SwapModeParameterExactOut SwapModeParameter = "ExactOut"
-)
-
-// Defines values for GetQuoteParamsSwapMode.
-const (
-	ExactIn  GetQuoteParamsSwapMode = "ExactIn"
-	ExactOut GetQuoteParamsSwapMode = "ExactOut"
+	ExactIn  SwapMode = "ExactIn"
+	ExactOut SwapMode = "ExactOut"
 )
 
 // AccountMeta defines model for AccountMeta.
@@ -57,15 +27,6 @@ type AccountMeta struct {
 	IsSigner   bool   `json:"isSigner"`
 	IsWritable bool   `json:"isWritable"`
 	Pubkey     string `json:"pubkey"`
-}
-
-// IndexedRouteMapResponse defines model for IndexedRouteMapResponse.
-type IndexedRouteMapResponse struct {
-	// IndexedRouteMap All the possible route and their corresponding output mints
-	IndexedRouteMap map[string][]float32 `json:"indexedRouteMap"`
-
-	// MintKeys All the mints that are indexed to match in indexedRouteMap
-	MintKeys []string `json:"mintKeys"`
 }
 
 // Instruction defines model for Instruction.
@@ -77,27 +38,32 @@ type Instruction struct {
 
 // PlatformFee defines model for PlatformFee.
 type PlatformFee struct {
-	Amount string `json:"amount"`
-	FeeBps int32  `json:"feeBps"`
+	Amount *string `json:"amount,omitempty"`
+	FeeBps *int32  `json:"feeBps,omitempty"`
 }
 
 // QuoteResponse defines model for QuoteResponse.
 type QuoteResponse struct {
-	ComputedAutoSlippage *int32          `json:"computedAutoSlippage,omitempty"`
-	ContextSlot          *float32        `json:"contextSlot,omitempty"`
-	InAmount             string          `json:"inAmount"`
-	InputMint            string          `json:"inputMint"`
-	OtherAmountThreshold string          `json:"otherAmountThreshold"`
-	OutAmount            string          `json:"outAmount"`
-	OutputMint           string          `json:"outputMint"`
-	PlatformFee          *PlatformFee    `json:"platformFee,omitempty"`
-	PriceImpactPct       string          `json:"priceImpactPct"`
-	RoutePlan            []RoutePlanStep `json:"routePlan"`
-	SimplerRouteUsed     *bool           `json:"simplerRouteUsed,omitempty"`
-	SlippageBps          int32           `json:"slippageBps"`
-	SwapMode             SwapMode        `json:"swapMode"`
-	SwapUsdValue         *string         `json:"swapUsdValue,omitempty"`
-	TimeTaken            *float32        `json:"timeTaken,omitempty"`
+	ContextSlot *float32 `json:"contextSlot,omitempty"`
+	InAmount    string   `json:"inAmount"`
+	InputMint   string   `json:"inputMint"`
+
+	// OtherAmountThreshold - Calculated minimum output amount after accounting for `slippageBps` and `platformFeeBps`
+	// - Not used by build transaction
+	OtherAmountThreshold string `json:"otherAmountThreshold"`
+
+	// OutAmount - Calculated output amount from routing algorithm
+	// - Exlcuding network fees, slippage or platform fees
+	OutAmount      string          `json:"outAmount"`
+	OutputMint     string          `json:"outputMint"`
+	PlatformFee    *PlatformFee    `json:"platformFee,omitempty"`
+	PriceImpactPct string          `json:"priceImpactPct"`
+	RoutePlan      []RoutePlanStep `json:"routePlan"`
+	SlippageBps    int32           `json:"slippageBps"`
+	SwapMode       SwapMode        `json:"swapMode"`
+
+	// TimeTaken Time taken to determine quote
+	TimeTaken *float32 `json:"timeTaken,omitempty"`
 }
 
 // RoutePlanStep defines model for RoutePlanStep.
@@ -108,14 +74,14 @@ type RoutePlanStep struct {
 
 // SwapInfo defines model for SwapInfo.
 type SwapInfo struct {
-	AmmKey     string `json:"ammKey"`
-	FeeAmount  string `json:"feeAmount"`
-	FeeMint    string `json:"feeMint"`
-	InAmount   string `json:"inAmount"`
-	InputMint  string `json:"inputMint"`
-	Label      string `json:"label"`
-	OutAmount  string `json:"outAmount"`
-	OutputMint string `json:"outputMint"`
+	AmmKey     string  `json:"ammKey"`
+	FeeAmount  string  `json:"feeAmount"`
+	FeeMint    string  `json:"feeMint"`
+	InAmount   string  `json:"inAmount"`
+	InputMint  string  `json:"inputMint"`
+	Label      *string `json:"label,omitempty"`
+	OutAmount  string  `json:"outAmount"`
+	OutputMint string  `json:"outputMint"`
 }
 
 // SwapInstructionsResponse defines model for SwapInstructionsResponse.
@@ -126,11 +92,11 @@ type SwapInstructionsResponse struct {
 
 	// ComputeBudgetInstructions The necessary instructions to setup the compute budget.
 	ComputeBudgetInstructions []Instruction `json:"computeBudgetInstructions"`
+	OtherInstructions         Instruction   `json:"otherInstructions"`
 
 	// SetupInstructions Setup missing ATA for the users.
-	SetupInstructions      []Instruction `json:"setupInstructions"`
-	SwapInstruction        Instruction   `json:"swapInstruction"`
-	TokenLedgerInstruction *Instruction  `json:"tokenLedgerInstruction,omitempty"`
+	SetupInstructions []Instruction `json:"setupInstructions"`
+	SwapInstruction   Instruction   `json:"swapInstruction"`
 }
 
 // SwapMode defines model for SwapMode.
@@ -138,381 +104,132 @@ type SwapMode string
 
 // SwapRequest defines model for SwapRequest.
 type SwapRequest struct {
-	// AddConsensusAccount Optional. Default to false. Add consensus account to (hopefully) prevent MEV attacks
-	AddConsensusAccount *bool `json:"addConsensusAccount,omitempty"`
-
-	// AllowOptimizedWrappedSolTokenAccount Default is false. Enabling it would reduce use an optimized way to open WSOL that reduce compute unit.
-	AllowOptimizedWrappedSolTokenAccount *bool `json:"allowOptimizedWrappedSolTokenAccount,omitempty"`
-
-	// AsLegacyTransaction Default is false. Request a legacy transaction rather than the default versioned transaction, needs to be paired with a quote using asLegacyTransaction otherwise the transaction might be too large.
+	// AsLegacyTransaction Default: false
+	// - Request a legacy transaction rather than the default versioned transaction
+	// - Used together with `asLegacyTransaction` in /quote, otherwise the transaction might be too large
 	AsLegacyTransaction *bool `json:"asLegacyTransaction,omitempty"`
 
-	// BlockhashSlotsToExpiry Optional. When passed in, Swap object will be returned with your desired slots to epxiry.
-	BlockhashSlotsToExpiry *float32 `json:"blockhashSlotsToExpiry,omitempty"`
+	// ComputeUnitPriceMicroLamports - To specify a compute unit price to calculate priority fee
+	// - `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`
+	// - **We recommend using `prioritizationFeeLamports` and `dynamicComputeUnitLimit` instead of passing in a compute unit price**
+	ComputeUnitPriceMicroLamports *int `json:"computeUnitPriceMicroLamports,omitempty"`
 
-	// ComputeUnitPriceMicroLamports The compute unit price to prioritize the transaction, the additional fee will be `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
-	ComputeUnitPriceMicroLamports *SwapRequest_ComputeUnitPriceMicroLamports `json:"computeUnitPriceMicroLamports,omitempty"`
-
-	// CorrectLastValidBlockHeight Optional. Default to false. Request Swap object to be returned with the correct blockhash prior to Agave 2.0.
-	CorrectLastValidBlockHeight *bool `json:"correctLastValidBlockHeight,omitempty"`
-
-	// DestinationTokenAccount Public key of the token account that will be used to receive the token out of the swap. If not provided, the user's ATA will be used. If provided, we assume that the token account is already initialized.
+	// DestinationTokenAccount - Public key of a token account that will be used to receive the token out of the swap
+	// - If not provided, the signer's ATA will be used
+	// - If provided, we assume that the token account is already initialized
 	DestinationTokenAccount *string `json:"destinationTokenAccount,omitempty"`
 
-	// DynamicComputeUnitLimit When enabled, it will do a swap simulation to get the compute unit used and set it in ComputeBudget's compute unit limit. This will increase latency slightly since there will be one extra RPC call to simulate this. Default is `false`.
+	// DynamicComputeUnitLimit Default: false
+	// - When enabled, it will do a swap simulation to get the compute unit used and set it in ComputeBudget's compute unit limit
+	// - This will increase latency slightly since there will be one extra RPC call to simulate this
+	// - This can be useful to estimate compute unit correctly and reduce priority fees needed or have higher chance to be included in a block
 	DynamicComputeUnitLimit *bool `json:"dynamicComputeUnitLimit,omitempty"`
-	DynamicSlippage         *struct {
-		MaxBps *int `json:"maxBps,omitempty"`
-		MinBps *int `json:"minBps,omitempty"`
-	} `json:"dynamicSlippage,omitempty"`
 
-	// FeeAccount Fee token account, same as the output token for ExactIn and as the input token for ExactOut, it is derived using the seeds = ["referral_ata", referral_account, mint] and the `REFER4ZgmyYx9c6He5XfaTMiGfdLwRnkV4RPp9t9iF3` referral contract (only pass in if you set a feeBps and make sure that the feeAccount has been created).
+	// DynamicSlippage Default: false
+	// - When enabled, it estimate slippage and apply it in the swap transaction directly, overwriting the `slippageBps` parameter in the quote response.
+	// - [See notes for more information](/docs/swap-api/send-swap-transaction#how-jupiter-estimates-slippage)
+	DynamicSlippage *bool `json:"dynamicSlippage,omitempty"`
+
+	// FeeAccount - An Associated Token Address (ATA) of specific mints depending on `SwapMode` to collect fees
+	// - You no longer need the Referral Program
+	// - See [Add Fees](/docs/swap-api/add-fees-to-swap) guide for more details
 	FeeAccount *string `json:"feeAccount,omitempty"`
 
-	// Payer Allow a custom payer to pay for the transaction.
-	Payer *string `json:"payer,omitempty"`
+	// PrioritizationFeeLamports - To specify a level or amount of additional fees to prioritize the transaction
+	// - It can be used for EITHER priority fee OR Jito tip
+	// - If you want to include both, you will need to use `/swap-instructions` to add both at the same time
+	PrioritizationFeeLamports *struct {
+		// JitoTipLamports - Exact amount of tip to use in a tip instruction
+		// - Estimate how much to set using Jito tip percentiles endpoint
+		// - It has to be used together with a connection to a Jito RPC
+		// - [See their docs](https://docs.jito.wtf/)
+		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+		PriorityLevelWithMaxLamports *struct {
+			// MaxLamports Maximum lamports to cap the priority fee estimation, to prevent overpaying
+			MaxLamports *int `json:"maxLamports,omitempty"`
 
-	// PrioritizationFeeLamports \* PriorityFeeWithMaxLamports is impossible to be typed. Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
-	PrioritizationFeeLamports *SwapRequest_PrioritizationFeeLamports `json:"prioritizationFeeLamports,omitempty"`
+			// PriorityLevel Either `medium`, `high` or `veryHigh`
+			PriorityLevel *string `json:"priorityLevel,omitempty"`
+		} `json:"priorityLevelWithMaxLamports,omitempty"`
+	} `json:"prioritizationFeeLamports,omitempty"`
+	QuoteResponse QuoteResponse `json:"quoteResponse"`
 
-	// ProgramAuthorityId The program authority id [0;7], load balanced across the available set by default
-	ProgramAuthorityId *int          `json:"programAuthorityId,omitempty"`
-	QuoteResponse      QuoteResponse `json:"quoteResponse"`
-
-	// SkipUserAccountsRpcCalls When enabled, it will not do any rpc calls check on user's accounts. Enable it only when you already setup all the accounts needed for the trasaction, like wrapping or unwrapping sol, destination account is already created.
+	// SkipUserAccountsRpcCalls Default: false
+	// - When enabled, it will not do any additional RPC calls to check on user's accounts
+	// - Enable it only when you already setup all the accounts needed for the trasaction, like wrapping or unwrapping sol, or destination account is already created
 	SkipUserAccountsRpcCalls *bool `json:"skipUserAccountsRpcCalls,omitempty"`
 
-	// UseSharedAccounts Default is true. This enables the usage of shared program accountns. That means no intermediate token accounts or open orders accounts need to be created for the users. But it also means that the likelihood of hot accounts is higher.
+	// TrackingAccount - Specify any public key that belongs to you to track the transactions
+	// - Useful for integrators to get all the swap transactions from this public key
+	// - Query the data using a block explorer like Solscan/SolanaFM or query like Dune/Flipside
+	TrackingAccount *string `json:"trackingAccount,omitempty"`
+
+	// UseSharedAccounts Default: true
+	// - This enables the usage of shared program accounts, this is essential as complex routing will require multiple intermediate token accounts which the user might not have
+	// - If true, you do not need to handle the creation of intermediate token accounts for the user.
 	UseSharedAccounts *bool `json:"useSharedAccounts,omitempty"`
 
-	// UseTokenLedger Default is false. This is useful when the instruction before the swap has a transfer that increases the input token amount. Then, the swap will just use the difference between the token ledger token amount and post token amount.
-	UseTokenLedger *bool `json:"useTokenLedger,omitempty"`
-
-	// UserPublicKey The user public key.
+	// UserPublicKey The user public key
 	UserPublicKey string `json:"userPublicKey"`
 
-	// WrapAndUnwrapSol Default is true. If true, will automatically wrap/unwrap SOL. If false, it will use wSOL token account.  Will be ignored if `destinationTokenAccount` is set because the `destinationTokenAccount` may belong to a different user that we have no authority to close.
+	// WrapAndUnwrapSol Default: true
+	// - To automatically wrap/unwrap SOL in the transaction
+	// - If false, it will use wSOL token account
+	// - Parameter will be ignored if `destinationTokenAccount` is set because the `destinationTokenAccount` may belong to a different user that we have no authority to close
 	WrapAndUnwrapSol *bool `json:"wrapAndUnwrapSol,omitempty"`
-}
-
-// SwapRequestComputeUnitPriceMicroLamports0 defines model for .
-type SwapRequestComputeUnitPriceMicroLamports0 = int
-
-// SwapRequestComputeUnitPriceMicroLamports1 defines model for SwapRequest.ComputeUnitPriceMicroLamports.1.
-type SwapRequestComputeUnitPriceMicroLamports1 string
-
-// SwapRequest_ComputeUnitPriceMicroLamports The compute unit price to prioritize the transaction, the additional fee will be `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
-type SwapRequest_ComputeUnitPriceMicroLamports struct {
-	union json.RawMessage
-}
-
-// SwapRequestPrioritizationFeeLamports0 defines model for .
-type SwapRequestPrioritizationFeeLamports0 = int
-
-// SwapRequestPrioritizationFeeLamports1 defines model for SwapRequest.PrioritizationFeeLamports.1.
-type SwapRequestPrioritizationFeeLamports1 string
-
-// SwapRequest_PrioritizationFeeLamports \* PriorityFeeWithMaxLamports is impossible to be typed. Prioritization fee lamports paid for the transaction in addition to the signatures fee. Mutually exclusive with compute_unit_price_micro_lamports. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
-type SwapRequest_PrioritizationFeeLamports struct {
-	union json.RawMessage
 }
 
 // SwapResponse defines model for SwapResponse.
 type SwapResponse struct {
-	DynamicSlippageReport *struct {
-		AmplificationRatio           *string                                        `json:"amplificationRatio,omitempty"`
-		CategoryName                 *SwapResponseDynamicSlippageReportCategoryName `json:"categoryName,omitempty"`
-		HeuristicMaxSlippageBps      *int                                           `json:"heuristicMaxSlippageBps,omitempty"`
-		OtherAmount                  *int                                           `json:"otherAmount,omitempty"`
-		SimulatedIncurredSlippageBps *int                                           `json:"simulatedIncurredSlippageBps,omitempty"`
-		SlippageBps                  *int                                           `json:"slippageBps,omitempty"`
-	} `json:"dynamicSlippageReport,omitempty"`
-	LastValidBlockHeight      float32 `json:"lastValidBlockHeight"`
-	PrioritizationFeeLamports float32 `json:"prioritizationFeeLamports"`
-
-	// PrioritizationType The type of prioritization used for the swap, either Jito or ComputeBudget.
-	PrioritizationType *struct {
-		ComputeBudget *struct {
-			EstimatedMicroLamports *int `json:"estimatedMicroLamports,omitempty"`
-			MicroLamports          *int `json:"microLamports,omitempty"`
-		} `json:"computeBudget,omitempty"`
-		Jito *struct {
-			Lamports *int `json:"lamports,omitempty"`
-		} `json:"jito,omitempty"`
-	} `json:"prioritizationType,omitempty"`
-	SwapTransaction string `json:"swapTransaction"`
-}
-
-// SwapResponseDynamicSlippageReportCategoryName defines model for SwapResponse.DynamicSlippageReport.CategoryName.
-type SwapResponseDynamicSlippageReportCategoryName string
-
-// AmountParameter defines model for AmountParameter.
-type AmountParameter = int64
-
-// AsLegacyTransactionParameter defines model for AsLegacyTransactionParameter.
-type AsLegacyTransactionParameter = bool
-
-// AutoSlippageCollisionValueParameter defines model for AutoSlippageCollisionValueParameter.
-type AutoSlippageCollisionValueParameter = int
-
-// AutoSlippageParameter defines model for AutoSlippageParameter.
-type AutoSlippageParameter = bool
-
-// ComputeAutoSlippageParameter defines model for ComputeAutoSlippageParameter.
-type ComputeAutoSlippageParameter = bool
-
-// DexesParameter defines model for DexesParameter.
-type DexesParameter = []string
-
-// DynamicSlippageParameter defines model for DynamicSlippageParameter.
-type DynamicSlippageParameter = bool
-
-// ExcludeDexesParameter defines model for ExcludeDexesParameter.
-type ExcludeDexesParameter = []string
-
-// InputMintParameter defines model for InputMintParameter.
-type InputMintParameter = string
-
-// MaxAccountsParameter defines model for MaxAccountsParameter.
-type MaxAccountsParameter = int
-
-// MaxAutoSlippageBpsParameter defines model for MaxAutoSlippageBpsParameter.
-type MaxAutoSlippageBpsParameter = int
-
-// MinimizeSlippage defines model for MinimizeSlippage.
-type MinimizeSlippage = bool
-
-// OnlyDirectRoutesParameter defines model for OnlyDirectRoutesParameter.
-type OnlyDirectRoutesParameter = bool
-
-// OutputMintParameter defines model for OutputMintParameter.
-type OutputMintParameter = string
-
-// PlatformFeeBpsParameter defines model for PlatformFeeBpsParameter.
-type PlatformFeeBpsParameter = int
-
-// PreferLiquidDexes defines model for PreferLiquidDexes.
-type PreferLiquidDexes = bool
-
-// PreferSimpleRoutingParameter defines model for PreferSimpleRoutingParameter.
-type PreferSimpleRoutingParameter = bool
-
-// RestrictIntermediateTokensParameter defines model for RestrictIntermediateTokensParameter.
-type RestrictIntermediateTokensParameter = bool
-
-// SlippageParameter defines model for SlippageParameter.
-type SlippageParameter = int
-
-// SwapModeParameter defines model for SwapModeParameter.
-type SwapModeParameter string
-
-// TokenCategoryBasedIntermediateTokensParameter defines model for TokenCategoryBasedIntermediateTokensParameter.
-type TokenCategoryBasedIntermediateTokensParameter = bool
-
-// GetIndexedRouteMapParams defines parameters for GetIndexedRouteMap.
-type GetIndexedRouteMapParams struct {
-	// OnlyDirectRoutes Default is false. Direct Routes limits Jupiter routing to single hop routes only.
-	OnlyDirectRoutes *OnlyDirectRoutesParameter `form:"onlyDirectRoutes,omitempty" json:"onlyDirectRoutes,omitempty"`
+	LastValidBlockHeight      int    `json:"lastValidBlockHeight"`
+	PrioritizationFeeLamports *int   `json:"prioritizationFeeLamports,omitempty"`
+	SwapTransaction           string `json:"swapTransaction"`
 }
 
 // GetQuoteParams defines parameters for GetQuote.
 type GetQuoteParams struct {
 	// InputMint Input token mint address
-	InputMint InputMintParameter `form:"inputMint" json:"inputMint"`
+	InputMint string `form:"inputMint" json:"inputMint"`
 
 	// OutputMint Output token mint address
-	OutputMint OutputMintParameter `form:"outputMint" json:"outputMint"`
+	OutputMint string `form:"outputMint" json:"outputMint"`
 
-	// Amount The amount to swap, have to factor in the token decimals.
-	Amount AmountParameter `form:"amount" json:"amount"`
+	// Amount Amount of input token
+	Amount float32 `form:"amount" json:"amount"`
 
-	// SlippageBps The slippage in basis points, 1 basis point is 0.01%. If the output token amount exceeds the slippage then the swap transaction will fail.
-	SlippageBps *SlippageParameter `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
+	// SlippageBps Slippage in basis points
+	SlippageBps *float32 `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
 
-	// DynamicSlippage Set to true to indicate the usage of dynamic slippage.
-	DynamicSlippage *DynamicSlippageParameter `form:"dynamicSlippage,omitempty" json:"dynamicSlippage,omitempty"`
+	// SwapMode Swap mode (ExactIn or ExactOut)
+	SwapMode *SwapMode `form:"swapMode,omitempty" json:"swapMode,omitempty"`
 
-	// AutoSlippage Automatically calculate the slippage based on pairs.
-	AutoSlippage *AutoSlippageParameter `form:"autoSlippage,omitempty" json:"autoSlippage,omitempty"`
+	// Dexes List of DEXes to include
+	Dexes *[]string `form:"dexes,omitempty" json:"dexes,omitempty"`
 
-	// AutoSlippageCollisionUsdValue Automatic slippage collision value.
-	AutoSlippageCollisionUsdValue *AutoSlippageCollisionValueParameter `form:"autoSlippageCollisionUsdValue,omitempty" json:"autoSlippageCollisionUsdValue,omitempty"`
+	// ExcludeDexes List of DEXes to exclude
+	ExcludeDexes *[]string `form:"excludeDexes,omitempty" json:"excludeDexes,omitempty"`
 
-	// ComputeAutoSlippage Compute auto slippage value without using it.
-	ComputeAutoSlippage *ComputeAutoSlippageParameter `form:"computeAutoSlippage,omitempty" json:"computeAutoSlippage,omitempty"`
+	// RestrictIntermediateTokens Whether to restrict intermediate tokens
+	RestrictIntermediateTokens *bool `form:"restrictIntermediateTokens,omitempty" json:"restrictIntermediateTokens,omitempty"`
 
-	// MaxAutoSlippageBps Max slippage in basis points for auto slippage calculation. Default is 400.
-	MaxAutoSlippageBps *MaxAutoSlippageBpsParameter `form:"maxAutoSlippageBps,omitempty" json:"maxAutoSlippageBps,omitempty"`
+	// OnlyDirectRoutes Whether to only use direct routes
+	OnlyDirectRoutes *bool `form:"onlyDirectRoutes,omitempty" json:"onlyDirectRoutes,omitempty"`
 
-	// SwapMode (ExactIn or ExactOut) Defaults to ExactIn. ExactOut is for supporting use cases where you need an exact token amount, like payments. In this case the slippage is on the input token.
-	SwapMode *GetQuoteParamsSwapMode `form:"swapMode,omitempty" json:"swapMode,omitempty"`
+	// AsLegacyTransaction Whether to use legacy transaction
+	AsLegacyTransaction *bool `form:"asLegacyTransaction,omitempty" json:"asLegacyTransaction,omitempty"`
 
-	// Dexes Default is that all DEXes are included. You can pass in the DEXes that you want to include only and separate them by `,`. You can check out the full list [here](https://quote-api.jup.ag/v6/program-id-to-label).
-	Dexes *DexesParameter `form:"dexes,omitempty" json:"dexes,omitempty"`
+	// PlatformFeeBps Platform fee in basis points
+	PlatformFeeBps *float32 `form:"platformFeeBps,omitempty" json:"platformFeeBps,omitempty"`
 
-	// ExcludeDexes Default is that all DEXes are included. You can pass in the DEXes that you want to exclude and separate them by `,`. You can check out the full list [here](https://quote-api.jup.ag/v6/program-id-to-label).
-	ExcludeDexes *ExcludeDexesParameter `form:"excludeDexes,omitempty" json:"excludeDexes,omitempty"`
-
-	// RestrictIntermediateTokens Restrict intermediate tokens to a top token set that has stable liquidity. This will help to ease potential high slippage error rate when swapping with minimal impact on pricing.
-	RestrictIntermediateTokens *RestrictIntermediateTokensParameter `form:"restrictIntermediateTokens,omitempty" json:"restrictIntermediateTokens,omitempty"`
-
-	// OnlyDirectRoutes Default is false. Direct Routes limits Jupiter routing to single hop routes only.
-	OnlyDirectRoutes *OnlyDirectRoutesParameter `form:"onlyDirectRoutes,omitempty" json:"onlyDirectRoutes,omitempty"`
-
-	// AsLegacyTransaction Default is false. Instead of using versioned transaction, this will use the legacy transaction.
-	AsLegacyTransaction *AsLegacyTransactionParameter `form:"asLegacyTransaction,omitempty" json:"asLegacyTransaction,omitempty"`
-
-	// PlatformFeeBps If you want to charge the user a fee, you can specify the fee in BPS. Fee % is taken out of the output token.
-	PlatformFeeBps *PlatformFeeBpsParameter `form:"platformFeeBps,omitempty" json:"platformFeeBps,omitempty"`
-
-	// MaxAccounts Rough estimate of the max accounts to be used for the quote, so that you can compose with your own accounts
-	MaxAccounts *MaxAccountsParameter `form:"maxAccounts,omitempty" json:"maxAccounts,omitempty"`
-
-	// MinimizeSlippage Default is false. Miminize slippage attempts to find routes with lower slippage.
-	MinimizeSlippage *MinimizeSlippage `form:"minimizeSlippage,omitempty" json:"minimizeSlippage,omitempty"`
-
-	// PreferLiquidDexes Default is false. Enabling it would only consider markets with high liquidity to reduce slippage.
-	PreferLiquidDexes *PreferLiquidDexes `form:"preferLiquidDexes,omitempty" json:"preferLiquidDexes,omitempty"`
-
-	// TokenCategoryBasedIntermediateTokens Default is true. Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list. This helps achieve better pricing while maintaining route reliability.
-	TokenCategoryBasedIntermediateTokens *TokenCategoryBasedIntermediateTokensParameter `form:"tokenCategoryBasedIntermediateTokens,omitempty" json:"tokenCategoryBasedIntermediateTokens,omitempty"`
-
-	// PreferSimpleRouting Default is false. Prefers simpler routing with less splits if the quoted amount is within an acceptable range.
-	PreferSimpleRouting *PreferSimpleRoutingParameter `form:"preferSimpleRouting,omitempty" json:"preferSimpleRouting,omitempty"`
+	// MaxAccounts Maximum number of accounts
+	MaxAccounts *float32 `form:"maxAccounts,omitempty" json:"maxAccounts,omitempty"`
 }
-
-// GetQuoteParamsSwapMode defines parameters for GetQuote.
-type GetQuoteParamsSwapMode string
 
 // PostSwapJSONRequestBody defines body for PostSwap for application/json ContentType.
 type PostSwapJSONRequestBody = SwapRequest
 
 // PostSwapInstructionsJSONRequestBody defines body for PostSwapInstructions for application/json ContentType.
 type PostSwapInstructionsJSONRequestBody = SwapRequest
-
-// AsSwapRequestComputeUnitPriceMicroLamports0 returns the union data inside the SwapRequest_ComputeUnitPriceMicroLamports as a SwapRequestComputeUnitPriceMicroLamports0
-func (t SwapRequest_ComputeUnitPriceMicroLamports) AsSwapRequestComputeUnitPriceMicroLamports0() (SwapRequestComputeUnitPriceMicroLamports0, error) {
-	var body SwapRequestComputeUnitPriceMicroLamports0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSwapRequestComputeUnitPriceMicroLamports0 overwrites any union data inside the SwapRequest_ComputeUnitPriceMicroLamports as the provided SwapRequestComputeUnitPriceMicroLamports0
-func (t *SwapRequest_ComputeUnitPriceMicroLamports) FromSwapRequestComputeUnitPriceMicroLamports0(v SwapRequestComputeUnitPriceMicroLamports0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSwapRequestComputeUnitPriceMicroLamports0 performs a merge with any union data inside the SwapRequest_ComputeUnitPriceMicroLamports, using the provided SwapRequestComputeUnitPriceMicroLamports0
-func (t *SwapRequest_ComputeUnitPriceMicroLamports) MergeSwapRequestComputeUnitPriceMicroLamports0(v SwapRequestComputeUnitPriceMicroLamports0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsSwapRequestComputeUnitPriceMicroLamports1 returns the union data inside the SwapRequest_ComputeUnitPriceMicroLamports as a SwapRequestComputeUnitPriceMicroLamports1
-func (t SwapRequest_ComputeUnitPriceMicroLamports) AsSwapRequestComputeUnitPriceMicroLamports1() (SwapRequestComputeUnitPriceMicroLamports1, error) {
-	var body SwapRequestComputeUnitPriceMicroLamports1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSwapRequestComputeUnitPriceMicroLamports1 overwrites any union data inside the SwapRequest_ComputeUnitPriceMicroLamports as the provided SwapRequestComputeUnitPriceMicroLamports1
-func (t *SwapRequest_ComputeUnitPriceMicroLamports) FromSwapRequestComputeUnitPriceMicroLamports1(v SwapRequestComputeUnitPriceMicroLamports1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSwapRequestComputeUnitPriceMicroLamports1 performs a merge with any union data inside the SwapRequest_ComputeUnitPriceMicroLamports, using the provided SwapRequestComputeUnitPriceMicroLamports1
-func (t *SwapRequest_ComputeUnitPriceMicroLamports) MergeSwapRequestComputeUnitPriceMicroLamports1(v SwapRequestComputeUnitPriceMicroLamports1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t SwapRequest_ComputeUnitPriceMicroLamports) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *SwapRequest_ComputeUnitPriceMicroLamports) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsSwapRequestPrioritizationFeeLamports0 returns the union data inside the SwapRequest_PrioritizationFeeLamports as a SwapRequestPrioritizationFeeLamports0
-func (t SwapRequest_PrioritizationFeeLamports) AsSwapRequestPrioritizationFeeLamports0() (SwapRequestPrioritizationFeeLamports0, error) {
-	var body SwapRequestPrioritizationFeeLamports0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSwapRequestPrioritizationFeeLamports0 overwrites any union data inside the SwapRequest_PrioritizationFeeLamports as the provided SwapRequestPrioritizationFeeLamports0
-func (t *SwapRequest_PrioritizationFeeLamports) FromSwapRequestPrioritizationFeeLamports0(v SwapRequestPrioritizationFeeLamports0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSwapRequestPrioritizationFeeLamports0 performs a merge with any union data inside the SwapRequest_PrioritizationFeeLamports, using the provided SwapRequestPrioritizationFeeLamports0
-func (t *SwapRequest_PrioritizationFeeLamports) MergeSwapRequestPrioritizationFeeLamports0(v SwapRequestPrioritizationFeeLamports0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsSwapRequestPrioritizationFeeLamports1 returns the union data inside the SwapRequest_PrioritizationFeeLamports as a SwapRequestPrioritizationFeeLamports1
-func (t SwapRequest_PrioritizationFeeLamports) AsSwapRequestPrioritizationFeeLamports1() (SwapRequestPrioritizationFeeLamports1, error) {
-	var body SwapRequestPrioritizationFeeLamports1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSwapRequestPrioritizationFeeLamports1 overwrites any union data inside the SwapRequest_PrioritizationFeeLamports as the provided SwapRequestPrioritizationFeeLamports1
-func (t *SwapRequest_PrioritizationFeeLamports) FromSwapRequestPrioritizationFeeLamports1(v SwapRequestPrioritizationFeeLamports1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSwapRequestPrioritizationFeeLamports1 performs a merge with any union data inside the SwapRequest_PrioritizationFeeLamports, using the provided SwapRequestPrioritizationFeeLamports1
-func (t *SwapRequest_PrioritizationFeeLamports) MergeSwapRequestPrioritizationFeeLamports1(v SwapRequestPrioritizationFeeLamports1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t SwapRequest_PrioritizationFeeLamports) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *SwapRequest_PrioritizationFeeLamports) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -587,9 +304,6 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetIndexedRouteMap request
-	GetIndexedRouteMap(ctx context.Context, params *GetIndexedRouteMapParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetProgramIdToLabel request
 	GetProgramIdToLabel(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -605,21 +319,6 @@ type ClientInterface interface {
 	PostSwapInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostSwapInstructions(ctx context.Context, body PostSwapInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTokens request
-	GetTokens(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-}
-
-func (c *Client) GetIndexedRouteMap(ctx context.Context, params *GetIndexedRouteMapParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetIndexedRouteMapRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
 }
 
 func (c *Client) GetProgramIdToLabel(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -692,67 +391,6 @@ func (c *Client) PostSwapInstructions(ctx context.Context, body PostSwapInstruct
 		return nil, err
 	}
 	return c.Client.Do(req)
-}
-
-func (c *Client) GetTokens(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTokensRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// NewGetIndexedRouteMapRequest generates requests for GetIndexedRouteMap
-func NewGetIndexedRouteMapRequest(server string, params *GetIndexedRouteMapParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/indexed-route-map")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.OnlyDirectRoutes != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "onlyDirectRoutes", runtime.ParamLocationQuery, *params.OnlyDirectRoutes); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
 }
 
 // NewGetProgramIdToLabelRequest generates requests for GetProgramIdToLabel
@@ -843,86 +481,6 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 		if params.SlippageBps != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "slippageBps", runtime.ParamLocationQuery, *params.SlippageBps); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.DynamicSlippage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "dynamicSlippage", runtime.ParamLocationQuery, *params.DynamicSlippage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.AutoSlippage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "autoSlippage", runtime.ParamLocationQuery, *params.AutoSlippage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.AutoSlippageCollisionUsdValue != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "autoSlippageCollisionUsdValue", runtime.ParamLocationQuery, *params.AutoSlippageCollisionUsdValue); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.ComputeAutoSlippage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "computeAutoSlippage", runtime.ParamLocationQuery, *params.ComputeAutoSlippage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.MaxAutoSlippageBps != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "maxAutoSlippageBps", runtime.ParamLocationQuery, *params.MaxAutoSlippageBps); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1064,70 +622,6 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 
 		}
 
-		if params.MinimizeSlippage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "minimizeSlippage", runtime.ParamLocationQuery, *params.MinimizeSlippage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PreferLiquidDexes != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "preferLiquidDexes", runtime.ParamLocationQuery, *params.PreferLiquidDexes); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.TokenCategoryBasedIntermediateTokens != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "tokenCategoryBasedIntermediateTokens", runtime.ParamLocationQuery, *params.TokenCategoryBasedIntermediateTokens); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PreferSimpleRouting != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "preferSimpleRouting", runtime.ParamLocationQuery, *params.PreferSimpleRouting); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -1219,33 +713,6 @@ func NewPostSwapInstructionsRequestWithBody(server string, contentType string, b
 	return req, nil
 }
 
-// NewGetTokensRequest generates requests for GetTokens
-func NewGetTokensRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/tokens")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -1289,9 +756,6 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetIndexedRouteMapWithResponse request
-	GetIndexedRouteMapWithResponse(ctx context.Context, params *GetIndexedRouteMapParams, reqEditors ...RequestEditorFn) (*GetIndexedRouteMapResponse, error)
-
 	// GetProgramIdToLabelWithResponse request
 	GetProgramIdToLabelWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProgramIdToLabelResponse, error)
 
@@ -1307,31 +771,6 @@ type ClientWithResponsesInterface interface {
 	PostSwapInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapInstructionsResponse, error)
 
 	PostSwapInstructionsWithResponse(ctx context.Context, body PostSwapInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapInstructionsResponse, error)
-
-	// GetTokensWithResponse request
-	GetTokensWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTokensResponse, error)
-}
-
-type GetIndexedRouteMapResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *IndexedRouteMapResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetIndexedRouteMapResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetIndexedRouteMapResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
 }
 
 type GetProgramIdToLabelResponse struct {
@@ -1422,37 +861,6 @@ func (r PostSwapInstructionsResponse) StatusCode() int {
 	return 0
 }
 
-type GetTokensResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *[]string
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTokensResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTokensResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// GetIndexedRouteMapWithResponse request returning *GetIndexedRouteMapResponse
-func (c *ClientWithResponses) GetIndexedRouteMapWithResponse(ctx context.Context, params *GetIndexedRouteMapParams, reqEditors ...RequestEditorFn) (*GetIndexedRouteMapResponse, error) {
-	rsp, err := c.GetIndexedRouteMap(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetIndexedRouteMapResponse(rsp)
-}
-
 // GetProgramIdToLabelWithResponse request returning *GetProgramIdToLabelResponse
 func (c *ClientWithResponses) GetProgramIdToLabelWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProgramIdToLabelResponse, error) {
 	rsp, err := c.GetProgramIdToLabel(ctx, reqEditors...)
@@ -1503,41 +911,6 @@ func (c *ClientWithResponses) PostSwapInstructionsWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParsePostSwapInstructionsResponse(rsp)
-}
-
-// GetTokensWithResponse request returning *GetTokensResponse
-func (c *ClientWithResponses) GetTokensWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTokensResponse, error) {
-	rsp, err := c.GetTokens(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTokensResponse(rsp)
-}
-
-// ParseGetIndexedRouteMapResponse parses an HTTP response from a GetIndexedRouteMapWithResponse call
-func ParseGetIndexedRouteMapResponse(rsp *http.Response) (*GetIndexedRouteMapResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetIndexedRouteMapResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest IndexedRouteMapResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
 }
 
 // ParseGetProgramIdToLabelResponse parses an HTTP response from a GetProgramIdToLabelWithResponse call
@@ -1634,32 +1007,6 @@ func ParsePostSwapInstructionsResponse(rsp *http.Response) (*PostSwapInstruction
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SwapInstructionsResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTokensResponse parses an HTTP response from a GetTokensWithResponse call
-func ParseGetTokensResponse(rsp *http.Response) (*GetTokensResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTokensResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []string
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
