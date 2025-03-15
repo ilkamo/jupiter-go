@@ -224,13 +224,10 @@ WaitForCommitmentStatus(
 ) (MonitorResponse, error)
 ```
 
-## API URLs
-
-This library provides two options to leverage for Jupiter APIs. 
-
-The default Jupiter API provided by the official Jupiter team can be used via `jupiter.DefaultAPIURL`.
-
-The second Jupiter API option leverages [jupiterapi.com](https://www.jupiterapi.com/) (Community Project). This endpoint provides higher rate limits, but *includes a small 0.2% platform fee*. This API can be used via `jupiter.JupiterAPIURL`.
+## Notes
+- Starting with **v0.1.0**, _jupiter-go_ supports the new Jupiter API as documented at [station.jup.ag/docs](https://station.jup.ag/docs/).
+  - It supports both **prioritization fee** and **Jito tips**.
+- For those who need to use the legacy API, **v0.0.24** is the final version supporting it. Note that legacy Jupiter API hostnames will be fully deprecated on **June 1, 2025**.
 
 ## Contribute
 
@@ -245,3 +242,7 @@ This library is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you find this library useful and want to support its development, consider donating some JUP/Solana to the following address:
 
 `BXzmfHxfEMcMj8hDccUNdrwXVNeybyfb2iV2nktE1VnJ`
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=ilkamo/jupiter-go&type=Date)](https://www.star-history.com/#ilkamo/jupiter-go&Date)
