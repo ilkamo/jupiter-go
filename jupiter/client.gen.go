@@ -92,7 +92,6 @@ type SwapInstructionsResponse struct {
 
 	// ComputeBudgetInstructions The necessary instructions to setup the compute budget.
 	ComputeBudgetInstructions []Instruction `json:"computeBudgetInstructions"`
-	OtherInstructions         Instruction   `json:"otherInstructions"`
 
 	// SetupInstructions Setup missing ATA for the users.
 	SetupInstructions []Instruction `json:"setupInstructions"`
