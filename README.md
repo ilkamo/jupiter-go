@@ -45,7 +45,7 @@ func main() {
 	// The amount is the smallest unit of the input token.
 	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, &jupiter.GetQuoteParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
-		OutputMint:  "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk",
+		OutputMint:  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
 		Amount:      100000,
 		SlippageBps: &slippageBps,
 	})
@@ -74,6 +74,7 @@ func main() {
 	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = "high"
 
 	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
+	// Look at _examples/jitoswap/main.go for more details.
 	// *prioritizationFeeLamports.JitoTipLamports = 1000
 
 	dynamicComputeUnitLimit := true
@@ -133,7 +134,7 @@ func main() {
 }
 ```
 
-A full swap example is available in the [examples/swap](_examples/swap) folder.
+A full swap example is available in the [examples/swap](_examples/swap) folder. For a swap with Jito tips, check the [examples/jitoswap](_examples/jitoswap) folder.
 
 A transaction monitoring example using websocket is available in the [examples/txmonitor](_examples/txmonitor) folder.
 
