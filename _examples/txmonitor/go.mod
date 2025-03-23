@@ -1,6 +1,6 @@
 module main.go
 
-go 1.22.1
+go 1.24.1
 
 require github.com/ilkamo/jupiter-go v0.0.8
 

@@ -92,7 +92,9 @@ type SwapInstructionsResponse struct {
 
 	// ComputeBudgetInstructions The necessary instructions to setup the compute budget.
 	ComputeBudgetInstructions []Instruction `json:"computeBudgetInstructions"`
-	OtherInstructions         Instruction   `json:"otherInstructions"`
+
+	// OtherInstructions If you set `{"prioritizationFeeLamports": {"jitoTipLamports": 5000}}`, you will see a custom tip instruction to Jito here.
+	OtherInstructions []Instruction `json:"otherInstructions"`
 
 	// SetupInstructions Setup missing ATA for the users.
 	SetupInstructions []Instruction `json:"setupInstructions"`

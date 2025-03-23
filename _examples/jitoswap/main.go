@@ -48,20 +48,10 @@ func main() {
 			PriorityLevel *string `json:"priorityLevel,omitempty"`
 		} `json:"priorityLevelWithMaxLamports,omitempty"`
 	}{
-		PriorityLevelWithMaxLamports: &struct {
-			MaxLamports   *int    `json:"maxLamports,omitempty"`
-			PriorityLevel *string `json:"priorityLevel,omitempty"`
-		}{
-			MaxLamports:   new(int),
-			PriorityLevel: new(string),
-		},
+		JitoTipLamports: new(int),
 	}
 
-	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
-	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = "high"
-
-	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
-	// *prioritizationFeeLamports.JitoTipLamports = 1000
+	*prioritizationFeeLamports.JitoTipLamports = 1000
 
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
