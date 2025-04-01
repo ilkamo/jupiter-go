@@ -344,6 +344,9 @@ components:
         computeUnitPriceMicroLamports:
           description: "- To specify a compute unit price to calculate priority fee\n- `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`\n- **We recommend using `prioritizationFeeLamports` and `dynamicComputeUnitLimit` instead of passing in a compute unit price**"
           type: integer
+        blockhashSlotsToExpiry:
+          description: "Pass in the number of slots we want the transaction to be valid for\n- Example: If you pass in 10 slots, the transaction will be valid for ~400ms * 10 = approximately 4 seconds before it expires"
+          type: integer
         quoteResponse:
           $ref: '#/components/schemas/QuoteResponse'
 

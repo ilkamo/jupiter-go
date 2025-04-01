@@ -111,6 +111,10 @@ type SwapRequest struct {
 	// - Used together with `asLegacyTransaction` in /quote, otherwise the transaction might be too large
 	AsLegacyTransaction *bool `json:"asLegacyTransaction,omitempty"`
 
+	// BlockhashSlotsToExpiry Pass in the number of slots we want the transaction to be valid for
+	// - Example: If you pass in 10 slots, the transaction will be valid for ~400ms * 10 = approximately 4 seconds before it expires
+	BlockhashSlotsToExpiry *int `json:"blockhashSlotsToExpiry,omitempty"`
+
 	// ComputeUnitPriceMicroLamports - To specify a compute unit price to calculate priority fee
 	// - `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`
 	// - **We recommend using `prioritizationFeeLamports` and `dynamicComputeUnitLimit` instead of passing in a compute unit price**
