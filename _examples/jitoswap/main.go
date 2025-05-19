@@ -24,7 +24,7 @@ func main() {
 	quoteResponse, err := jupClient.QuoteGetWithResponse(ctx, &jupiter.QuoteGetParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
 		OutputMint:  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-		Amount:      1000,
+		Amount:      100000,
 		SlippageBps: &slippageBps,
 	})
 	if err != nil {
