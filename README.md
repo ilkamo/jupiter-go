@@ -38,12 +38,12 @@ func main() {
 
 	ctx := context.TODO()
 
-	slippageBps := float32(250.0)
+	slippageBps := 250
 
 	// Get the current quote for a swap.
 	// Ensure that the input and output mints are valid.
 	// The amount is the smallest unit of the input token.
-	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, &jupiter.GetQuoteParams{
+	quoteResponse, err := jupClient.QuoteGetWithResponse(ctx, &jupiter.QuoteGetParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
 		OutputMint:  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
 		Amount:      100000,
@@ -54,24 +54,24 @@ func main() {
 	quote := quoteResponse.JSON200
 
 	// Define the prioritization fee in lamports.
-	prioritizationFeeLamports := &struct {
-		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
-		PriorityLevelWithMaxLamports *struct {
-			MaxLamports   *int    `json:"maxLamports,omitempty"`
-			PriorityLevel *string `json:"priorityLevel,omitempty"`
-		} `json:"priorityLevelWithMaxLamports,omitempty"`
-	}{
-		PriorityLevelWithMaxLamports: &struct {
-			MaxLamports   *int    `json:"maxLamports,omitempty"`
-			PriorityLevel *string `json:"priorityLevel,omitempty"`
-		}{
-			MaxLamports:   new(int),
-			PriorityLevel: new(string),
-		},
-	}
-
-	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
-	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = "high"
+    prioritizationFeeLamports := &struct {
+        JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+        PriorityLevelWithMaxLamports *struct {
+            MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+            PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
+        } `json:"priorityLevelWithMaxLamports,omitempty"`
+    }{
+        PriorityLevelWithMaxLamports: &struct {
+            MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+            PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
+        }{
+            MaxLamports:   new(int),
+            PriorityLevel: new(jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel),
+        },
+    }
+  
+    *prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
+    *prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = jupiter.High
 
 	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
 	// Look at _examples/jitoswap/main.go for more details.
@@ -80,7 +80,7 @@ func main() {
 	dynamicComputeUnitLimit := true
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
-	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
+	swapResponse, err := jupClient.SwapPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
 		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
@@ -143,46 +143,46 @@ A transaction monitoring example using websocket is available in the [examples/t
 The Jupiter client is generated from the [official Jupiter openapi definition](https://github.com/jup-ag/jupiter-quote-api-node/blob/main/swagger.yaml) and provides the following methods to interact with the Jupiter API:
 
 ```go
-// GetProgramIdToLabelWithResponse request
-GetProgramIdToLabelWithResponse(
+// ProgramIdToLabelGetWithResponse request
+ProgramIdToLabelGetWithResponse(
 	ctx context.Context, 
 	reqEditors ...RequestEditorFn,
-) (*GetProgramIdToLabelResponse, error)
+) (*ProgramIdToLabelGetResponse, error)
 
-// GetQuoteWithResponse request
-GetQuoteWithResponse(
+// QuoteGetWithResponse request
+QuoteGetWithResponse(
 	ctx context.Context, 
-	params *GetQuoteParams, 
+	params *QuoteGetParams, 
 	reqEditors ...RequestEditorFn, 
-) (*GetQuoteResponse, error)
+) (*QuoteGetResponse, error)
 
-// PostSwapWithBodyWithResponse request with any body
-PostSwapWithBodyWithResponse(
+// SwapPostWithBodyWithResponse request with any body
+SwapPostWithBodyWithResponse(
 	ctx context.Context, 
 	contentType string, 
 	body io.Reader, 
 	reqEditors ...RequestEditorFn, 
-) (*PostSwapResponse, error)
+) (*SwapPostResponse, error)
 
-PostSwapWithResponse(
+SwapPostWithResponse(
 	ctx context.Context, 
-	body PostSwapJSONRequestBody, 
+	body SwapPostJSONRequestBody, 
 	reqEditors ...RequestEditorFn,
-) (*PostSwapResponse, error)
+) (*SwapPostResponse, error)
 
-// PostSwapInstructionsWithBodyWithResponse request with any body
-PostSwapInstructionsWithBodyWithResponse(
+// SwapInstructionsPostWithBodyWithResponse request with any body
+SwapInstructionsPostWithBodyWithResponse(
 	ctx context.Context, 
 	contentType string, 
 	body io.Reader, 
 	reqEditors ...RequestEditorFn,
-) (*PostSwapInstructionsResponse, error)
+) (*SwapInstructionsPostResponse, error)
 
-PostSwapInstructionsWithResponse(
+SwapInstructionsPostWithResponse(
 	ctx context.Context, 
-	body PostSwapInstructionsJSONRequestBody, 
+	body SwapInstructionsPostJSONRequestBody, 
 	reqEditors ...RequestEditorFn, 
-) (*PostSwapInstructionsResponse, error)
+) (*SwapInstructionsPostResponse, error)
 ```
 
 ## Solana client
