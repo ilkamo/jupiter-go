@@ -54,24 +54,24 @@ func main() {
 	quote := quoteResponse.JSON200
 
 	// Define the prioritization fee in lamports.
-    prioritizationFeeLamports := &struct {
-        JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
-        PriorityLevelWithMaxLamports *struct {
-            MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
-            PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
-        } `json:"priorityLevelWithMaxLamports,omitempty"`
-    }{
-        PriorityLevelWithMaxLamports: &struct {
-            MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
-            PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
+        prioritizationFeeLamports := &struct {
+            JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+            PriorityLevelWithMaxLamports *struct {
+                MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+                PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
+            } `json:"priorityLevelWithMaxLamports,omitempty"`
         }{
-            MaxLamports:   new(int),
-            PriorityLevel: new(jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel),
-        },
-    }
-  
-    *prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
-    *prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = jupiter.High
+            PriorityLevelWithMaxLamports: &struct {
+                MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+                PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
+            }{
+                MaxLamports:   new(int),
+                PriorityLevel: new(jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel),
+            },
+        }
+      
+        *prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
+        *prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = jupiter.High
 
 	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
 	// Look at _examples/jitoswap/main.go for more details.
