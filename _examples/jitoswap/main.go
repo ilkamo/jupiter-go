@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ilkamo/jupiter-go/jupiter"
@@ -55,7 +54,7 @@ func main() {
 
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
-	swapResponse, err := jupClient.SwapInstructionsPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
+	swapResponse, err := jupClient.SwapPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
 		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
@@ -70,7 +69,6 @@ func main() {
 	}
 
 	swap := swapResponse.JSON200
-	fmt.Printf("%+v", swap)
 
 	// Create a wallet from private key.
 	walletPrivateKey := "{YOUR_PRIVATE_KEY}"
@@ -86,7 +84,7 @@ func main() {
 	}
 
 	// Sign and send the transaction.
-	signedTx, err := solanaClient.SendTransactionOnChain(ctx, swap.SwapInstruction.Data)
+	signedTx, err := solanaClient.SendTransactionOnChain(ctx, swap.SwapTransaction)
 	if err != nil {
 		panic(err)
 	}
