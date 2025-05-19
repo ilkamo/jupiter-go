@@ -226,6 +226,7 @@ WaitForCommitmentStatus(
 ```
 
 ## Notes
+- Starting with **v0.2.0**, methods and parameters were renamed to align with the Jupiter OpenAPI definition.
 - Starting with **v0.1.0**, _jupiter-go_ supports the new Jupiter API as documented at [station.jup.ag/docs](https://station.jup.ag/docs/).
   - It supports both **prioritization fee** and **Jito tips**.
 - For those who need to use the legacy API, **v0.0.24** is the final version supporting it. Note that legacy Jupiter API hostnames will be fully deprecated on **June 1, 2025**.
