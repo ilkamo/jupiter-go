@@ -18,8 +18,27 @@ import (
 
 // Defines values for SwapMode.
 const (
-	ExactIn  SwapMode = "ExactIn"
-	ExactOut SwapMode = "ExactOut"
+	SwapModeExactIn  SwapMode = "ExactIn"
+	SwapModeExactOut SwapMode = "ExactOut"
+)
+
+// Defines values for SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel.
+const (
+	High     SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel = "high"
+	Medium   SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel = "medium"
+	VeryHigh SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel = "veryHigh"
+)
+
+// Defines values for SwapModeParameter.
+const (
+	SwapModeParameterExactIn  SwapModeParameter = "ExactIn"
+	SwapModeParameterExactOut SwapModeParameter = "ExactOut"
+)
+
+// Defines values for QuoteGetParamsSwapMode.
+const (
+	ExactIn  QuoteGetParamsSwapMode = "ExactIn"
+	ExactOut QuoteGetParamsSwapMode = "ExactOut"
 )
 
 // AccountMeta defines model for AccountMeta.
@@ -49,11 +68,11 @@ type QuoteResponse struct {
 	InputMint   string   `json:"inputMint"`
 
 	// OtherAmountThreshold - Calculated minimum output amount after accounting for `slippageBps` and `platformFeeBps`
-	// - Not used by build transaction
+	// - Not used by `/swap` endpoint to build transaction
 	OtherAmountThreshold string `json:"otherAmountThreshold"`
 
-	// OutAmount - Calculated output amount from routing algorithm
-	// - Exlcuding network fees, slippage or platform fees
+	// OutAmount - Calculated output amount from routing engine
+	// - Exlcuding slippage or platform fees
 	OutAmount      string          `json:"outAmount"`
 	OutputMint     string          `json:"outputMint"`
 	PlatformFee    *PlatformFee    `json:"platformFee,omitempty"`
@@ -61,9 +80,7 @@ type QuoteResponse struct {
 	RoutePlan      []RoutePlanStep `json:"routePlan"`
 	SlippageBps    int32           `json:"slippageBps"`
 	SwapMode       SwapMode        `json:"swapMode"`
-
-	// TimeTaken Time taken to determine quote
-	TimeTaken *float32 `json:"timeTaken,omitempty"`
+	TimeTaken      *float32        `json:"timeTaken,omitempty"`
 }
 
 // RoutePlanStep defines model for RoutePlanStep.
@@ -86,17 +103,17 @@ type SwapInfo struct {
 
 // SwapInstructionsResponse defines model for SwapInstructionsResponse.
 type SwapInstructionsResponse struct {
-	// AddressLookupTableAddresses The lookup table addresses that you can use if you are using versioned transaction.
+	// AddressLookupTableAddresses - The lookup table addresses if you are using versioned transaction.
 	AddressLookupTableAddresses []string     `json:"addressLookupTableAddresses"`
 	CleanupInstruction          *Instruction `json:"cleanupInstruction,omitempty"`
 
-	// ComputeBudgetInstructions The necessary instructions to setup the compute budget.
+	// ComputeBudgetInstructions - To setup the compute budget for the transaction.
 	ComputeBudgetInstructions []Instruction `json:"computeBudgetInstructions"`
 
-	// OtherInstructions If you set `{"prioritizationFeeLamports": {"jitoTipLamports": 5000}}`, you will see a custom tip instruction to Jito here.
-	OtherInstructions []Instruction `json:"otherInstructions"`
+	// OtherInstructions - If you set `{\"prioritizationFeeLamports\": {\"jitoTipLamports\": 5000}}`, you will see a custom tip instruction to Jito here.
+	OtherInstructions *[]Instruction `json:"otherInstructions,omitempty"`
 
-	// SetupInstructions Setup missing ATA for the users.
+	// SetupInstructions - To setup required token accounts for the users.
 	SetupInstructions []Instruction `json:"setupInstructions"`
 	SwapInstruction   Instruction   `json:"swapInstruction"`
 }
@@ -106,62 +123,58 @@ type SwapMode string
 
 // SwapRequest defines model for SwapRequest.
 type SwapRequest struct {
-	// AsLegacyTransaction Default: false
-	// - Request a legacy transaction rather than the default versioned transaction
-	// - Used together with `asLegacyTransaction` in /quote, otherwise the transaction might be too large
+	// AsLegacyTransaction - Builds a legacy transaction rather than the default versioned transaction
+	// - Used together with `asLegacyTransaction` in `/quote`, otherwise the transaction might be too large
 	AsLegacyTransaction *bool `json:"asLegacyTransaction,omitempty"`
 
-	// BlockhashSlotsToExpiry Pass in the number of slots we want the transaction to be valid for
+	// BlockhashSlotsToExpiry - Pass in the number of slots we want the transaction to be valid for
 	// - Example: If you pass in 10 slots, the transaction will be valid for ~400ms * 10 = approximately 4 seconds before it expires
 	BlockhashSlotsToExpiry *int `json:"blockhashSlotsToExpiry,omitempty"`
 
-	// ComputeUnitPriceMicroLamports - To specify a compute unit price to calculate priority fee
+	// ComputeUnitPriceMicroLamports - To use an exact compute unit price to calculate priority fee
 	// - `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`
-	// - **We recommend using `prioritizationFeeLamports` and `dynamicComputeUnitLimit` instead of passing in a compute unit price**
+	// - We recommend using `prioritizationFeeLamports` and `dynamicComputeUnitLimit` instead of passing in your own compute unit price
 	ComputeUnitPriceMicroLamports *int `json:"computeUnitPriceMicroLamports,omitempty"`
 
 	// DestinationTokenAccount - Public key of a token account that will be used to receive the token out of the swap
-	// - If not provided, the signer's ATA will be used
+	// - If not provided, the signer's token account will be used
 	// - If provided, we assume that the token account is already initialized
 	DestinationTokenAccount *string `json:"destinationTokenAccount,omitempty"`
 
-	// DynamicComputeUnitLimit Default: false
-	// - When enabled, it will do a swap simulation to get the compute unit used and set it in ComputeBudget's compute unit limit
-	// - This will increase latency slightly since there will be one extra RPC call to simulate this
-	// - This can be useful to estimate compute unit correctly and reduce priority fees needed or have higher chance to be included in a block
+	// DynamicComputeUnitLimit - When enabled, it will do a swap simulation to get the compute unit used and set it in ComputeBudget's compute unit limit
+	// - This incurs one extra RPC call to simulate this
+	// - We recommend to enable this to estimate compute unit correctly and reduce priority fees needed or have higher chance to be included in a block
 	DynamicComputeUnitLimit *bool `json:"dynamicComputeUnitLimit,omitempty"`
 
-	// DynamicSlippage Default: false
-	// - When enabled, it estimate slippage and apply it in the swap transaction directly, overwriting the `slippageBps` parameter in the quote response.
+	// DynamicSlippage - When enabled, it estimates slippage and apply it in the swap transaction directly, overwriting the `slippageBps` parameter in the quote response.
+	// - Used together with `dynamicSlippage` in `/quote`, otherwise the slippage used will be the one in the `/quote`'s `slippageBps`
 	// - [See notes for more information](/docs/swap-api/send-swap-transaction#how-jupiter-estimates-slippage)
 	DynamicSlippage *bool `json:"dynamicSlippage,omitempty"`
 
-	// FeeAccount - An Associated Token Address (ATA) of specific mints depending on `SwapMode` to collect fees
-	// - You no longer need the Referral Program
+	// FeeAccount - An token account that will be used to collect fees
+	// - The mint of the token account **can only be either the input or output mint of the swap**
+	// - You no longer are required to use the Referral Program
 	// - See [Add Fees](/docs/swap-api/add-fees-to-swap) guide for more details
 	FeeAccount *string `json:"feeAccount,omitempty"`
 
 	// PrioritizationFeeLamports - To specify a level or amount of additional fees to prioritize the transaction
-	// - It can be used for EITHER priority fee OR Jito tip
+	// - It can be used for EITHER priority fee OR Jito tip (not both at the same time)
 	// - If you want to include both, you will need to use `/swap-instructions` to add both at the same time
 	PrioritizationFeeLamports *struct {
 		// JitoTipLamports - Exact amount of tip to use in a tip instruction
-		// - Estimate how much to set using Jito tip percentiles endpoint
+		// - Refer to Jito docs on how to estimate the tip amount based on percentiles
 		// - It has to be used together with a connection to a Jito RPC
 		// - [See their docs](https://docs.jito.wtf/)
 		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
 		PriorityLevelWithMaxLamports *struct {
-			// MaxLamports Maximum lamports to cap the priority fee estimation, to prevent overpaying
-			MaxLamports *int `json:"maxLamports,omitempty"`
-
-			// PriorityLevel Either `medium`, `high` or `veryHigh`
-			PriorityLevel *string `json:"priorityLevel,omitempty"`
+			// MaxLamports - Maximum lamports to cap the priority fee estimation, to prevent overpaying
+			MaxLamports   *int                                                                           `json:"maxLamports,omitempty"`
+			PriorityLevel *SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
 		} `json:"priorityLevelWithMaxLamports,omitempty"`
 	} `json:"prioritizationFeeLamports,omitempty"`
 	QuoteResponse QuoteResponse `json:"quoteResponse"`
 
-	// SkipUserAccountsRpcCalls Default: false
-	// - When enabled, it will not do any additional RPC calls to check on user's accounts
+	// SkipUserAccountsRpcCalls - When enabled, it will not do any additional RPC calls to check on required accounts
 	// - Enable it only when you already setup all the accounts needed for the trasaction, like wrapping or unwrapping sol, or destination account is already created
 	SkipUserAccountsRpcCalls *bool `json:"skipUserAccountsRpcCalls,omitempty"`
 
@@ -170,20 +183,21 @@ type SwapRequest struct {
 	// - Query the data using a block explorer like Solscan/SolanaFM or query like Dune/Flipside
 	TrackingAccount *string `json:"trackingAccount,omitempty"`
 
-	// UseSharedAccounts Default: true
+	// UseSharedAccounts - The default is determined dynamically by the routing engine, allowing us to optimize for compute units, etc
 	// - This enables the usage of shared program accounts, this is essential as complex routing will require multiple intermediate token accounts which the user might not have
-	// - If true, you do not need to handle the creation of intermediate token accounts for the user.
-	UseSharedAccounts *bool `json:"useSharedAccounts,omitempty"`
+	// - If true, you do not need to handle the creation of intermediate token accounts for the user
+	// - Do note, shared accounts route will fail on some new AMMs (low liquidity token)
+	UseSharedAccounts *bool  `json:"useSharedAccounts,omitempty"`
+	UserPublicKey     string `json:"userPublicKey"`
 
-	// UserPublicKey The user public key
-	UserPublicKey string `json:"userPublicKey"`
-
-	// WrapAndUnwrapSol Default: true
-	// - To automatically wrap/unwrap SOL in the transaction
+	// WrapAndUnwrapSol - To automatically wrap/unwrap SOL in the transaction
 	// - If false, it will use wSOL token account
 	// - Parameter will be ignored if `destinationTokenAccount` is set because the `destinationTokenAccount` may belong to a different user that we have no authority to close
 	WrapAndUnwrapSol *bool `json:"wrapAndUnwrapSol,omitempty"`
 }
+
+// SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel defines model for SwapRequest.PrioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel.
+type SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel string
 
 // SwapResponse defines model for SwapResponse.
 type SwapResponse struct {
@@ -192,50 +206,106 @@ type SwapResponse struct {
 	SwapTransaction           string `json:"swapTransaction"`
 }
 
-// GetQuoteParams defines parameters for GetQuote.
-type GetQuoteParams struct {
-	// InputMint Input token mint address
-	InputMint string `form:"inputMint" json:"inputMint"`
+// AmountParameter defines model for AmountParameter.
+type AmountParameter = int
 
-	// OutputMint Output token mint address
-	OutputMint string `form:"outputMint" json:"outputMint"`
+// AsLegacyTransactionParameter defines model for AsLegacyTransactionParameter.
+type AsLegacyTransactionParameter = bool
 
-	// Amount Amount of input token
-	Amount float32 `form:"amount" json:"amount"`
+// DexesParameter defines model for DexesParameter.
+type DexesParameter = []string
 
-	// SlippageBps Slippage in basis points
-	SlippageBps *float32 `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
+// DynamicSlippage defines model for DynamicSlippage.
+type DynamicSlippage = bool
 
-	// SwapMode Swap mode (ExactIn or ExactOut)
-	SwapMode *SwapMode `form:"swapMode,omitempty" json:"swapMode,omitempty"`
+// ExcludeDexesParameter defines model for ExcludeDexesParameter.
+type ExcludeDexesParameter = []string
 
-	// Dexes List of DEXes to include
-	Dexes *[]string `form:"dexes,omitempty" json:"dexes,omitempty"`
+// InputMintParameter defines model for InputMintParameter.
+type InputMintParameter = string
 
-	// ExcludeDexes List of DEXes to exclude
-	ExcludeDexes *[]string `form:"excludeDexes,omitempty" json:"excludeDexes,omitempty"`
+// MaxAccountsParameter defines model for MaxAccountsParameter.
+type MaxAccountsParameter = int
 
-	// RestrictIntermediateTokens Whether to restrict intermediate tokens
-	RestrictIntermediateTokens *bool `form:"restrictIntermediateTokens,omitempty" json:"restrictIntermediateTokens,omitempty"`
+// OnlyDirectRoutesParameter defines model for OnlyDirectRoutesParameter.
+type OnlyDirectRoutesParameter = bool
 
-	// OnlyDirectRoutes Whether to only use direct routes
-	OnlyDirectRoutes *bool `form:"onlyDirectRoutes,omitempty" json:"onlyDirectRoutes,omitempty"`
+// OutputMintParameter defines model for OutputMintParameter.
+type OutputMintParameter = string
 
-	// AsLegacyTransaction Whether to use legacy transaction
-	AsLegacyTransaction *bool `form:"asLegacyTransaction,omitempty" json:"asLegacyTransaction,omitempty"`
+// PlatformFeeBpsParameter defines model for PlatformFeeBpsParameter.
+type PlatformFeeBpsParameter = int
 
-	// PlatformFeeBps Platform fee in basis points
-	PlatformFeeBps *float32 `form:"platformFeeBps,omitempty" json:"platformFeeBps,omitempty"`
+// RestrictIntermediateTokensParameter defines model for RestrictIntermediateTokensParameter.
+type RestrictIntermediateTokensParameter = bool
 
-	// MaxAccounts Maximum number of accounts
-	MaxAccounts *float32 `form:"maxAccounts,omitempty" json:"maxAccounts,omitempty"`
+// SlippageParameter defines model for SlippageParameter.
+type SlippageParameter = int
+
+// SwapModeParameter defines model for SwapModeParameter.
+type SwapModeParameter string
+
+// QuoteGetParams defines parameters for QuoteGet.
+type QuoteGetParams struct {
+	InputMint  InputMintParameter  `form:"inputMint" json:"inputMint"`
+	OutputMint OutputMintParameter `form:"outputMint" json:"outputMint"`
+
+	// Amount - Raw amount to swap (before decimals)
+	// - Input Amount if `SwapMode=ExactIn`
+	// - Output Amount if `SwapMode=ExactOut`
+	Amount      AmountParameter    `form:"amount" json:"amount"`
+	SlippageBps *SlippageParameter `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
+
+	// SwapMode - ExactOut is for supporting use cases where you need an exact output amount, like https://station.jup.ag/docs/swap-api/payments-through-swap
+	// - In the case of `ExactIn`, the slippage is on the output token
+	// - In the case of `ExactOut`, the slippage is on the input token
+	// - Not all AMMs support `ExactOut`
+	SwapMode *QuoteGetParamsSwapMode `form:"swapMode,omitempty" json:"swapMode,omitempty"`
+
+	// Dexes - Multiple DEXes can be pass in by comma separating them
+	// - For example: `dexes=Raydium,Orca+V2,Meteora+DLMM`
+	// - If a DEX is indicated, the route will **only use** that DEX
+	// - [Full list of DEXes here](https://api.jup.ag/swap/v1/program-id-to-label)
+	Dexes *DexesParameter `form:"dexes,omitempty" json:"dexes,omitempty"`
+
+	// ExcludeDexes - Multiple DEXes can be pass in by comma separating them
+	// - For example: `excludeDexes=Raydium,Orca+V2,Meteora+DLMM`
+	// - If a DEX is indicated, the route will **not use** that DEX
+	// - [Full list of DEXes here](https://api.jup.ag/swap/v1/program-id-to-label)
+	ExcludeDexes *ExcludeDexesParameter `form:"excludeDexes,omitempty" json:"excludeDexes,omitempty"`
+
+	// RestrictIntermediateTokens - Restrict intermediate tokens within a route to a set of more stable tokens
+	// - This will help to reduce exposure to potential high slippage routes
+	RestrictIntermediateTokens *RestrictIntermediateTokensParameter `form:"restrictIntermediateTokens,omitempty" json:"restrictIntermediateTokens,omitempty"`
+
+	// OnlyDirectRoutes - Direct Routes limits Jupiter routing to single hop routes only
+	// - This may result in worse routes
+	OnlyDirectRoutes *OnlyDirectRoutesParameter `form:"onlyDirectRoutes,omitempty" json:"onlyDirectRoutes,omitempty"`
+
+	// AsLegacyTransaction - Instead of using versioned transaction, this will use the legacy transaction
+	AsLegacyTransaction *AsLegacyTransactionParameter `form:"asLegacyTransaction,omitempty" json:"asLegacyTransaction,omitempty"`
+
+	// PlatformFeeBps - Take fees in basis points
+	// - Used together with `feeAccount` in /swap, see [Adding Fees](/docs/swap-api/add-fees-to-swap) guide
+	PlatformFeeBps *PlatformFeeBpsParameter `form:"platformFeeBps,omitempty" json:"platformFeeBps,omitempty"`
+
+	// MaxAccounts - Rough estimate of the max accounts to be used for the quote
+	// - Useful if composing your own transaction or to be more precise in resource accounting for better routes
+	MaxAccounts *MaxAccountsParameter `form:"maxAccounts,omitempty" json:"maxAccounts,omitempty"`
+
+	// DynamicSlippage - If true, `slippageBps` will be overriden by Dynamic Slippage's estimated value
+	// - The value is returned in `/swap` endpoint
+	DynamicSlippage *DynamicSlippage `form:"dynamicSlippage,omitempty" json:"dynamicSlippage,omitempty"`
 }
 
-// PostSwapJSONRequestBody defines body for PostSwap for application/json ContentType.
-type PostSwapJSONRequestBody = SwapRequest
+// QuoteGetParamsSwapMode defines parameters for QuoteGet.
+type QuoteGetParamsSwapMode string
 
-// PostSwapInstructionsJSONRequestBody defines body for PostSwapInstructions for application/json ContentType.
-type PostSwapInstructionsJSONRequestBody = SwapRequest
+// SwapPostJSONRequestBody defines body for SwapPost for application/json ContentType.
+type SwapPostJSONRequestBody = SwapRequest
+
+// SwapInstructionsPostJSONRequestBody defines body for SwapInstructionsPost for application/json ContentType.
+type SwapInstructionsPostJSONRequestBody = SwapRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -310,25 +380,25 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetProgramIdToLabel request
-	GetProgramIdToLabel(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// ProgramIdToLabelGet request
+	ProgramIdToLabelGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetQuote request
-	GetQuote(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// QuoteGet request
+	QuoteGet(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostSwapWithBody request with any body
-	PostSwapWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// SwapPostWithBody request with any body
+	SwapPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostSwap(ctx context.Context, body PostSwapJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SwapPost(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostSwapInstructionsWithBody request with any body
-	PostSwapInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// SwapInstructionsPostWithBody request with any body
+	SwapInstructionsPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostSwapInstructions(ctx context.Context, body PostSwapInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SwapInstructionsPost(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetProgramIdToLabel(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetProgramIdToLabelRequest(c.Server)
+func (c *Client) ProgramIdToLabelGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProgramIdToLabelGetRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -339,8 +409,8 @@ func (c *Client) GetProgramIdToLabel(ctx context.Context, reqEditors ...RequestE
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetQuote(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetQuoteRequest(c.Server, params)
+func (c *Client) QuoteGet(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewQuoteGetRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -351,8 +421,8 @@ func (c *Client) GetQuote(ctx context.Context, params *GetQuoteParams, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSwapWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSwapRequestWithBody(c.Server, contentType, body)
+func (c *Client) SwapPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapPostRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -363,8 +433,8 @@ func (c *Client) PostSwapWithBody(ctx context.Context, contentType string, body 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSwap(ctx context.Context, body PostSwapJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSwapRequest(c.Server, body)
+func (c *Client) SwapPost(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapPostRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -375,8 +445,8 @@ func (c *Client) PostSwap(ctx context.Context, body PostSwapJSONRequestBody, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSwapInstructionsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSwapInstructionsRequestWithBody(c.Server, contentType, body)
+func (c *Client) SwapInstructionsPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapInstructionsPostRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -387,8 +457,8 @@ func (c *Client) PostSwapInstructionsWithBody(ctx context.Context, contentType s
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSwapInstructions(ctx context.Context, body PostSwapInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSwapInstructionsRequest(c.Server, body)
+func (c *Client) SwapInstructionsPost(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapInstructionsPostRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -399,8 +469,8 @@ func (c *Client) PostSwapInstructions(ctx context.Context, body PostSwapInstruct
 	return c.Client.Do(req)
 }
 
-// NewGetProgramIdToLabelRequest generates requests for GetProgramIdToLabel
-func NewGetProgramIdToLabelRequest(server string) (*http.Request, error) {
+// NewProgramIdToLabelGetRequest generates requests for ProgramIdToLabelGet
+func NewProgramIdToLabelGetRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -408,7 +478,7 @@ func NewGetProgramIdToLabelRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/program-id-to-label")
+	operationPath := fmt.Sprintf("/swap/v1/program-id-to-label")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -426,8 +496,8 @@ func NewGetProgramIdToLabelRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetQuoteRequest generates requests for GetQuote
-func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, error) {
+// NewQuoteGetRequest generates requests for QuoteGet
+func NewQuoteGetRequest(server string, params *QuoteGetParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -435,7 +505,7 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/quote")
+	operationPath := fmt.Sprintf("/swap/v1/quote")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -628,6 +698,22 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 
 		}
 
+		if params.DynamicSlippage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "dynamicSlippage", runtime.ParamLocationQuery, *params.DynamicSlippage); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -639,19 +725,19 @@ func NewGetQuoteRequest(server string, params *GetQuoteParams) (*http.Request, e
 	return req, nil
 }
 
-// NewPostSwapRequest calls the generic PostSwap builder with application/json body
-func NewPostSwapRequest(server string, body PostSwapJSONRequestBody) (*http.Request, error) {
+// NewSwapPostRequest calls the generic SwapPost builder with application/json body
+func NewSwapPostRequest(server string, body SwapPostJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostSwapRequestWithBody(server, "application/json", bodyReader)
+	return NewSwapPostRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostSwapRequestWithBody generates requests for PostSwap with any type of body
-func NewPostSwapRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewSwapPostRequestWithBody generates requests for SwapPost with any type of body
+func NewSwapPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -659,7 +745,7 @@ func NewPostSwapRequestWithBody(server string, contentType string, body io.Reade
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap")
+	operationPath := fmt.Sprintf("/swap/v1/swap")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -679,19 +765,19 @@ func NewPostSwapRequestWithBody(server string, contentType string, body io.Reade
 	return req, nil
 }
 
-// NewPostSwapInstructionsRequest calls the generic PostSwapInstructions builder with application/json body
-func NewPostSwapInstructionsRequest(server string, body PostSwapInstructionsJSONRequestBody) (*http.Request, error) {
+// NewSwapInstructionsPostRequest calls the generic SwapInstructionsPost builder with application/json body
+func NewSwapInstructionsPostRequest(server string, body SwapInstructionsPostJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostSwapInstructionsRequestWithBody(server, "application/json", bodyReader)
+	return NewSwapInstructionsPostRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostSwapInstructionsRequestWithBody generates requests for PostSwapInstructions with any type of body
-func NewPostSwapInstructionsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewSwapInstructionsPostRequestWithBody generates requests for SwapInstructionsPost with any type of body
+func NewSwapInstructionsPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -699,7 +785,7 @@ func NewPostSwapInstructionsRequestWithBody(server string, contentType string, b
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap-instructions")
+	operationPath := fmt.Sprintf("/swap/v1/swap-instructions")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -762,31 +848,31 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetProgramIdToLabelWithResponse request
-	GetProgramIdToLabelWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProgramIdToLabelResponse, error)
+	// ProgramIdToLabelGetWithResponse request
+	ProgramIdToLabelGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ProgramIdToLabelGetResponse, error)
 
-	// GetQuoteWithResponse request
-	GetQuoteWithResponse(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFn) (*GetQuoteResponse, error)
+	// QuoteGetWithResponse request
+	QuoteGetWithResponse(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*QuoteGetResponse, error)
 
-	// PostSwapWithBodyWithResponse request with any body
-	PostSwapWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapResponse, error)
+	// SwapPostWithBodyWithResponse request with any body
+	SwapPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapPostResponse, error)
 
-	PostSwapWithResponse(ctx context.Context, body PostSwapJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapResponse, error)
+	SwapPostWithResponse(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapPostResponse, error)
 
-	// PostSwapInstructionsWithBodyWithResponse request with any body
-	PostSwapInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapInstructionsResponse, error)
+	// SwapInstructionsPostWithBodyWithResponse request with any body
+	SwapInstructionsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error)
 
-	PostSwapInstructionsWithResponse(ctx context.Context, body PostSwapInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapInstructionsResponse, error)
+	SwapInstructionsPostWithResponse(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error)
 }
 
-type GetProgramIdToLabelResponse struct {
+type ProgramIdToLabelGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *map[string]string
 }
 
 // Status returns HTTPResponse.Status
-func (r GetProgramIdToLabelResponse) Status() string {
+func (r ProgramIdToLabelGetResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -794,21 +880,21 @@ func (r GetProgramIdToLabelResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetProgramIdToLabelResponse) StatusCode() int {
+func (r ProgramIdToLabelGetResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetQuoteResponse struct {
+type QuoteGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *QuoteResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetQuoteResponse) Status() string {
+func (r QuoteGetResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -816,21 +902,21 @@ func (r GetQuoteResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetQuoteResponse) StatusCode() int {
+func (r QuoteGetResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostSwapResponse struct {
+type SwapPostResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SwapResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostSwapResponse) Status() string {
+func (r SwapPostResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -838,21 +924,21 @@ func (r PostSwapResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostSwapResponse) StatusCode() int {
+func (r SwapPostResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostSwapInstructionsResponse struct {
+type SwapInstructionsPostResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *SwapInstructionsResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostSwapInstructionsResponse) Status() string {
+func (r SwapInstructionsPostResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -860,74 +946,74 @@ func (r PostSwapInstructionsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostSwapInstructionsResponse) StatusCode() int {
+func (r SwapInstructionsPostResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetProgramIdToLabelWithResponse request returning *GetProgramIdToLabelResponse
-func (c *ClientWithResponses) GetProgramIdToLabelWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProgramIdToLabelResponse, error) {
-	rsp, err := c.GetProgramIdToLabel(ctx, reqEditors...)
+// ProgramIdToLabelGetWithResponse request returning *ProgramIdToLabelGetResponse
+func (c *ClientWithResponses) ProgramIdToLabelGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ProgramIdToLabelGetResponse, error) {
+	rsp, err := c.ProgramIdToLabelGet(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetProgramIdToLabelResponse(rsp)
+	return ParseProgramIdToLabelGetResponse(rsp)
 }
 
-// GetQuoteWithResponse request returning *GetQuoteResponse
-func (c *ClientWithResponses) GetQuoteWithResponse(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFn) (*GetQuoteResponse, error) {
-	rsp, err := c.GetQuote(ctx, params, reqEditors...)
+// QuoteGetWithResponse request returning *QuoteGetResponse
+func (c *ClientWithResponses) QuoteGetWithResponse(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*QuoteGetResponse, error) {
+	rsp, err := c.QuoteGet(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetQuoteResponse(rsp)
+	return ParseQuoteGetResponse(rsp)
 }
 
-// PostSwapWithBodyWithResponse request with arbitrary body returning *PostSwapResponse
-func (c *ClientWithResponses) PostSwapWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapResponse, error) {
-	rsp, err := c.PostSwapWithBody(ctx, contentType, body, reqEditors...)
+// SwapPostWithBodyWithResponse request with arbitrary body returning *SwapPostResponse
+func (c *ClientWithResponses) SwapPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapPostResponse, error) {
+	rsp, err := c.SwapPostWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostSwapResponse(rsp)
+	return ParseSwapPostResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostSwapWithResponse(ctx context.Context, body PostSwapJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapResponse, error) {
-	rsp, err := c.PostSwap(ctx, body, reqEditors...)
+func (c *ClientWithResponses) SwapPostWithResponse(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapPostResponse, error) {
+	rsp, err := c.SwapPost(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostSwapResponse(rsp)
+	return ParseSwapPostResponse(rsp)
 }
 
-// PostSwapInstructionsWithBodyWithResponse request with arbitrary body returning *PostSwapInstructionsResponse
-func (c *ClientWithResponses) PostSwapInstructionsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapInstructionsResponse, error) {
-	rsp, err := c.PostSwapInstructionsWithBody(ctx, contentType, body, reqEditors...)
+// SwapInstructionsPostWithBodyWithResponse request with arbitrary body returning *SwapInstructionsPostResponse
+func (c *ClientWithResponses) SwapInstructionsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error) {
+	rsp, err := c.SwapInstructionsPostWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostSwapInstructionsResponse(rsp)
+	return ParseSwapInstructionsPostResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostSwapInstructionsWithResponse(ctx context.Context, body PostSwapInstructionsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapInstructionsResponse, error) {
-	rsp, err := c.PostSwapInstructions(ctx, body, reqEditors...)
+func (c *ClientWithResponses) SwapInstructionsPostWithResponse(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error) {
+	rsp, err := c.SwapInstructionsPost(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostSwapInstructionsResponse(rsp)
+	return ParseSwapInstructionsPostResponse(rsp)
 }
 
-// ParseGetProgramIdToLabelResponse parses an HTTP response from a GetProgramIdToLabelWithResponse call
-func ParseGetProgramIdToLabelResponse(rsp *http.Response) (*GetProgramIdToLabelResponse, error) {
+// ParseProgramIdToLabelGetResponse parses an HTTP response from a ProgramIdToLabelGetWithResponse call
+func ParseProgramIdToLabelGetResponse(rsp *http.Response) (*ProgramIdToLabelGetResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetProgramIdToLabelResponse{
+	response := &ProgramIdToLabelGetResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -945,15 +1031,15 @@ func ParseGetProgramIdToLabelResponse(rsp *http.Response) (*GetProgramIdToLabelR
 	return response, nil
 }
 
-// ParseGetQuoteResponse parses an HTTP response from a GetQuoteWithResponse call
-func ParseGetQuoteResponse(rsp *http.Response) (*GetQuoteResponse, error) {
+// ParseQuoteGetResponse parses an HTTP response from a QuoteGetWithResponse call
+func ParseQuoteGetResponse(rsp *http.Response) (*QuoteGetResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetQuoteResponse{
+	response := &QuoteGetResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -971,15 +1057,15 @@ func ParseGetQuoteResponse(rsp *http.Response) (*GetQuoteResponse, error) {
 	return response, nil
 }
 
-// ParsePostSwapResponse parses an HTTP response from a PostSwapWithResponse call
-func ParsePostSwapResponse(rsp *http.Response) (*PostSwapResponse, error) {
+// ParseSwapPostResponse parses an HTTP response from a SwapPostWithResponse call
+func ParseSwapPostResponse(rsp *http.Response) (*SwapPostResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostSwapResponse{
+	response := &SwapPostResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -997,15 +1083,15 @@ func ParsePostSwapResponse(rsp *http.Response) (*PostSwapResponse, error) {
 	return response, nil
 }
 
-// ParsePostSwapInstructionsResponse parses an HTTP response from a PostSwapInstructionsWithResponse call
-func ParsePostSwapInstructionsResponse(rsp *http.Response) (*PostSwapInstructionsResponse, error) {
+// ParseSwapInstructionsPostResponse parses an HTTP response from a SwapInstructionsPostWithResponse call
+func ParseSwapInstructionsPostResponse(rsp *http.Response) (*SwapInstructionsPostResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostSwapInstructionsResponse{
+	response := &SwapInstructionsPostResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

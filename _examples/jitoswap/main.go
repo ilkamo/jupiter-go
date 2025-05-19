@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ilkamo/jupiter-go/jupiter"
@@ -17,12 +16,12 @@ func main() {
 
 	ctx := context.TODO()
 
-	slippageBps := float32(250.0)
+	slippageBps := 250
 
 	// Get the current quote for a swap.
 	// Ensure that the input and output mints are valid.
 	// The amount is the smallest unit of the input token.
-	quoteResponse, err := jupClient.GetQuoteWithResponse(ctx, &jupiter.GetQuoteParams{
+	quoteResponse, err := jupClient.QuoteGetWithResponse(ctx, &jupiter.QuoteGetParams{
 		InputMint:   "So11111111111111111111111111111111111111112",
 		OutputMint:  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
 		Amount:      100000,
@@ -44,8 +43,8 @@ func main() {
 	prioritizationFeeLamports := &struct {
 		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
 		PriorityLevelWithMaxLamports *struct {
-			MaxLamports   *int    `json:"maxLamports,omitempty"`
-			PriorityLevel *string `json:"priorityLevel,omitempty"`
+			MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+			PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
 		} `json:"priorityLevelWithMaxLamports,omitempty"`
 	}{
 		JitoTipLamports: new(int),
@@ -55,7 +54,7 @@ func main() {
 
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
-	swapResponse, err := jupClient.PostSwapWithResponse(ctx, jupiter.PostSwapJSONRequestBody{
+	swapResponse, err := jupClient.SwapPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
 		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
@@ -70,7 +69,6 @@ func main() {
 	}
 
 	swap := swapResponse.JSON200
-	fmt.Printf("%+v", swap)
 
 	// Create a wallet from private key.
 	walletPrivateKey := "{YOUR_PRIVATE_KEY}"

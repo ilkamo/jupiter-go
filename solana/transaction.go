@@ -15,6 +15,11 @@ func NewTransactionFromBase64(txStr string) (solana.Transaction, error) {
 		return solana.Transaction{}, fmt.Errorf("could not decode transaction: %w", err)
 	}
 
+	return NewTransactionFromBytes(txBytes)
+}
+
+// NewTransactionFromBytes deserializes a transaction from a byte array.
+func NewTransactionFromBytes(txBytes []byte) (solana.Transaction, error) {
 	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(txBytes))
 	if err != nil {
 		return solana.Transaction{}, fmt.Errorf("could not deserialize transaction: %w", err)

@@ -24,7 +24,8 @@ func TestSwapInstructionsResponse_Unmarshal(t *testing.T) {
 		require.Len(t, response.SetupInstructions, 4)
 		require.NotEmpty(t, response.SwapInstruction)
 		require.NotEmpty(t, response.CleanupInstruction)
-		require.Len(t, response.OtherInstructions, 1)
+		require.NotNil(t, response.OtherInstructions)
+		require.Len(t, *response.OtherInstructions, 1)
 	})
 
 	t.Run("parse swap instructions without jito tip", func(t *testing.T) {
