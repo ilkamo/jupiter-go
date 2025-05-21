@@ -256,7 +256,7 @@ type QuoteGetParams struct {
 	Amount      AmountParameter    `form:"amount" json:"amount"`
 	SlippageBps *SlippageParameter `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
 
-	// SwapMode - ExactOut is for supporting use cases where you need an exact output amount, like https://station.jup.ag/docs/swap-api/payments-through-swap
+	// SwapMode - ExactOut is for supporting use cases where you need an exact output amount, like using [Swap API as a payment service](/docs/swap-api/payments-through-swap)
 	// - In the case of `ExactIn`, the slippage is on the output token
 	// - In the case of `ExactOut`, the slippage is on the input token
 	// - Not all AMMs support `ExactOut`
@@ -265,13 +265,13 @@ type QuoteGetParams struct {
 	// Dexes - Multiple DEXes can be pass in by comma separating them
 	// - For example: `dexes=Raydium,Orca+V2,Meteora+DLMM`
 	// - If a DEX is indicated, the route will **only use** that DEX
-	// - [Full list of DEXes here](https://api.jup.ag/swap/v1/program-id-to-label)
+	// - [Full list of DEXes here](https://lite-api.jup.ag/swap/v1/program-id-to-label)
 	Dexes *DexesParameter `form:"dexes,omitempty" json:"dexes,omitempty"`
 
 	// ExcludeDexes - Multiple DEXes can be pass in by comma separating them
 	// - For example: `excludeDexes=Raydium,Orca+V2,Meteora+DLMM`
 	// - If a DEX is indicated, the route will **not use** that DEX
-	// - [Full list of DEXes here](https://api.jup.ag/swap/v1/program-id-to-label)
+	// - [Full list of DEXes here](https://lite-api.jup.ag/swap/v1/program-id-to-label)
 	ExcludeDexes *ExcludeDexesParameter `form:"excludeDexes,omitempty" json:"excludeDexes,omitempty"`
 
 	// RestrictIntermediateTokens - Restrict intermediate tokens within a route to a set of more stable tokens
@@ -478,7 +478,7 @@ func NewProgramIdToLabelGetRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap/v1/program-id-to-label")
+	operationPath := fmt.Sprintf("/program-id-to-label")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -505,7 +505,7 @@ func NewQuoteGetRequest(server string, params *QuoteGetParams) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap/v1/quote")
+	operationPath := fmt.Sprintf("/quote")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -745,7 +745,7 @@ func NewSwapPostRequestWithBody(server string, contentType string, body io.Reade
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap/v1/swap")
+	operationPath := fmt.Sprintf("/swap")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -785,7 +785,7 @@ func NewSwapInstructionsPostRequestWithBody(server string, contentType string, b
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap/v1/swap-instructions")
+	operationPath := fmt.Sprintf("/swap-instructions")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
