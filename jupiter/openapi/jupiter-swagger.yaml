@@ -473,6 +473,7 @@ components:
       required: true
       schema:
         type: integer
+        format: int64
     SlippageParameter:
       name: slippageBps
       in: query

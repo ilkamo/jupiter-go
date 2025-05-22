@@ -207,7 +207,7 @@ type SwapResponse struct {
 }
 
 // AmountParameter defines model for AmountParameter.
-type AmountParameter = int
+type AmountParameter = int64
 
 // AsLegacyTransactionParameter defines model for AsLegacyTransactionParameter.
 type AsLegacyTransactionParameter = bool
