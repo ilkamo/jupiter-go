@@ -1,8 +1,8 @@
 module main.go
 
-go 1.24.1
+go 1.25.1
 
-require github.com/ilkamo/jupiter-go v0.1.5-0.20250519165712-573bb0c104c7
+require github.com/ilkamo/jupiter-go v0.2.2
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect

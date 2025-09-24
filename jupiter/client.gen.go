@@ -58,34 +58,35 @@ type Instruction struct {
 // PlatformFee defines model for PlatformFee.
 type PlatformFee struct {
 	Amount *string `json:"amount,omitempty"`
-	FeeBps *int32  `json:"feeBps,omitempty"`
+	FeeBps *uint64 `json:"feeBps,omitempty"`
 }
 
 // QuoteResponse defines model for QuoteResponse.
 type QuoteResponse struct {
-	ContextSlot *float32 `json:"contextSlot,omitempty"`
-	InAmount    string   `json:"inAmount"`
-	InputMint   string   `json:"inputMint"`
+	ContextSlot *uint64 `json:"contextSlot,omitempty"`
+	InAmount    string  `json:"inAmount"`
+	InputMint   string  `json:"inputMint"`
 
-	// OtherAmountThreshold - Calculated minimum output amount after accounting for `slippageBps` and `platformFeeBps`
+	// OtherAmountThreshold - Calculated minimum output amount after accounting for `slippageBps` on the `outAmount` value
 	// - Not used by `/swap` endpoint to build transaction
 	OtherAmountThreshold string `json:"otherAmountThreshold"`
 
 	// OutAmount - Calculated output amount from routing engine
-	// - Exlcuding slippage or platform fees
+	// - The value includes platform fees and DEX fees, excluding slippage
 	OutAmount      string          `json:"outAmount"`
 	OutputMint     string          `json:"outputMint"`
 	PlatformFee    *PlatformFee    `json:"platformFee,omitempty"`
 	PriceImpactPct string          `json:"priceImpactPct"`
 	RoutePlan      []RoutePlanStep `json:"routePlan"`
-	SlippageBps    int32           `json:"slippageBps"`
+	SlippageBps    uint64          `json:"slippageBps"`
 	SwapMode       SwapMode        `json:"swapMode"`
 	TimeTaken      *float32        `json:"timeTaken,omitempty"`
 }
 
 // RoutePlanStep defines model for RoutePlanStep.
 type RoutePlanStep struct {
-	Percent  int32    `json:"percent"`
+	Bps      *uint64  `json:"bps,omitempty"`
+	Percent  uint64   `json:"percent"`
 	SwapInfo SwapInfo `json:"swapInfo"`
 }
 
@@ -129,12 +130,12 @@ type SwapRequest struct {
 
 	// BlockhashSlotsToExpiry - Pass in the number of slots we want the transaction to be valid for
 	// - Example: If you pass in 10 slots, the transaction will be valid for ~400ms * 10 = approximately 4 seconds before it expires
-	BlockhashSlotsToExpiry *int `json:"blockhashSlotsToExpiry,omitempty"`
+	BlockhashSlotsToExpiry *uint64 `json:"blockhashSlotsToExpiry,omitempty"`
 
 	// ComputeUnitPriceMicroLamports - To use an exact compute unit price to calculate priority fee
 	// - `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`
 	// - We recommend using `prioritizationFeeLamports` and `dynamicComputeUnitLimit` instead of passing in your own compute unit price
-	ComputeUnitPriceMicroLamports *int `json:"computeUnitPriceMicroLamports,omitempty"`
+	ComputeUnitPriceMicroLamports *uint64 `json:"computeUnitPriceMicroLamports,omitempty"`
 
 	// DestinationTokenAccount - Public key of a token account that will be used to receive the token out of the swap
 	// - If not provided, the signer's token account will be used
@@ -157,6 +158,10 @@ type SwapRequest struct {
 	// - See [Add Fees](/docs/swap-api/add-fees-to-swap) guide for more details
 	FeeAccount *string `json:"feeAccount,omitempty"`
 
+	// Payer - Allow a custom payer to pay for the transaction fees and rent of token accounts
+	// - Note that users can close their ATAs elsewhere and have you reopen them again, your fees should account for this
+	Payer *string `json:"payer,omitempty"`
+
 	// PrioritizationFeeLamports - To specify a level or amount of additional fees to prioritize the transaction
 	// - It can be used for EITHER priority fee OR Jito tip (not both at the same time)
 	// - If you want to include both, you will need to use `/swap-instructions` to add both at the same time
@@ -165,17 +170,17 @@ type SwapRequest struct {
 		// - Refer to Jito docs on how to estimate the tip amount based on percentiles
 		// - It has to be used together with a connection to a Jito RPC
 		// - [See their docs](https://docs.jito.wtf/)
-		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+		JitoTipLamports              *uint64 `json:"jitoTipLamports,omitempty"`
 		PriorityLevelWithMaxLamports *struct {
 			// MaxLamports - Maximum lamports to cap the priority fee estimation, to prevent overpaying
-			MaxLamports   *int                                                                           `json:"maxLamports,omitempty"`
+			MaxLamports   *uint64                                                                        `json:"maxLamports,omitempty"`
 			PriorityLevel *SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
 		} `json:"priorityLevelWithMaxLamports,omitempty"`
 	} `json:"prioritizationFeeLamports,omitempty"`
 	QuoteResponse QuoteResponse `json:"quoteResponse"`
 
 	// SkipUserAccountsRpcCalls - When enabled, it will not do any additional RPC calls to check on required accounts
-	// - Enable it only when you already setup all the accounts needed for the trasaction, like wrapping or unwrapping sol, or destination account is already created
+	// - The returned swap transaction will still attempt to create required accounts regardless if it exists or not
 	SkipUserAccountsRpcCalls *bool `json:"skipUserAccountsRpcCalls,omitempty"`
 
 	// TrackingAccount - Specify any public key that belongs to you to track the transactions
@@ -190,8 +195,10 @@ type SwapRequest struct {
 	UseSharedAccounts *bool  `json:"useSharedAccounts,omitempty"`
 	UserPublicKey     string `json:"userPublicKey"`
 
-	// WrapAndUnwrapSol - To automatically wrap/unwrap SOL in the transaction
-	// - If false, it will use wSOL token account
+	// WrapAndUnwrapSol - To automatically wrap/unwrap SOL in the transaction, as WSOL is an SPL token while native SOL is not
+	// - When true, it will strictly use SOL amount to wrap it to swap, and each time after you swap, it will unwrap all WSOL back to SOL
+	// - When false, it will strictly use WSOL amount to swap, and each time after you swap, it will not unwrap the WSOL back to SOL
+	// - To set this parameter to false, you need to have the WSOL token account initialized
 	// - Parameter will be ignored if `destinationTokenAccount` is set because the `destinationTokenAccount` may belong to a different user that we have no authority to close
 	WrapAndUnwrapSol *bool `json:"wrapAndUnwrapSol,omitempty"`
 }
@@ -201,13 +208,13 @@ type SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLev
 
 // SwapResponse defines model for SwapResponse.
 type SwapResponse struct {
-	LastValidBlockHeight      int    `json:"lastValidBlockHeight"`
-	PrioritizationFeeLamports *int   `json:"prioritizationFeeLamports,omitempty"`
-	SwapTransaction           string `json:"swapTransaction"`
+	LastValidBlockHeight      uint64  `json:"lastValidBlockHeight"`
+	PrioritizationFeeLamports *uint64 `json:"prioritizationFeeLamports,omitempty"`
+	SwapTransaction           string  `json:"swapTransaction"`
 }
 
 // AmountParameter defines model for AmountParameter.
-type AmountParameter = int64
+type AmountParameter = uint64
 
 // AsLegacyTransactionParameter defines model for AsLegacyTransactionParameter.
 type AsLegacyTransactionParameter = bool
@@ -225,7 +232,7 @@ type ExcludeDexesParameter = []string
 type InputMintParameter = string
 
 // MaxAccountsParameter defines model for MaxAccountsParameter.
-type MaxAccountsParameter = int
+type MaxAccountsParameter = uint64
 
 // OnlyDirectRoutesParameter defines model for OnlyDirectRoutesParameter.
 type OnlyDirectRoutesParameter = bool
@@ -234,13 +241,13 @@ type OnlyDirectRoutesParameter = bool
 type OutputMintParameter = string
 
 // PlatformFeeBpsParameter defines model for PlatformFeeBpsParameter.
-type PlatformFeeBpsParameter = int
+type PlatformFeeBpsParameter = uint64
 
 // RestrictIntermediateTokensParameter defines model for RestrictIntermediateTokensParameter.
 type RestrictIntermediateTokensParameter = bool
 
 // SlippageParameter defines model for SlippageParameter.
-type SlippageParameter = int
+type SlippageParameter = uint64
 
 // SwapModeParameter defines model for SwapModeParameter.
 type SwapModeParameter string
@@ -259,7 +266,7 @@ type QuoteGetParams struct {
 	// SwapMode - ExactOut is for supporting use cases where you need an exact output amount, like using [Swap API as a payment service](/docs/swap-api/payments-through-swap)
 	// - In the case of `ExactIn`, the slippage is on the output token
 	// - In the case of `ExactOut`, the slippage is on the input token
-	// - Not all AMMs support `ExactOut`
+	// - Not all AMMs support `ExactOut`: Currently only Orca Whirlpool, Raydium CLMM, Raydium CPMM
 	SwapMode *QuoteGetParamsSwapMode `form:"swapMode,omitempty" json:"swapMode,omitempty"`
 
 	// Dexes - Multiple DEXes can be pass in by comma separating them
