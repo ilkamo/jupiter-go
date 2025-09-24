@@ -38,7 +38,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	slippageBps := 250
+	slippageBps := uint64(200)
 
 	// Get the current quote for a swap.
 	// Ensure that the input and output mints are valid.
@@ -55,17 +55,17 @@ func main() {
 
 	// Define the prioritization fee in lamports.
 	prioritizationFeeLamports := &struct {
-		JitoTipLamports              *int `json:"jitoTipLamports,omitempty"`
+		JitoTipLamports              *uint64 `json:"jitoTipLamports,omitempty"`
 		PriorityLevelWithMaxLamports *struct {
-			MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+			MaxLamports   *uint64                                                                                   `json:"maxLamports,omitempty"`
 			PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
 		} `json:"priorityLevelWithMaxLamports,omitempty"`
 	}{
 		PriorityLevelWithMaxLamports: &struct {
-			MaxLamports   *int                                                                                   `json:"maxLamports,omitempty"`
+			MaxLamports   *uint64                                                                                   `json:"maxLamports,omitempty"`
 			PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
 		}{
-			MaxLamports:   new(int),
+			MaxLamports:   new(uint64),
 			PriorityLevel: new(jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel),
 		},
 	}
