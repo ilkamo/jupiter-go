@@ -241,8 +241,6 @@ components:
         - outputMint
         - inAmount
         - outAmount
-        - feeAmount
-        - feeMint
       properties:
         ammKey:
           type: string
