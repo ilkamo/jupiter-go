@@ -65,12 +65,14 @@ func main() {
 
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
+	// API key is required for the Jupiter API
+	apiKey := "{YOUR_API_KEY}" // Replace with your actual API key
 	swapResponse, err := jupClient.SwapPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
 		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
 		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,
-	})
+	}, apiKey)
 	if err != nil {
 		panic(err)
 	}

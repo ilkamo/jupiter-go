@@ -80,12 +80,14 @@ func main() {
 	dynamicComputeUnitLimit := true
 	// Get instructions for a swap.
 	// Ensure your public key is valid.
+	// API key is required for the Jupiter API
+	apiKey := "{YOUR_API_KEY}" // Replace with your actual API key
 	swapResponse, err := jupClient.SwapPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
 		PrioritizationFeeLamports: prioritizationFeeLamports,
 		QuoteResponse:             *quote,
 		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
 		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,
-	})
+	}, apiKey)
 	// handle the error
 	
 	swap := swapResponse.JSON200
@@ -146,6 +148,7 @@ The Jupiter client is generated from the [official Jupiter openapi definition](h
 // ProgramIdToLabelGetWithResponse request
 ProgramIdToLabelGetWithResponse(
 	ctx context.Context, 
+	apiKey string,
 	reqEditors ...RequestEditorFn,
 ) (*ProgramIdToLabelGetResponse, error)
 
@@ -153,6 +156,7 @@ ProgramIdToLabelGetWithResponse(
 QuoteGetWithResponse(
 	ctx context.Context, 
 	params *QuoteGetParams, 
+	apiKey string,
 	reqEditors ...RequestEditorFn, 
 ) (*QuoteGetResponse, error)
 
@@ -161,12 +165,14 @@ SwapPostWithBodyWithResponse(
 	ctx context.Context, 
 	contentType string, 
 	body io.Reader, 
+	apiKey string,
 	reqEditors ...RequestEditorFn, 
 ) (*SwapPostResponse, error)
 
 SwapPostWithResponse(
 	ctx context.Context, 
 	body SwapPostJSONRequestBody, 
+	apiKey string,
 	reqEditors ...RequestEditorFn,
 ) (*SwapPostResponse, error)
 
@@ -175,12 +181,14 @@ SwapInstructionsPostWithBodyWithResponse(
 	ctx context.Context, 
 	contentType string, 
 	body io.Reader, 
+	apiKey string,
 	reqEditors ...RequestEditorFn,
 ) (*SwapInstructionsPostResponse, error)
 
 SwapInstructionsPostWithResponse(
 	ctx context.Context, 
 	body SwapInstructionsPostJSONRequestBody, 
+	apiKey string,
 	reqEditors ...RequestEditorFn, 
 ) (*SwapInstructionsPostResponse, error)
 ```

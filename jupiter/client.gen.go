@@ -388,23 +388,23 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// ProgramIdToLabelGet request
-	ProgramIdToLabelGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	ProgramIdToLabelGet(ctx context.Context, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// QuoteGet request
-	QuoteGet(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	QuoteGet(ctx context.Context, params *QuoteGetParams, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// SwapPostWithBody request with any body
-	SwapPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SwapPostWithBody(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	SwapPost(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SwapPost(ctx context.Context, body SwapPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// SwapInstructionsPostWithBody request with any body
-	SwapInstructionsPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SwapInstructionsPostWithBody(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	SwapInstructionsPost(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SwapInstructionsPost(ctx context.Context, body SwapInstructionsPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) ProgramIdToLabelGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) ProgramIdToLabelGet(ctx context.Context, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewProgramIdToLabelGetRequest(c.Server)
 	if err != nil {
 		return nil, err
@@ -413,10 +413,11 @@ func (c *Client) ProgramIdToLabelGet(ctx context.Context, reqEditors ...RequestE
 	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
+	req.Header.Add("x-api-key", apiKey)
 	return c.Client.Do(req)
 }
 
-func (c *Client) QuoteGet(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) QuoteGet(ctx context.Context, params *QuoteGetParams, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewQuoteGetRequest(c.Server, params)
 	if err != nil {
 		return nil, err
@@ -425,11 +426,12 @@ func (c *Client) QuoteGet(ctx context.Context, params *QuoteGetParams, reqEditor
 	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
 		return nil, err
 	}
+	req.Header.Add("x-api-key", apiKey)
 	return c.Client.Do(req)
 }
 
-func (c *Client) SwapPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSwapPostRequestWithBody(c.Server, contentType, body)
+func (c *Client) SwapPostWithBody(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapPostRequestWithBody(c.Server, contentType, body, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -440,8 +442,8 @@ func (c *Client) SwapPostWithBody(ctx context.Context, contentType string, body 
 	return c.Client.Do(req)
 }
 
-func (c *Client) SwapPost(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSwapPostRequest(c.Server, body)
+func (c *Client) SwapPost(ctx context.Context, body SwapPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapPostRequest(c.Server, body, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -452,8 +454,8 @@ func (c *Client) SwapPost(ctx context.Context, body SwapPostJSONRequestBody, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) SwapInstructionsPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSwapInstructionsPostRequestWithBody(c.Server, contentType, body)
+func (c *Client) SwapInstructionsPostWithBody(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapInstructionsPostRequestWithBody(c.Server, contentType, body, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -464,8 +466,8 @@ func (c *Client) SwapInstructionsPostWithBody(ctx context.Context, contentType s
 	return c.Client.Do(req)
 }
 
-func (c *Client) SwapInstructionsPost(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSwapInstructionsPostRequest(c.Server, body)
+func (c *Client) SwapInstructionsPost(ctx context.Context, body SwapInstructionsPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSwapInstructionsPostRequest(c.Server, body, apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -733,18 +735,18 @@ func NewQuoteGetRequest(server string, params *QuoteGetParams) (*http.Request, e
 }
 
 // NewSwapPostRequest calls the generic SwapPost builder with application/json body
-func NewSwapPostRequest(server string, body SwapPostJSONRequestBody) (*http.Request, error) {
+func NewSwapPostRequest(server string, body SwapPostJSONRequestBody, apiKey string) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewSwapPostRequestWithBody(server, "application/json", bodyReader)
+	return NewSwapPostRequestWithBody(server, "application/json", bodyReader, apiKey)
 }
 
 // NewSwapPostRequestWithBody generates requests for SwapPost with any type of body
-func NewSwapPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewSwapPostRequestWithBody(server string, contentType string, body io.Reader, apiKey string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -768,23 +770,24 @@ func NewSwapPostRequestWithBody(server string, contentType string, body io.Reade
 	}
 
 	req.Header.Add("Content-Type", contentType)
+	req.Header.Add("x-api-key", apiKey)
 
 	return req, nil
 }
 
 // NewSwapInstructionsPostRequest calls the generic SwapInstructionsPost builder with application/json body
-func NewSwapInstructionsPostRequest(server string, body SwapInstructionsPostJSONRequestBody) (*http.Request, error) {
+func NewSwapInstructionsPostRequest(server string, body SwapInstructionsPostJSONRequestBody, apiKey string) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewSwapInstructionsPostRequestWithBody(server, "application/json", bodyReader)
+	return NewSwapInstructionsPostRequestWithBody(server, "application/json", bodyReader, apiKey)
 }
 
 // NewSwapInstructionsPostRequestWithBody generates requests for SwapInstructionsPost with any type of body
-func NewSwapInstructionsPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewSwapInstructionsPostRequestWithBody(server string, contentType string, body io.Reader, apiKey string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -808,6 +811,7 @@ func NewSwapInstructionsPostRequestWithBody(server string, contentType string, b
 	}
 
 	req.Header.Add("Content-Type", contentType)
+	req.Header.Add("x-api-key", apiKey)
 
 	return req, nil
 }
@@ -856,20 +860,20 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// ProgramIdToLabelGetWithResponse request
-	ProgramIdToLabelGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ProgramIdToLabelGetResponse, error)
+	ProgramIdToLabelGetWithResponse(ctx context.Context, apiKey string, reqEditors ...RequestEditorFn) (*ProgramIdToLabelGetResponse, error)
 
 	// QuoteGetWithResponse request
-	QuoteGetWithResponse(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*QuoteGetResponse, error)
+	QuoteGetWithResponse(ctx context.Context, params *QuoteGetParams, apiKey string, reqEditors ...RequestEditorFn) (*QuoteGetResponse, error)
 
 	// SwapPostWithBodyWithResponse request with any body
-	SwapPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapPostResponse, error)
+	SwapPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*SwapPostResponse, error)
 
-	SwapPostWithResponse(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapPostResponse, error)
+	SwapPostWithResponse(ctx context.Context, body SwapPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*SwapPostResponse, error)
 
 	// SwapInstructionsPostWithBodyWithResponse request with any body
-	SwapInstructionsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error)
+	SwapInstructionsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error)
 
-	SwapInstructionsPostWithResponse(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error)
+	SwapInstructionsPostWithResponse(ctx context.Context, body SwapInstructionsPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error)
 }
 
 type ProgramIdToLabelGetResponse struct {
@@ -961,8 +965,8 @@ func (r SwapInstructionsPostResponse) StatusCode() int {
 }
 
 // ProgramIdToLabelGetWithResponse request returning *ProgramIdToLabelGetResponse
-func (c *ClientWithResponses) ProgramIdToLabelGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ProgramIdToLabelGetResponse, error) {
-	rsp, err := c.ProgramIdToLabelGet(ctx, reqEditors...)
+func (c *ClientWithResponses) ProgramIdToLabelGetWithResponse(ctx context.Context, apiKey string, reqEditors ...RequestEditorFn) (*ProgramIdToLabelGetResponse, error) {
+	rsp, err := c.ProgramIdToLabelGet(ctx, apiKey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -970,8 +974,8 @@ func (c *ClientWithResponses) ProgramIdToLabelGetWithResponse(ctx context.Contex
 }
 
 // QuoteGetWithResponse request returning *QuoteGetResponse
-func (c *ClientWithResponses) QuoteGetWithResponse(ctx context.Context, params *QuoteGetParams, reqEditors ...RequestEditorFn) (*QuoteGetResponse, error) {
-	rsp, err := c.QuoteGet(ctx, params, reqEditors...)
+func (c *ClientWithResponses) QuoteGetWithResponse(ctx context.Context, params *QuoteGetParams, apiKey string, reqEditors ...RequestEditorFn) (*QuoteGetResponse, error) {
+	rsp, err := c.QuoteGet(ctx, params, apiKey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -979,16 +983,16 @@ func (c *ClientWithResponses) QuoteGetWithResponse(ctx context.Context, params *
 }
 
 // SwapPostWithBodyWithResponse request with arbitrary body returning *SwapPostResponse
-func (c *ClientWithResponses) SwapPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapPostResponse, error) {
-	rsp, err := c.SwapPostWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) SwapPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*SwapPostResponse, error) {
+	rsp, err := c.SwapPostWithBody(ctx, contentType, body, apiKey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseSwapPostResponse(rsp)
 }
 
-func (c *ClientWithResponses) SwapPostWithResponse(ctx context.Context, body SwapPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapPostResponse, error) {
-	rsp, err := c.SwapPost(ctx, body, reqEditors...)
+func (c *ClientWithResponses) SwapPostWithResponse(ctx context.Context, body SwapPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*SwapPostResponse, error) {
+	rsp, err := c.SwapPost(ctx, body, apiKey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -996,16 +1000,16 @@ func (c *ClientWithResponses) SwapPostWithResponse(ctx context.Context, body Swa
 }
 
 // SwapInstructionsPostWithBodyWithResponse request with arbitrary body returning *SwapInstructionsPostResponse
-func (c *ClientWithResponses) SwapInstructionsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error) {
-	rsp, err := c.SwapInstructionsPostWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) SwapInstructionsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, apiKey string, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error) {
+	rsp, err := c.SwapInstructionsPostWithBody(ctx, contentType, body, apiKey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseSwapInstructionsPostResponse(rsp)
 }
 
-func (c *ClientWithResponses) SwapInstructionsPostWithResponse(ctx context.Context, body SwapInstructionsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error) {
-	rsp, err := c.SwapInstructionsPost(ctx, body, reqEditors...)
+func (c *ClientWithResponses) SwapInstructionsPostWithResponse(ctx context.Context, body SwapInstructionsPostJSONRequestBody, apiKey string, reqEditors ...RequestEditorFn) (*SwapInstructionsPostResponse, error) {
+	rsp, err := c.SwapInstructionsPost(ctx, body, apiKey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
