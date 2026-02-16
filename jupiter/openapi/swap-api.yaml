@@ -241,8 +241,6 @@ components:
         - outputMint
         - inAmount
         - outAmount
-        - feeAmount
-        - feeMint
       properties:
         ammKey:
           type: string
@@ -255,10 +253,6 @@ components:
         inAmount:
           type: string
         outAmount:
-          type: string
-        feeAmount:
-          type: string
-        feeMint:
           type: string
 
     SwapRequest:
@@ -399,8 +393,6 @@ components:
                 outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
                 inAmount: "1000000"
                 outAmount: "125630"
-                feeAmount: "5"
-                feeMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
               percent: 100
         prioritizationFeeLamports:
           priorityLevelWithMaxLamports:
