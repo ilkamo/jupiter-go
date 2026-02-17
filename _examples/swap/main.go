@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/ilkamo/jupiter-go/jupiter"
@@ -10,7 +11,15 @@ import (
 )
 
 func main() {
-	jupClient, err := jupiter.NewClientWithResponses(jupiter.DefaultAPIURL)
+	// Initialize client with API key (automatically added to all requests)
+	apiKey := "{YOUR_JUPITER_API_KEY}"
+	jupClient, err := jupiter.NewClientWithResponses(
+		jupiter.DefaultAPIURL,
+		jupiter.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+			req.Header.Set("x-api-key", apiKey)
+			return nil
+		}),
+	)
 	if err != nil {
 		panic(err)
 	}

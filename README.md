@@ -28,12 +28,21 @@ package main
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/ilkamo/jupiter-go/jupiter"
 )
 
 func main() {
-	jupClient, err := jupiter.NewClientWithResponses(jupiter.DefaultAPIURL)
+	// Initialize client with API key (automatically added to all requests)
+	apiKey := "{YOUR_JUPITER_API_KEY}"
+	jupClient, err := jupiter.NewClientWithResponses(
+		jupiter.DefaultAPIURL,
+		jupiter.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+			req.Header.Set("x-api-key", apiKey)
+			return nil
+		}),
+	)
 	// handle the error
 
 	ctx := context.TODO()
@@ -137,6 +146,23 @@ func main() {
 A full swap example is available in the [examples/swap](_examples/swap) folder. For a swap with Jito tips, check the [examples/jitoswap](_examples/jitoswap) folder.
 
 A transaction monitoring example using websocket is available in the [examples/txmonitor](_examples/txmonitor) folder.
+
+## API Key Usage
+
+To use Jupiter's API, you need an API key. The recommended way is to configure the client once with `WithRequestEditorFn`, which automatically injects the API key into every request:
+
+```go
+apiKey := "{YOUR_JUPITER_API_KEY}"
+jupClient, err := jupiter.NewClientWithResponses(
+	jupiter.DefaultAPIURL,
+	jupiter.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("x-api-key", apiKey)
+		return nil
+	}),
+)
+```
+
+With this approach, you don't need to pass the API key to individual method calls—it's handled automatically.
 
 ## Jupiter client
 
