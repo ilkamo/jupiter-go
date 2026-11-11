@@ -6,7 +6,7 @@
 [![GoDoc](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go?status.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go?tab=doc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ilkamo/jupiter-go)](https://goreportcard.com/report/ilkamo/jupiter-go)
 
-<img align="right" width="200" src="assets/jup-gopher.png">
+<img align="right" width="200" src="docs/assets/jup-gopher.png">
 
 A typed, dependency-light client for every public Jupiter REST API:
 
@@ -173,7 +173,7 @@ This is an unofficial, community-maintained library and is not affiliated with o
 endorsed by Jupiter. The Go gopher was designed by
 [Renée French](https://reneefrench.blogspot.com/) and is licensed under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the mascot artwork in
-`assets/` is a derivative of it and carries the same license.
+`docs/assets/` is a derivative of it and carries the same license.
 
 ## Donate
 

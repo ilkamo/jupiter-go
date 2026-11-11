@@ -57,26 +57,18 @@ order, err := client.Swap.Order(ctx, swap.OrderRequest{
 })
 ```
 
-Proposed layout:
+Layout:
 
 ```text
-client.go
-options.go
-errors.go
-swap/
-tokens/
-price/
-trigger/
-lend/
-prediction/
-send/
-studio/
-transaction/
-internal/transport/
-internal/generated/
-openapi/
-examples/
-docs/
+client.go, options.go   root package jupiter: NewClient and options
+swap/ tokens/ price/ trigger/ transaction/      stable product clients
+lend/ prediction/ send/ studio/                 beta product clients
+solanatx/               signing and assembly (the only solana-go user)
+instruction/ response/  shared public types
+internal/               transport, retries, address and amount parsing
+examples/               runnable programs
+docs/                   separate module: plans, inventory, pinned
+                        references (docs/openapi/), images (docs/assets/)
 ```
 
 Resolve shared transport and error ownership without import cycles: product

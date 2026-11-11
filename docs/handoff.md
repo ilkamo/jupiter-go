@@ -54,11 +54,13 @@ history of every step (decisions, tests, validation).
 2. **Re-audit: done** (see "Upstream re-audit and fuzzing"). Repeat right
    before tagging if time has passed: compare the index with the manifest and
    parse the linked OpenAPI specs with a real YAML parser.
-3. **Exported API review** before freezing v1: names, request/response shapes,
-   and error types across products (the plan's "Review exported symbols" item).
-   Beta packages may change later; stable ones may not without v2.
+3. **API review: done.** Four changes applied (see "API settlement and docs
+   layout" in `development-status.md`). The stable packages are frozen at
+   v1.0.0; beta packages may still change in minor releases.
 4. **Optional:** `solanatx.Assemble` support for version 1 builds (needs a
    compute-unit-limit policy, since builds return a unit price but no limit);
-   fuzz tests are done (`make fuzz`).
+   fuzz tests are done (`make fuzz`). Docs layout: done (`docs/` is a separate
+   module excluded from the download). Before tagging, decide whether to keep
+   `development-status.md`, `v1-plan.md`, and this file in `docs/` as history.
 5. **Release:** open a PR from `v1` to `main`, let CI pass, merge, and tag
    `v1.0.0`; update the CHANGELOG date.

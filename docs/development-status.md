@@ -337,8 +337,8 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 ## Tokens and Price clients
 
 Committed the solana-go upgrade as `894971d` and signing adapters as `2319b9e`.
-Pinned the Tokens V2 discovery and Price V3 references in `openapi/tokens-v2`
-and `openapi/price-v3` on 2026-11-11; their SHA-256 hashes match the inventory
+Pinned the Tokens V2 discovery and Price V3 references in `docs/openapi/tokens-v2`
+and `docs/openapi/price-v3` on 2026-11-11; their SHA-256 hashes match the inventory
 manifest, which now marks the five operations implemented.
 
 `client.Tokens` (package `tokens`):
@@ -384,7 +384,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 
 Committed shared helpers as `b5221bb` and Tokens/Price as `50830fd`. Fetched all 18
 Trigger references (hashes match the manifest) and pinned the 8 implemented ones
-plus the authentication, error, and deposit guides in `openapi/trigger-v2`.
+plus the authentication, error, and deposit guides in `docs/openapi/trigger-v2`.
 
 Design (package `trigger`, `client.Trigger`):
 
@@ -440,7 +440,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 
 Committed the helpers as `aafb852` and sessions as `b0ca797`. All 18 Trigger
 operations are now implemented; the remaining 10 references and the order guides
-are pinned in `openapi/trigger-v2`.
+are pinned in `docs/openapi/trigger-v2`.
 
 Session methods:
 
@@ -506,7 +506,7 @@ and `git diff --check` passed.
 ## Lend (Earn and Borrow)
 
 Committed the `errors.AsType` refactor as `b700a6e`. All 15 Lend references
-(hashes match the manifest) and both API guides are pinned in `openapi/lend-v1`.
+(hashes match the manifest) and both API guides are pinned in `docs/openapi/lend-v1`.
 Both guides label the APIs beta; the package documents this, and the
 compatibility boundary is left to the review.
 
@@ -558,7 +558,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 Committed the instruction/retry refactor as `d5aa288`, the Trigger metadata fix
 as `14d38cf`, and Lend as `f1b4929`. Fetched the Prediction OpenAPI spec linked
 from the documentation index and all 27 reference pages (hashes match the
-manifest), and pinned them with the trading guides in `openapi/prediction-v1`.
+manifest), and pinned them with the trading guides in `docs/openapi/prediction-v1`.
 The spec contains `GET /forecast`, which has no reference page and was missing
 from the inventory; it is implemented and listed as spec-only. The API is beta
 and geo-restricted (US, South Korea); the package documents both.
@@ -612,7 +612,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 
 Committed the shared test servers as `33bd08f` and Prediction as `b376116`.
 The 4 Send references (hashes match the manifest) and its guides are pinned in
-`openapi/send-v1`. Send is beta upstream.
+`docs/openapi/send-v1`. Send is beta upstream.
 
 Invite codes (`send.InviteCode`), implemented from the invite-code and clawback
 guides with the standard library plus established parsers:
@@ -653,7 +653,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 
 Committed Send as `2ca80f7`. Fetched the Studio OpenAPI spec and its 5 reference
 pages (hashes match the manifest) and pinned them with the guides in
-`openapi/studio-v1`. Studio is beta upstream.
+`docs/openapi/studio-v1`. Studio is beta upstream.
 
 Transport additions, kept generic:
 
@@ -698,7 +698,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 
 Committed the transport extension as `582ee62` and Studio as `71e5a6a`. The
 reference (hash matches the manifest) and guide are pinned in
-`openapi/transaction-v1`.
+`docs/openapi/transaction-v1`.
 
 As the inventory required, the landing service has its own endpoint instead of
 overloading the REST base URL: `WithTransactionURL` (default
@@ -738,7 +738,7 @@ Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 ## Tokens Express Verification
 
 Committed transaction submission as `628ecfd`. The three Express Verification
-references (hashes match the manifest) are pinned in `openapi/tokens-v2`. With
+references (hashes match the manifest) are pinned in `docs/openapi/tokens-v2`. With
 this step every operation in the inventory and manifest is implemented.
 
 `client.Tokens.Express` is separate from discovery because it pays for
@@ -898,3 +898,23 @@ Fuzz targets (`make fuzz`, `FUZZTIME` default 30s):
 
 No failures. The solanatx fixture builders now take `testing.TB` so fuzz targets
 can seed from them.
+
+## API settlement and docs layout
+
+Owner decisions after the API review: apply all four proposed changes and keep
+the documentation out of the module download.
+
+- `swap.ErrExecutionOutcomeUnknown` renamed to `swap.ErrOutcomeUnknown`,
+  matching every other product.
+- `trigger.Tokens` renamed to `trigger.AuthTokens` (`Session.AuthTokens()`) to
+  avoid confusion with the Tokens product.
+- `transaction.TipReceivers` is a function returning a copy; the list itself is
+  unexported, so callers cannot change `RandomTipReceiver`'s choices.
+- `trigger.Session.UpdatePriceOrder` returns `*trigger.OrderUpdate` with response
+  metadata (also alongside errors), like every other method.
+- `openapi/` and `assets/` moved under `docs/`, which has its own `go.mod`
+  (`github.com/ilkamo/jupiter-go/docs`, no Go code). Go excludes nested modules
+  from module zips: built with `golang.org/x/mod/zip`, the library zip is
+  194 KB with 98 files and contains nothing from `docs/`. The README image path
+  is `docs/assets/jup-gopher.png`; pkg.go.dev rewrites relative README links to
+  the repository.
