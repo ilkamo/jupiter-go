@@ -76,6 +76,8 @@ type BorrowVaults struct {
 	Metadata response.Metadata
 }
 
+// Vaults lists borrow vaults for a market with their tokens, risk parameters,
+// rates, and available liquidity.
 func (c *BorrowClient) Vaults(ctx context.Context, r VaultsRequest) (*BorrowVaults, error) {
 	query, err := marketQuery(r.Market)
 	if err != nil {
@@ -247,6 +249,8 @@ type OperateInstructions struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// OperateInstructions builds the same operation as Operate as instructions for
+// composing your own transaction.
 func (c *BorrowClient) OperateInstructions(
 	ctx context.Context,
 	r OperateRequest,

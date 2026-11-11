@@ -69,6 +69,8 @@ type Eligibility struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// CheckEligibility reports whether a token can be submitted. Execute also rejects
+// ineligible tokens before charging.
 func (c *ExpressClient) CheckEligibility(ctx context.Context, tokenID string) (*Eligibility, error) {
 	if err := address.Validate(tokenID); err != nil {
 		return nil, fmt.Errorf("token: %w", err)

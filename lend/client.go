@@ -26,6 +26,8 @@ type Client struct {
 	Borrow *BorrowClient
 }
 
+// NewClient is called by jupiter.NewClient, which applications use instead; it
+// takes the SDK's internal transport.
 func NewClient(t *transport.Client) *Client {
 	return &Client{
 		Earn:   &EarnClient{transport: t},
@@ -44,6 +46,7 @@ type Transaction struct {
 // a string, while the documented example returns a number. Numbers keep their text.
 type ChainID string
 
+// UnmarshalJSON implements json.Unmarshaler for both chain ID forms.
 func (c *ChainID) UnmarshalJSON(data []byte) error {
 	var text string
 	if err := json.Unmarshal(data, &text); err == nil {

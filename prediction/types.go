@@ -16,6 +16,7 @@ import (
 // such as Market.ResolveAt. Numbers keep their text; null leaves it empty.
 type StringOrNumber string
 
+// UnmarshalJSON implements json.Unmarshaler for string, number, and null.
 func (v *StringOrNumber) UnmarshalJSON(data []byte) error {
 	var text string
 	if err := json.Unmarshal(data, &text); err == nil {

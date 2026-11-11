@@ -123,6 +123,7 @@ type InstructionResult struct {
 	Metadata    response.Metadata
 }
 
+// DepositInstructions builds the deposit as a single instruction.
 func (c *EarnClient) DepositInstructions(ctx context.Context, r AmountRequest) (*InstructionResult, error) {
 	body, err := r.normalized()
 	if err != nil {
@@ -132,6 +133,7 @@ func (c *EarnClient) DepositInstructions(ctx context.Context, r AmountRequest) (
 	return c.instruction(ctx, "/earn/deposit-instructions", body)
 }
 
+// WithdrawInstructions builds the withdrawal as a single instruction.
 func (c *EarnClient) WithdrawInstructions(ctx context.Context, r AmountRequest) (*InstructionResult, error) {
 	body, err := r.normalized()
 	if err != nil {
@@ -141,6 +143,7 @@ func (c *EarnClient) WithdrawInstructions(ctx context.Context, r AmountRequest) 
 	return c.instruction(ctx, "/earn/withdraw-instructions", body)
 }
 
+// MintInstructions builds the share mint as a single instruction.
 func (c *EarnClient) MintInstructions(ctx context.Context, r SharesRequest) (*InstructionResult, error) {
 	body, err := r.normalized()
 	if err != nil {
@@ -150,6 +153,7 @@ func (c *EarnClient) MintInstructions(ctx context.Context, r SharesRequest) (*In
 	return c.instruction(ctx, "/earn/mint-instructions", body)
 }
 
+// RedeemInstructions builds the share redemption as a single instruction.
 func (c *EarnClient) RedeemInstructions(ctx context.Context, r SharesRequest) (*InstructionResult, error) {
 	body, err := r.normalized()
 	if err != nil {

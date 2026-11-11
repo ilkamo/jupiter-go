@@ -63,6 +63,7 @@ func (c *Client) Orders(ctx context.Context, owner string, page Page) (*OrderLis
 	return &result, nil
 }
 
+// Order returns one order by its account public key.
 func (c *Client) Order(ctx context.Context, orderPubkey string) (*Order, error) {
 	if err := validatePubkey("order", orderPubkey); err != nil {
 		return nil, err
@@ -111,6 +112,7 @@ type PositionList struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// Positions lists positions with P&L in micro USD.
 func (c *Client) Positions(ctx context.Context, r PositionsRequest) (*PositionList, error) {
 	query := url.Values{}
 
@@ -155,6 +157,7 @@ func (c *Client) Positions(ctx context.Context, r PositionsRequest) (*PositionLi
 	return &result, nil
 }
 
+// Position returns one position by its account public key.
 func (c *Client) Position(ctx context.Context, positionPubkey string) (*Position, error) {
 	if err := validatePubkey("position", positionPubkey); err != nil {
 		return nil, err
@@ -186,6 +189,7 @@ type HistoryList struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// History lists order, fill, settlement, and claim events.
 func (c *Client) History(ctx context.Context, r HistoryRequest) (*HistoryList, error) {
 	query := url.Values{}
 	if r.Owner != "" {
@@ -242,6 +246,7 @@ type Profile struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// Profile returns a wallet's trading statistics.
 func (c *Client) Profile(ctx context.Context, owner string) (*Profile, error) {
 	if err := validatePubkey("owner", owner); err != nil {
 		return nil, err
@@ -277,6 +282,7 @@ type PnLHistory struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// PnLHistory returns a wallet's realized P&L time series for charting.
 func (c *Client) PnLHistory(ctx context.Context, r PnLHistoryRequest) (*PnLHistory, error) {
 	if err := validatePubkey("owner", r.Owner); err != nil {
 		return nil, err
@@ -368,6 +374,7 @@ type Leaderboard struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// Leaderboards ranks traders by P&L, volume, or win rate for a period.
 func (c *Client) Leaderboards(ctx context.Context, r LeaderboardRequest) (*Leaderboard, error) {
 	query := url.Values{}
 	if err := setFilter(query, "period", r.Period); err != nil {
@@ -409,6 +416,7 @@ type VaultInfo struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// VaultInfo returns the settlement vault account and balance.
 func (c *Client) VaultInfo(ctx context.Context) (*VaultInfo, error) {
 	var info VaultInfo
 	metadata, err := c.get(ctx, "/vault-info", nil, &info)

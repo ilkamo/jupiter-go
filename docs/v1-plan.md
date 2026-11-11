@@ -37,14 +37,13 @@ current APIs. Do not add a `/v1` suffix to the Go module path.
   method names.
 - Keep signing and RPC dependencies outside the core HTTP implementation.
 
-Proposed usage (illustrative, not implemented):
+Usage:
 
 ```go
 client, err := jupiter.NewClient(
     jupiter.WithAPIKey(apiKey),
     jupiter.WithHTTPClient(httpClient),
     jupiter.WithTimeout(15*time.Second),
-    jupiter.WithoutMaintainerFee(),
 )
 if err != nil {
     return err
@@ -119,51 +118,15 @@ For beta upstream products, decide the compatibility boundary before exposing
 public types. An upstream beta label alone does not waive the SDK's v1 semantic
 versioning obligations.
 
-## Swap monetization policy
+## Fees (decided)
 
-Support these three explicit modes:
-
-1. Maintainer referral, if enabled by the selected default policy.
-2. No maintainer fee, selected with `WithoutMaintainerFee()`.
-3. Developer referral, selected with `WithReferral(account, bps)`, replacing the
-   maintainer referral.
-
-The discussion approved planning fee support, but did not settle whether the
-maintainer fee should be enabled by default. Decide the default, rate, recipient,
-and supported swap paths before publishing the constructor contract. Opt-in was
-recommended during review because the documented managed referral minimum is
-material; default-on with a clear opt-out remains the user's original proposal.
-
-### Upstream mechanics to verify
-
-- Managed `/order` swaps use `referralAccount` and `referralFee`.
-- Reviewed docs specify 50–255 bps and a 20% Jupiter share of the integrator fee,
-  without a separate Jupiter platform fee when the referral is active.
-- A 50 bps referral is 0.5%: approximately $5 on a $1,000 swap, of which the
-  maintainer share would be approximately $4 before other costs.
-- Collection requires referral token accounts for the applicable fee mints.
-  Missing accounts can result in execution without referral revenue.
-- `/build` uses `platformFeeBps` and a suitable token `feeAccount`. It needs
-  separate handling; one wallet address is not a universal fee destination.
-
-### Required behavior
-
-- Expose the configured fee mode, recipient, and rate for inspection.
-- Preserve upstream fee fields so applications can show actual fees before
-  signing. Do not report a configured fee as successfully collected.
-- A developer referral replaces, rather than stacks with, the maintainer fee.
-- Reject conflicting fee-mode options instead of depending on option order.
-- Disabling the maintainer fee must remain effective through retries and any
-  fallback paths. Define request-level precedence before exposing overrides.
-- Distinguish maintainer fees from Jupiter fees, network fees, rent, and tips.
-- Version recipient and rate in source; do not change them through remote config.
-- Do not rewrite an already signed transaction to insert a fee.
-- Document missing-account behavior and unsupported collection paths explicitly.
-- Disclose the default, beneficiary, rate, scope, and opt-out before the README's
-  first swap example, and in constructor documentation and migration notes.
-
-Account creation and funding are a separate operational task. The SDK must not
-create or fund referral accounts implicitly during construction or a quote.
+The SDK charges no fee and has no maintainer referral. `WithReferral(account,
+bps)` lets integrators add their own Jupiter referral (50–255 bps) to managed
+`/order` swaps; it is validated, cannot be configured twice, and does not apply to
+`/build`, which takes explicit `PlatformFeeBps` and `FeeAccount` per request.
+Referral and fee token accounts are provisioned by the integrator; the SDK never
+creates them. Upstream fee fields are preserved so applications can show actual
+fees before signing.
 
 ## Engineering requirements
 
@@ -229,11 +192,11 @@ create or fund referral accounts implicitly during construction or a quote.
 
 ### 1. Contract and foundation
 
-- [ ] Verify API inventory and schema sources.
-- [ ] Settle fee defaults and public fee-mode semantics.
+- [x] Verify API inventory and schema sources.
+- [x] Settle fee defaults and public fee-mode semantics.
 - [ ] Review constructor, service, request, response, and error examples.
-- [ ] Decide beta API compatibility and legacy package strategy.
-- [ ] Implement transport, options, validation, authentication boundaries, and
+- [x] Decide beta API compatibility and legacy package strategy.
+- [x] Implement transport, options, validation, authentication boundaries, and
       error handling.
 
 Acceptance: examples establish the intended public API; `httptest` verifies
@@ -242,11 +205,11 @@ retry eligibility without live credentials.
 
 ### 2. Complete Swap V2 workflow
 
-- [ ] Implement order, execute, build, and program-label operations.
-- [ ] Implement fee modes and path-specific fee behavior.
-- [ ] Provide examples for quote-only, managed execution with external signing,
-      custom builds, and disabling maintainer fees.
-- [ ] Establish signing adapter boundaries and transaction version support.
+- [x] Implement order, execute, build, and program-label operations.
+- [x] Implement fee modes and path-specific fee behavior.
+- [x] Provide examples for quote-only, managed execution with external signing,
+      and custom builds.
+- [x] Establish signing adapter boundaries and transaction version support.
 
 Acceptance: fixture-based tests cover successful and failed executions, partial
 signing/message preservation, fee opt-out and replacement, missing referral fee
@@ -255,11 +218,11 @@ perform real swaps by default.
 
 ### 3. Complete REST coverage
 
-- [ ] Add Tokens and Price.
-- [ ] Add Trigger V2, including authenticated wallet sessions and DCA.
-- [ ] Add Lend.
-- [ ] Add Prediction, Send, Studio, and transaction submission.
-- [ ] Add other public REST products identified by the approved inventory.
+- [x] Add Tokens and Price.
+- [x] Add Trigger V2, including authenticated wallet sessions and DCA.
+- [x] Add Lend.
+- [x] Add Prediction, Send, Studio, and transaction submission.
+- [x] Add other public REST products identified by the approved inventory.
 - [ ] Complete pagination, error fixtures, and examples for each product.
 
 Acceptance: every in-scope endpoint has a typed public method, documented auth
@@ -269,8 +232,8 @@ services count as supported APIs.
 ### 4. Stabilize and release v1
 
 - [ ] Review exported symbols for consistency and compatibility.
-- [ ] Write a migration guide from the existing generated API and Solana helpers.
-- [ ] Set the maintenance policy for existing v0 releases and legacy endpoints;
+- [x] Write a migration guide from the existing generated API and Solana helpers.
+- [x] Set the maintenance policy for existing v0 releases and legacy endpoints;
       do not silently redirect legacy calls to incompatible workflows.
 - [ ] Complete README, Go documentation, product examples, and fee disclosure.
 - [ ] Run formatting, static analysis, race tests, targeted fuzzing, generation
@@ -281,12 +244,11 @@ services count as supported APIs.
 Acceptance: the inventory is complete, migration and fee behavior are documented,
 required checks pass, and public compatibility decisions are recorded.
 
-## First implementation session
+## Current state
 
-Start with milestone 1: verify the endpoint inventory, resolve the fee policy,
-and prepare the constructor/service/error contracts for review. Then implement
-the shared transport and one complete Swap V2 flow as the reference for subsequent
-products. Do not start by replacing the existing generated client wholesale.
+Decisions: no SDK fee; Lend, Prediction, Send, and Studio ship as beta; the legacy
+`jupiter` and `solana` packages are removed and v0 releases receive no further
+maintenance. Remaining work is tracked in [handoff.md](handoff.md).
 
 ## References
 

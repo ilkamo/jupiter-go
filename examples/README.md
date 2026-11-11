@@ -1,13 +1,16 @@
-# New client examples
+# Examples
 
-The root package is the v1 implementation in development. See
-[development status](../docs/development-status.md) for current coverage.
+Runnable programs for each product. Run them from the repository root with
+`go run ./examples/<name>`. Examples that move funds only do so when an explicit
+environment flag is set; without it they stop after building or signing.
 
-The current default collects no maintainer fee. Jupiter and network fees can
-still apply. `WithReferral(account, 50)` configures a 0.5% managed-order referral;
-the account must be a base58 Solana address. Provision the referral and applicable
-token accounts separately. Always inspect returned fee fields before signing.
-Missing referral token accounts can prevent referral collection.
+The SDK charges no fee; Jupiter and network fees still apply. If you operate a
+Jupiter referral account, `WithReferral(account, 50)` adds a 0.5% referral to
+managed swap orders. Provision the referral and its token accounts separately:
+without them orders execute without collecting the fee. Always inspect the
+returned fee fields before signing.
+
+## Quote
 
 Run a quote without signing or sending a transaction:
 

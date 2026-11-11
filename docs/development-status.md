@@ -1,6 +1,8 @@
 # v1 development status
 
-Updated: 2026-11-11. Implementation is in progress; this is not a v1 release.
+Updated: 2026-11-11. Feature-complete for the API inventory; not yet tagged.
+**Start with [handoff.md](handoff.md)** for the remaining release work. The
+sections from "Validation" onward are a chronological log of each step.
 
 ## Working conventions
 
@@ -37,62 +39,31 @@ validation remains applicable.
 
 ## Implemented
 
-- Root `jupiter.NewClient` and functional options for HTTP injection, gateway URL,
-  API key, operation timeout, and explicit referral policy.
-- Separate HTTP transport and Swap V2 service responsibilities.
-- Typed order, execute, build, and program-label operations.
-- Exact raw amount strings and `json.Number` for decimal response values.
-- Structured HTTP and execution errors; context errors retain their causes.
-- Default HTTP redirect refusal, bounded responses, and body cleanup.
-- Configuration and request validation, including conflicting fee options.
-- Contract tests and a runnable quote-only example in `examples/quote`.
-- Pinned official Swap endpoint documentation in `openapi/swap-v2`, fetched from
-  the URLs in `v1-plan.md` on the date above. These Markdown files contain their
-  OpenAPI definitions; deterministic schema extraction/generation is still pending.
-
-The existing `jupiter` and `solana` subpackages remain available. The new root
-package imports only standard-library code and the new Swap service; it does not
-load a wallet or mutate transaction messages. Legacy dependencies remain in the
-module until the migration strategy is finalized.
+Root `jupiter.NewClient` with functional options; product clients `Swap`,
+`Tokens` (with `Express`), `Price`, `Trigger`, `Transaction`, and the beta `Lend`,
+`Prediction`, `Send`, and `Studio`; `solanatx` for signing and assembly;
+`instruction` for shared instruction types; `response` for metadata. Every
+operation in `api-inventory.md` is implemented with contract tests, and every
+product has a runnable example in `examples/`.
 
 ## Decisions and limits
 
-- No maintainer fee is enabled: no recipient account has been supplied. The
-  default-on policy remains a release decision. `WithoutMaintainerFee` makes the
-  current policy explicit; `WithReferral` configures managed-order referrals.
-- Build platform fees are explicit request fields and require a token fee account;
-  managed-order referrals do not carry into builds.
-- Retries are chosen per operation (see "Operation-specific retry policies").
-  Execute makes one attempt and reports ambiguous failures explicitly.
-- A custom HTTP implementation is responsible for its own redirect policy. The
-  constructor documents this; caller-owned HTTP clients are never mutated.
-- Signing lives in `solanatx`, separate from the HTTP clients. Execute still
-  accepts caller-signed base64 bytes unchanged and does not parse them.
-- The public API is provisional until the compatibility review.
-- The repository's Go 1.26 baseline is unchanged. Validation uses the installed
-  Go 1.27.4 toolchain; support-range CI remains pending.
+- The SDK charges no fee. `WithReferral` only adds the integrator's own referral
+  to managed Swap orders and cannot be configured twice. Build platform fees are
+  explicit request fields.
+- Lend, Prediction, Send, and Studio are beta upstream and documented as beta;
+  their types may change in minor releases.
+- The legacy `jupiter` and `solana` packages and `_examples` were removed; v0
+  releases get no further maintenance. `CHANGELOG.md` has the migration table.
+- Retries follow each operation's semantics; submissions of signed transactions
+  make one attempt and report ambiguous failures with `ErrOutcomeUnknown`.
+- A custom HTTP implementation owns its redirect policy; the default refuses
+  redirects and caller-owned clients are never mutated.
+- `go.mod` declares Go 1.26; checks pass on Go 1.26.0 and 1.27.4.
 
 ## Resume here
 
-1. Run `go test -race ./...` and `go vet ./...`; inspect this document's validation
-   section before repeating already completed checks.
-2. Use `docs/api-inventory.md` and the source manifest as the endpoint checklist.
-   Verify full schemas, effective authentication, pagination semantics, and
-   idempotency per operation before implementing it. Discovery is complete for
-   the 82 indexed references; guide-only operations still need reconciliation.
-3. Swap is functionally complete: validation, retries, signing adapters, and
-   examples. Remaining Swap work: version 1 assembly for build responses (needs a
-   compute-unit-limit policy) and a live smoke test with a funded wallet before
-   release.
-4. All 82 indexed operations and the spec-only Prediction forecast are
-   implemented. Re-audit the documentation index for new APIs and guide-only
-   operations before the release candidate. Audit the current documentation index for additional APIs.
-   These are not implemented. Decide the compatibility boundary for upstream beta
-   products (Lend, Prediction) during the compatibility review.
-5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
-   migration documentation, and compatibility review from `v1-plan.md`.
-6. Resolve the maintainer fee recipient/default and beta API compatibility before
-   release candidates. Publishing and funded on-chain account setup are pending.
+Follow [handoff.md](handoff.md). Run `make check` first.
 
 ## Validation
 
@@ -799,3 +770,26 @@ path without an amount, and 7 invalid inputs rejected before transport.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Release preparation
+
+Committed Express Verification as `48d63c1` and the legacy removal as `078a25c`.
+Owner decisions: no SDK fee, beta labels for Lend/Prediction/Send/Studio, and no
+legacy support.
+
+- Removed the `jupiter` and `solana` packages and `_examples`; `go mod tidy`
+  dropped oapi-codegen runtime, shopspring/decimal, and testify. Removed
+  `WithoutMaintainerFee`; `WithReferral` rejects a second configuration.
+- golangci-lint v2.12.2 (CI's pin, run with `GOTOOLCHAIN=go1.26.0` because the
+  local build cannot read Go 1.27 export data) found two capitalized error
+  strings, now fixed; gofumpt collapsed one single-variable `var` block.
+- Makefile: removed the obsolete `generate-openapi` target; added `vet` and
+  `check` (vet, lint, race tests).
+- Rewrote `README.md` (product table with beta labels, no-fee statement, options,
+  managed swap with `solanatx`, error/retry/safety model, migration pointer) and
+  the `examples/README.md` header; added `CHANGELOG.md` with the v0 migration
+  table; updated `v1-plan.md` (fee decision, milestones) and this file's summary.
+- Added `docs/handoff.md` with the remaining ordered work.
+
+Validation: `go test -race ./...` on Go 1.26.0 and 1.27.4, `go vet ./...`,
+golangci-lint and gofumpt (0 issues), and `git diff --check` passed.

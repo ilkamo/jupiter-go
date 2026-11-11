@@ -61,6 +61,8 @@ type Client struct {
 	transport *transport.Client
 }
 
+// NewClient is called by jupiter.NewClient, which applications use instead; it
+// takes the SDK's internal transport.
 func NewClient(t *transport.Client) *Client {
 	return &Client{transport: t}
 }
@@ -441,6 +443,7 @@ type PoolAddresses struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// PoolAddresses returns the pools of a token launched through Studio.
 func (c *Client) PoolAddresses(ctx context.Context, mint string) (*PoolAddresses, error) {
 	if err := validate("mint", mint); err != nil {
 		return nil, err

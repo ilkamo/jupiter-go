@@ -55,6 +55,8 @@ type Client struct {
 	transport *transport.Client
 }
 
+// NewClient is called by jupiter.NewClient, which applications use instead; it
+// takes the SDK's internal transport.
 func NewClient(t *transport.Client) *Client {
 	return &Client{transport: t}
 }

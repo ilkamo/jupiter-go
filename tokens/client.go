@@ -52,6 +52,8 @@ type Client struct {
 	Express *ExpressClient
 }
 
+// NewClient is called by jupiter.NewClient, which applications use instead; it
+// takes the SDK's internal transport.
 func NewClient(t *transport.Client) *Client {
 	return &Client{
 		transport: t,
@@ -103,6 +105,7 @@ type CategoryRequest struct {
 	Limit    *uint8
 }
 
+// Category returns top tokens in a trading category over an interval.
 func (c *Client) Category(ctx context.Context, r CategoryRequest) (*ListResponse, error) {
 	if r.Category == "" || r.Interval == "" {
 		return nil, fmt.Errorf("category and interval required")

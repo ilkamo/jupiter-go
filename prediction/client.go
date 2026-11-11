@@ -66,6 +66,8 @@ type Client struct {
 	transport *transport.Client
 }
 
+// NewClient is called by jupiter.NewClient, which applications use instead; it
+// takes the SDK's internal transport.
 func NewClient(t *transport.Client) *Client {
 	return &Client{transport: t}
 }
@@ -195,6 +197,7 @@ func (r EventsRequest) query() (url.Values, error) {
 	return query, nil
 }
 
+// Events lists events, each holding one or more binary markets.
 func (c *Client) Events(ctx context.Context, r EventsRequest) (*EventList, error) {
 	query, err := r.query()
 	if err != nil {
@@ -212,6 +215,7 @@ type SearchRequest struct {
 	Limit    *uint8
 }
 
+// SearchEvents searches event titles.
 func (c *Client) SearchEvents(ctx context.Context, r SearchRequest) (*EventList, error) {
 	length := utf8.RuneCountInString(r.Query)
 	if length == 0 || length > MaxSearchQueryRune {
@@ -266,6 +270,7 @@ type EventRequest struct {
 	IncludeAllMarkets bool
 }
 
+// Event returns one event, optionally with its markets.
 func (c *Client) Event(ctx context.Context, r EventRequest) (*Event, error) {
 	id, err := pathID("event ID", r.EventID)
 	if err != nil {
@@ -298,6 +303,7 @@ type MarketList struct {
 	Metadata response.Metadata `json:"-"`
 }
 
+// EventMarkets lists an event's markets.
 func (c *Client) EventMarkets(ctx context.Context, eventID string, page Page) (*MarketList, error) {
 	id, err := pathID("event ID", eventID)
 	if err != nil {
@@ -391,6 +397,7 @@ type EventScore struct {
 	Metadata response.Metadata
 }
 
+// EventScore returns the live score of a sports event.
 func (c *Client) EventScore(ctx context.Context, eventID string) (*EventScore, error) {
 	id, err := pathID("event ID", eventID)
 	if err != nil {
@@ -413,6 +420,7 @@ type OrderbookResult struct {
 	Metadata  response.Metadata
 }
 
+// Orderbook returns YES and NO depth for a market.
 func (c *Client) Orderbook(ctx context.Context, marketID string) (*OrderbookResult, error) {
 	id, err := pathID("market ID", marketID)
 	if err != nil {

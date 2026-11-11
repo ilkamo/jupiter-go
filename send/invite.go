@@ -75,6 +75,7 @@ func (c InviteCode) String() string {
 	return "send.InviteCode(redacted)"
 }
 
+// GoString redacts the code for the %#v verb.
 func (c InviteCode) GoString() string {
 	return c.String()
 }

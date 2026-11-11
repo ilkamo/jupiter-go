@@ -26,40 +26,40 @@ history of every step (decisions, tests, validation).
   data. `make check` runs everything CI runs.
 - No live requests or funded transactions have been made.
 
+## Done in the release-preparation pass
+
+- `README.md` rewritten (product table with beta labels, no-fee statement,
+  options, managed swap with `solanatx`, error/retry/safety model).
+- `examples/README.md` header updated; `CHANGELOG.md` added with the v1.0.0 entry
+  and the v0 migration table.
+- `docs/v1-plan.md` updated (fee decision, milestones); the summary sections of
+  `docs/development-status.md` rewritten.
+- Godoc examples in `example_test.go` (`ExampleNewClient` and
+  `Example_sendInviteCode` run with checked output; quote, managed swap, and
+  Trigger session examples compile only, because they need the network).
+- Every exported function and method has a doc comment (revive's `exported` rule
+  reports none for functions and methods). Exported constants and struct types
+  were not documented one by one: `AGENTS.md` forbids comments that restate the
+  code, so only those with a non-obvious contract carry comments.
+- CI runs golangci-lint v2.12.2 and gofumpt on Go 1.26, and `make vet` plus
+  `make test` on Go 1.26 and 1.27, for pull requests and pushes to `main` and `v1`.
+
 ## Remaining work, in order
 
-1. **Rewrite `README.md`.** It still documents the deleted legacy API. Cover:
-   install, `jupiter.NewClient` and options (`WithAPIKey`, `WithTimeout`,
-   `WithHTTPClient`, `WithBaseURL`, `WithTransactionURL`, `WithoutRetries`,
-   `WithReferral`), one short example per product, a **beta notice for Lend,
-   Prediction, Send, and Studio**, the "no SDK fee" statement, signing with
-   `solanatx`, error handling (`errors.Is`/`errors.AsType`, `ErrOutcomeUnknown`
-   per product, `response.Metadata`), retry behaviour, and links to `examples/`.
-   Keep `assets/jup-gopher.png` if desired.
-2. **Update `examples/README.md`.** Remove the "maintainer fee" sentence at the
-   top; state that the SDK charges no fee.
-3. **Add `CHANGELOG.md`** with a v1.0.0 entry: full rewrite, legacy packages
-   removed (breaking), product list, beta products, Go 1.26 minimum. Add a short
-   migration section mapping old `jupiter.NewClientWithResponses` +
-   `solana.NewClient` usage to `client.Swap.Order`/`Execute` + `solanatx`.
-4. **Clean up `docs/v1-plan.md`.** Replace the "Swap monetization policy" section
-   with the no-fee decision; tick completed milestones; mark the legacy package
-   decision done. In `docs/development-status.md`, update the "Decisions and
-   limits" and "Resume here" sections at the top to point to this file (the step
-   log below them is history and can stay).
-5. **Godoc polish.** Add `Example` test functions (`example_test.go`) for the
-   root package and key flows (quote, managed swap with `solanatx`, Trigger
-   login) so pkg.go.dev shows them. Check every exported identifier has a doc
-   comment (`golangci-lint` with `revive`'s exported rule can help).
-6. **CI.** `.github/workflows/workflow.yml` already runs golangci-lint v2.12.2 and
-   `make test` on Go 1.26. Consider adding `go vet`, a Go 1.27 matrix entry, and
-   running on pushes to `v1`.
-7. **Live smoke test** with a funded wallet before tagging (quote, managed swap,
-   build + `tx.jup.ag` submit). Record results in `development-status.md`.
-8. **Re-audit the documentation index** (`https://developers.jup.ag/docs/llms.txt`)
-   for operations added since the inventory; the Prediction spec already had one
-   (`/forecast`). Also compare each pinned file in `openapi/` against upstream.
-9. **Optional follow-ups:** `solanatx.Assemble` support for version 1 builds
-   (needs a compute-unit-limit policy); fuzz tests for `solanatx.Parse`,
-   `internal/address`, and amount parsing.
-10. **Release:** merge `v1` into `main` via PR, tag `v1.0.0`.
+1. **Live smoke test** with a funded wallet before tagging: quote, managed swap
+   (`examples/managed` with `JUPITER_EXECUTE_SWAP=yes`), and build + tx.jup.ag
+   (`examples/build` with `JUPITER_SUBMIT_VIA=tx`). Also run the read-only
+   examples (`quote`, `tokens`, `lend`, `prediction`) against the live API. Record
+   results in `development-status.md`; fix any schema drift they reveal.
+2. **Re-audit the documentation index** (`https://developers.jup.ag/docs/llms.txt`)
+   for operations added since the inventory (the Prediction spec already had one,
+   `/forecast`), and compare each pinned file in `openapi/` with upstream
+   (hashes are in `docs/api-reference-manifest.json`).
+3. **Exported API review** before freezing v1: names, request/response shapes,
+   and error types across products (the plan's "Review exported symbols" item).
+   Beta packages may change later; stable ones may not without v2.
+4. **Optional:** `solanatx.Assemble` support for version 1 builds (needs a
+   compute-unit-limit policy, since builds return a unit price but no limit);
+   fuzz tests for `solanatx.Parse`, `internal/address`, and amount parsing.
+5. **Release:** open a PR from `v1` to `main`, let CI pass, merge, and tag
+   `v1.0.0`; update the CHANGELOG date.

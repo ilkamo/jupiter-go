@@ -66,6 +66,7 @@ func newSession(c *Client, wallet string, tokens Tokens, options SessionOptions)
 	}
 }
 
+// Wallet returns the address the session is authorized for.
 func (s *Session) Wallet() string {
 	return s.wallet
 }

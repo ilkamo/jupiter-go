@@ -220,6 +220,7 @@ func locateVersion1(wire []byte) (wireLayout, error) {
 	}, nil
 }
 
+// Version reports the transaction's message version.
 func (t *Transaction) Version() Version {
 	return t.layout.version
 }

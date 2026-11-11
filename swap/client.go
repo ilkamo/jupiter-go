@@ -41,10 +41,14 @@ func (r Referral) Validate() error {
 	return nil
 }
 
+// NewClient is called by jupiter.NewClient, which applications use instead; it
+// takes the SDK's internal transport.
 func NewClient(t *transport.Client, referral Referral) *Client {
 	return &Client{transport: t, referral: referral}
 }
 
+// Referral reports the referral configured with jupiter.WithReferral; it is zero
+// when none is set.
 func (c *Client) Referral() Referral {
 	return c.referral
 }
@@ -184,6 +188,9 @@ func set(q url.Values, key, value string) {
 	}
 }
 
+// Order requests a managed order: a quote, plus a transaction to sign when Taker
+// is set. Repeating an order changes nothing, so transient failures are retried.
+// An order carrying an upstream error code returns *ExecutionError.
 func (c *Client) Order(
 	ctx context.Context,
 	r OrderRequest,
@@ -243,6 +250,9 @@ func (r ExecuteRequest) validate() error {
 	return nil
 }
 
+// Execute submits a signed order transaction, which Jupiter lands. It makes one
+// attempt and requires an explicit success status and zero code; failures after
+// which the transaction may still land wrap ErrExecutionOutcomeUnknown.
 func (c *Client) Execute(
 	ctx context.Context,
 	r ExecuteRequest,
@@ -290,6 +300,7 @@ func (c *Client) Execute(
 	return &result, nil
 }
 
+// ProgramLabels maps DEX program IDs to the labels used by ExcludeDexes and Dexes.
 func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, error) {
 	var result ProgramLabelsResponse
 	request := transport.Request{

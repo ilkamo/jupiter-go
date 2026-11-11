@@ -146,6 +146,8 @@ type attemptOutcome struct {
 	retryable bool
 }
 
+// Do sends request under its retry policy and decodes a successful JSON response
+// into result; a nil result ignores the body. Metadata describes the last attempt.
 func (c *Client) Do(
 	ctx context.Context,
 	request Request,
