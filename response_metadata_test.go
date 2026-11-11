@@ -42,8 +42,8 @@ func TestOrderMetadataAndRFQFields(t *testing.T) {
 	}
 
 	result, err := client.Swap.Order(context.Background(), swap.OrderRequest{
-		InputMint:  "input",
-		OutputMint: "output",
+		InputMint:  wrappedSOLMint,
+		OutputMint: usdcMint,
 		Amount:     "1",
 		SwapMode:   swap.SwapModeExactIn,
 	})

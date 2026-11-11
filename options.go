@@ -2,7 +2,6 @@ package jupiter
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/ilkamo/jupiter-go/swap"
@@ -58,12 +57,9 @@ func WithoutMaintainerFee() Option {
 // WithReferral replaces the SDK fee policy for managed orders. Accounts must be provisioned separately.
 func WithReferral(account string, bps uint16) Option {
 	return func(c *config) error {
-		if strings.TrimSpace(account) == "" || bps < swap.MinReferralFeeBps || bps > swap.MaxReferralFeeBps {
-			return fmt.Errorf(
-				"referral requires an account and %d–%d basis points",
-				swap.MinReferralFeeBps,
-				swap.MaxReferralFeeBps,
-			)
+		referral := swap.Referral{Account: account, BasisPoints: bps}
+		if err := referral.Validate(); err != nil {
+			return fmt.Errorf("referral: %w", err)
 		}
 
 		if c.feeConfigured {
@@ -71,7 +67,7 @@ func WithReferral(account string, bps uint16) Option {
 		}
 
 		c.feeConfigured = true
-		c.fee = swap.Referral{Account: account, BasisPoints: bps}
+		c.fee = referral
 
 		return nil
 	}

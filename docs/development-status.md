@@ -69,7 +69,6 @@ module until the migration strategy is finalized.
 - No signing adapter is supplied yet. Execute accepts caller-signed base64 bytes
   unchanged. It does not parse transaction messages or claim wallet verification.
 - The public API is provisional until the compatibility review.
-  input address validation and optional-field presence semantics need further review.
 - The repository's Go 1.26 baseline is unchanged. Validation uses the installed
   Go 1.27.4 toolchain; support-range CI remains pending.
 
@@ -81,8 +80,9 @@ module until the migration strategy is finalized.
    Verify full schemas, effective authentication, pagination semantics, and
    idempotency per operation before implementing it. Discovery is complete for
    the 82 indexed references; guide-only operations still need reconciliation.
-3. Complete Swap response-field parity, success metadata, bounded retry policy,
-   amount/address validation, and fixture tests for build and managed execution.
+3. Implement operation-specific bounded retry policies (see "Swap request
+   validation" below for the current one-attempt behavior), then add fixture
+   tests for build and managed execution.
 4. Add signing adapters and examples for managed execution and custom builds,
    preserving blockhashes and existing signatures. Test transaction versions
    explicitly before declaring adapter support.
@@ -177,3 +177,51 @@ adapters; these remain the next implementation work.
 
 Validation: `go test -race ./...`, `go vet ./...`, and `git diff --check` passed
 for the optional-field update. No live trades were performed.
+
+## Swap request validation
+
+Mint, wallet, payer, receiver, destination, fee, and referral addresses are now
+validated before any HTTP request. `internal/address` decodes them with the
+established `github.com/mr-tron/base58` parser (already in the module graph via
+solana-go, now a direct dependency) and requires exactly 32 decoded bytes. Curve
+membership is deliberately not checked: associated token accounts and other
+program-derived addresses are off-curve. Base58 encodings are unique, so validated
+addresses are compared as strings. Address failures wrap `swap.ErrInvalidAddress`
+together with the parser's cause.
+
+Parameter-combination rules now enforced:
+
+- Order and build: input and output mints must differ.
+- Order: receiver and payer require a taker; receiver must differ from taker
+  (documented). Payer equal to taker is accepted because the docs describe it as
+  a no-op rather than an error. `broadcastFeeType` requires a priority fee or Jito
+  tip, since the API otherwise ignores it silently.
+- Order and build: router names and DEX labels must be non-empty, contain no
+  comma separator, and have no surrounding whitespace, so joining them cannot
+  change their meaning. Router names are not restricted to the documented set
+  (`metis`, `jupiterz`, `dflow`, `okx`, provided as named constants) so routers
+  added upstream remain usable without an SDK release.
+- Build: added the documented `maxBytes` parameter (1–1232); it is rejected with
+  transaction version 1, which upstream answers with HTTP 400.
+- Execute: `lastValidBlockHeight`, when supplied, must be an unsigned 64-bit
+  integer.
+
+`OrderRequest`, `BuildRequest`, and `ExecuteRequest` now have separate
+`validate` and query/encoding steps; query construction always validates first.
+`swap.Referral.Validate` checks the referral address and fee range and is used by
+`WithReferral`. Grouped request struct fields were expanded to one per line.
+
+Boundary tests cover 31/32/33-byte keys, excluded base58 digits, whitespace,
+non-ASCII and hexadecimal input, every numeric range edge (slippage, platform fee,
+accounts, bytes, blockhash expiry, compute-unit percentile, tip, block height,
+referral fee), and each combination rule. A public-API test uses an HTTP client
+that fails the test if invoked, proving invalid requests never reach transport.
+Test fixtures now use real base58 addresses.
+
+Decision: request validation is limited to format, range, and combination checks
+and never requires RPC access. Mint existence, token-account mint or ownership,
+and whether `nativeDestinationAccount` is used only with SOL output are left to
+the API.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.

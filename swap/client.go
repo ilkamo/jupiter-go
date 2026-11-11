@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"math/big"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -23,6 +23,23 @@ type Referral struct {
 	BasisPoints uint16
 }
 
+// Validate checks the referral account address and the documented managed-order fee range.
+func (r Referral) Validate() error {
+	if err := validateAddress("referral account", r.Account); err != nil {
+		return err
+	}
+
+	if r.BasisPoints < MinReferralFeeBps || r.BasisPoints > MaxReferralFeeBps {
+		return fmt.Errorf(
+			"referral fee must be between %d and %d basis points",
+			MinReferralFeeBps,
+			MaxReferralFeeBps,
+		)
+	}
+
+	return nil
+}
+
 func NewClient(t *transport.Client, referral Referral) *Client {
 	return &Client{transport: t, referral: referral}
 }
@@ -31,36 +48,133 @@ func (c *Client) Referral() Referral {
 	return c.referral
 }
 
+// OrderRequest describes a managed order. Without Taker, Jupiter returns a quote without a
+// transaction; Receiver and Payer only shape that transaction and therefore require Taker.
 type OrderRequest struct {
-	InputMint, OutputMint, Amount, Taker string
-	Receiver, Payer                      string
-	SwapMode                             string
-	SlippageBps                          *uint16
-	PriorityFeeLamports, JitoTipLamports *uint64
-	BroadcastFeeType                     string
-	ExcludeRouters, ExcludeDexes         []string
-	MaxSupportedTransactionVersion       *uint8
+	InputMint                      string
+	OutputMint                     string
+	Amount                         string
+	Taker                          string
+	Receiver                       string
+	Payer                          string
+	SwapMode                       string
+	SlippageBps                    *uint16
+	PriorityFeeLamports            *uint64
+	JitoTipLamports                *uint64
+	BroadcastFeeType               string
+	ExcludeRouters                 []string
+	ExcludeDexes                   []string
+	MaxSupportedTransactionVersion *uint8
 }
 
-func swapQuery(input, output, amount string) (url.Values, error) {
-	if input == "" || output == "" || amount == "" {
-		return nil, fmt.Errorf("input mint, output mint and amount required")
+func (r OrderRequest) validate() error {
+	if err := validateMintPair(r.InputMint, r.OutputMint); err != nil {
+		return err
 	}
 
-	rawAmount, ok := new(big.Int).SetString(amount, decimalBase)
-	if !ok {
-		return nil, fmt.Errorf("amount must be a base-10 raw integer")
+	if err := validateOptionalAddress("taker", r.Taker); err != nil {
+		return err
 	}
 
-	if rawAmount.Sign() <= 0 {
-		return nil, fmt.Errorf("amount must be positive")
+	if err := validateOptionalAddress("receiver", r.Receiver); err != nil {
+		return err
 	}
 
-	return url.Values{
-		"inputMint":  {input},
-		"outputMint": {output},
-		"amount":     {rawAmount.String()},
-	}, nil
+	if err := validateOptionalAddress("payer", r.Payer); err != nil {
+		return err
+	}
+
+	transactionAccountSet := r.Receiver != "" || r.Payer != ""
+	if transactionAccountSet && r.Taker == "" {
+		return fmt.Errorf("receiver and payer require a taker")
+	}
+
+	if r.Receiver != "" && r.Receiver == r.Taker {
+		return fmt.Errorf("receiver must differ from taker")
+	}
+
+	if r.SwapMode != "" && r.SwapMode != SwapModeExactIn {
+		return fmt.Errorf("unsupported swap mode %q", r.SwapMode)
+	}
+
+	if r.SlippageBps != nil && *r.SlippageBps > BasisPointsPerWhole {
+		return fmt.Errorf("slippage exceeds %d bps", BasisPointsPerWhole)
+	}
+
+	versionSet := r.MaxSupportedTransactionVersion != nil
+	if versionSet && *r.MaxSupportedTransactionVersion > MaxTransactionVersion {
+		return fmt.Errorf("unsupported transaction version")
+	}
+
+	switch r.BroadcastFeeType {
+	case "", BroadcastFeeMaxCap, BroadcastFeeExact:
+	default:
+		return fmt.Errorf("invalid broadcast fee type %q", r.BroadcastFeeType)
+	}
+
+	broadcastFeeSet := r.PriorityFeeLamports != nil || r.JitoTipLamports != nil
+	if r.BroadcastFeeType != "" && !broadcastFeeSet {
+		return fmt.Errorf("broadcast fee type requires a priority fee or Jito tip")
+	}
+
+	// Router names are format-checked only, so routers added upstream remain usable.
+	if err := validateLabels("excluded routers", r.ExcludeRouters); err != nil {
+		return err
+	}
+
+	return validateLabels("excluded DEXes", r.ExcludeDexes)
+}
+
+func (r OrderRequest) query(referral Referral) (url.Values, error) {
+	if err := r.validate(); err != nil {
+		return nil, err
+	}
+
+	amount, err := parseRawAmount(r.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	q := url.Values{
+		"inputMint":  {r.InputMint},
+		"outputMint": {r.OutputMint},
+		"amount":     {amount},
+	}
+
+	set(q, "swapMode", r.SwapMode)
+	set(q, "taker", r.Taker)
+	set(q, "receiver", r.Receiver)
+	set(q, "payer", r.Payer)
+
+	if r.SlippageBps != nil {
+		q.Set("slippageBps", strconv.Itoa(int(*r.SlippageBps)))
+	}
+
+	if r.MaxSupportedTransactionVersion != nil {
+		q.Set(
+			"maxSupportedTransactionVersion",
+			strconv.Itoa(int(*r.MaxSupportedTransactionVersion)),
+		)
+	}
+
+	if r.PriorityFeeLamports != nil {
+		q.Set("priorityFeeLamports", strconv.FormatUint(*r.PriorityFeeLamports, decimalBase))
+	}
+
+	if r.JitoTipLamports != nil {
+		q.Set("jitoTipLamports", strconv.FormatUint(*r.JitoTipLamports, decimalBase))
+	}
+
+	set(q, "broadcastFeeType", r.BroadcastFeeType)
+	set(q, "excludeRouters", strings.Join(r.ExcludeRouters, labelSeparator))
+	set(q, "excludeDexes", strings.Join(r.ExcludeDexes, labelSeparator))
+
+	if referral.Account != "" {
+		q.Set("referralAccount", referral.Account)
+		q.Set("referralFee", strconv.Itoa(int(referral.BasisPoints)))
+	}
+
+	return q, nil
 }
 
 func set(q url.Values, key, value string) {
@@ -73,61 +187,13 @@ func (c *Client) Order(
 	ctx context.Context,
 	r OrderRequest,
 ) (*OrderResponse, error) {
-	q, err := swapQuery(r.InputMint, r.OutputMint, r.Amount)
+	q, err := r.query(c.referral)
 	if err != nil {
 		return nil, err
 	}
 
-	if r.SwapMode != "" && r.SwapMode != SwapModeExactIn {
-		return nil, fmt.Errorf("unsupported swap mode")
-	}
-
-	set(q, "swapMode", r.SwapMode)
-	set(q, "taker", r.Taker)
-	set(q, "receiver", r.Receiver)
-	set(q, "payer", r.Payer)
-
-	if r.SlippageBps != nil {
-		if *r.SlippageBps > BasisPointsPerWhole {
-			return nil, fmt.Errorf("slippage exceeds %d bps", BasisPointsPerWhole)
-		}
-
-		q.Set("slippageBps", strconv.Itoa(int(*r.SlippageBps)))
-	}
-
-	if r.MaxSupportedTransactionVersion != nil {
-		if *r.MaxSupportedTransactionVersion > MaxTransactionVersion {
-			return nil, fmt.Errorf("unsupported transaction version")
-		}
-
-		q.Set("maxSupportedTransactionVersion", strconv.Itoa(int(*r.MaxSupportedTransactionVersion)))
-	}
-
-	if r.PriorityFeeLamports != nil {
-		q.Set("priorityFeeLamports", strconv.FormatUint(*r.PriorityFeeLamports, decimalBase))
-	}
-
-	if r.JitoTipLamports != nil {
-		q.Set("jitoTipLamports", strconv.FormatUint(*r.JitoTipLamports, decimalBase))
-	}
-
-	switch r.BroadcastFeeType {
-	case "", BroadcastFeeMaxCap, BroadcastFeeExact:
-	default:
-		return nil, fmt.Errorf("invalid broadcast fee type")
-	}
-
-	set(q, "broadcastFeeType", r.BroadcastFeeType)
-	set(q, "excludeRouters", strings.Join(r.ExcludeRouters, ","))
-	set(q, "excludeDexes", strings.Join(r.ExcludeDexes, ","))
-
-	if c.referral.Account != "" {
-		q.Set("referralAccount", c.referral.Account)
-		q.Set("referralFee", strconv.Itoa(int(c.referral.BasisPoints)))
-	}
-
 	var result OrderResponse
-	metadata, err := c.transport.Do(ctx, "GET", "/swap/v2/order", q, nil, &result)
+	metadata, err := c.transport.Do(ctx, http.MethodGet, "/swap/v2/order", q, nil, &result)
 	result.Metadata = metadata
 	if err != nil {
 		return &result, err
@@ -150,26 +216,44 @@ type ExecuteRequest struct {
 	LastValidBlockHeight string `json:"lastValidBlockHeight,omitempty"`
 }
 
+func (r ExecuteRequest) validate() error {
+	if r.RequestID == "" || r.SignedTransaction == "" {
+		return fmt.Errorf("request ID and signed transaction required")
+	}
+
+	if _, err := base64.StdEncoding.DecodeString(r.SignedTransaction); err != nil {
+		return fmt.Errorf("signed transaction: %w", err)
+	}
+
+	if r.LastValidBlockHeight != "" {
+		_, err := strconv.ParseUint(r.LastValidBlockHeight, decimalBase, blockHeightBits)
+		if err != nil {
+			return fmt.Errorf("parse last valid block height: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func (c *Client) Execute(
 	ctx context.Context,
 	r ExecuteRequest,
 ) (*ExecuteResponse, error) {
-	if r.RequestID == "" || r.SignedTransaction == "" {
-		return nil, fmt.Errorf("request ID and signed transaction required")
-	}
-
-	if _, err := base64.StdEncoding.DecodeString(r.SignedTransaction); err != nil {
-		return nil, fmt.Errorf("signed transaction: %w", err)
+	if err := r.validate(); err != nil {
+		return nil, err
 	}
 
 	var result ExecuteResponse
-	metadata, err := c.transport.Do(ctx, "POST", "/swap/v2/execute", nil, r, &result)
+	metadata, err := c.transport.Do(ctx, http.MethodPost, "/swap/v2/execute", nil, r, &result)
 	result.Metadata = metadata
 	if err != nil {
 		return &result, err
 	}
 
-	if result.Status != ExecutionStatusSuccess || result.Code == nil || *result.Code != executionSuccessCode {
+	confirmed := result.Status == ExecutionStatusSuccess &&
+		result.Code != nil &&
+		*result.Code == executionSuccessCode
+	if !confirmed {
 		message := result.Error
 		if message == "" {
 			message = fmt.Sprintf("execution did not confirm success (status %q)", result.Status)
@@ -188,7 +272,14 @@ func (c *Client) Execute(
 
 func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, error) {
 	var result ProgramLabelsResponse
-	metadata, err := c.transport.Do(ctx, "GET", "/swap/v2/program-id-to-label", nil, nil, &result.Labels)
+	metadata, err := c.transport.Do(
+		ctx,
+		http.MethodGet,
+		"/swap/v2/program-id-to-label",
+		nil,
+		nil,
+		&result.Labels,
+	)
 	result.Metadata = metadata
 	if err != nil {
 		return &result, err
@@ -198,8 +289,10 @@ func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, err
 }
 
 type ExecutionError struct {
-	Code                          *int
-	Message, RequestID, Signature string
+	Code      *int
+	Message   string
+	RequestID string
+	Signature string
 }
 
 func (e *ExecutionError) Error() string {

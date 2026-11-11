@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 	"time"
 
@@ -41,7 +40,7 @@ func TestOrderContract(t *testing.T) {
 	c, err := jupiter.NewClient(
 		jupiter.WithBaseURL(server.URL),
 		jupiter.WithAPIKey("secret"),
-		jupiter.WithReferral("account", 50),
+		jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -50,8 +49,8 @@ func TestOrderContract(t *testing.T) {
 	result, err := c.Swap.Order(
 		context.Background(),
 		swap.OrderRequest{
-			InputMint:  "in",
-			OutputMint: "out",
+			InputMint:  wrappedSOLMint,
+			OutputMint: usdcMint,
 			Amount:     "9007199254740993",
 		},
 	)
@@ -139,8 +138,8 @@ func TestConfiguration(t *testing.T) {
 	tests := [][]jupiter.Option{
 		{jupiter.WithTimeout(0)},
 		{jupiter.WithBaseURL("ftp://host")},
-		{jupiter.WithReferral("a", swap.MinReferralFeeBps-1)},
-		{jupiter.WithReferral("a", swap.MinReferralFeeBps), jupiter.WithoutMaintainerFee()},
+		{jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps-1)},
+		{jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps), jupiter.WithoutMaintainerFee()},
 		{nil},
 	}
 
@@ -161,8 +160,8 @@ func TestCancellation(t *testing.T) {
 	cancel()
 
 	_, err = c.Swap.Order(ctx, swap.OrderRequest{
-		InputMint:  "in",
-		OutputMint: "out",
+		InputMint:  wrappedSOLMint,
+		OutputMint: usdcMint,
 		Amount:     "1",
 	})
 	if !errors.Is(err, context.Canceled) {
@@ -203,7 +202,7 @@ func TestBuildPreservesInstructionsAndSeparatesFees(t *testing.T) {
 		if r.URL.Path != "/swap/v2/build" ||
 			q.Get("referralAccount") != "" ||
 			q.Get("platformFeeBps") != "25" ||
-			q.Get("feeAccount") != "token-account" ||
+			q.Get("feeAccount") != tokenAccount ||
 			q.Get("slippageBps") != swap.SlippageRTSE {
 			t.Errorf("unexpected build: %s", r.URL)
 		}
@@ -233,7 +232,10 @@ func TestBuildPreservesInstructionsAndSeparatesFees(t *testing.T) {
 
 	defer server.Close()
 
-	c, err := jupiter.NewClient(jupiter.WithBaseURL(server.URL), jupiter.WithReferral("referral", 50))
+	c, err := jupiter.NewClient(
+		jupiter.WithBaseURL(server.URL),
+		jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -241,13 +243,13 @@ func TestBuildPreservesInstructionsAndSeparatesFees(t *testing.T) {
 	result, err := c.Swap.Build(
 		context.Background(),
 		swap.BuildRequest{
-			InputMint:      "in",
-			OutputMint:     "out",
+			InputMint:      wrappedSOLMint,
+			OutputMint:     usdcMint,
 			Amount:         "1",
-			Taker:          "owner",
+			Taker:          takerAddress,
 			SlippageBps:    swap.SlippageRTSE,
 			PlatformFeeBps: 25,
-			FeeAccount:     "token-account",
+			FeeAccount:     tokenAccount,
 		},
 	)
 	if err != nil {
@@ -310,77 +312,101 @@ func TestExecutePreservesSignedPayload(t *testing.T) {
 	}
 }
 
-func TestBuildValidation(t *testing.T) {
-	client, err := jupiter.NewClient()
+type unreachableHTTPClient struct {
+	t *testing.T
+}
+
+func (c unreachableHTTPClient) Do(r *http.Request) (*http.Response, error) {
+	c.t.Errorf("invalid request reached transport: %s", r.URL)
+
+	return nil, errors.New("unexpected request")
+}
+
+func TestInvalidRequestsDoNotReachTransport(t *testing.T) {
+	client, err := jupiter.NewClient(jupiter.WithHTTPClient(unreachableHTTPClient{t: t}))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tests := []struct {
-		name       string
-		configure  func(*swap.BuildRequest)
-		parseError bool
+		name         string
+		call         func(context.Context) error
+		addressError bool
 	}{
 		{
-			name: "malformed slippage",
-			configure: func(r *swap.BuildRequest) {
-				r.SlippageBps = "invalid"
+			name: "order with malformed taker",
+			call: func(ctx context.Context) error {
+				_, err := client.Swap.Order(ctx, swap.OrderRequest{
+					InputMint:  wrappedSOLMint,
+					OutputMint: usdcMint,
+					Amount:     "1",
+					Taker:      "owner",
+				})
+
+				return err
 			},
-			parseError: true,
+			addressError: true,
 		},
 		{
-			name: "slippage above maximum",
-			configure: func(r *swap.BuildRequest) {
-				r.SlippageBps = strconv.Itoa(swap.BasisPointsPerWhole + 1)
+			name: "order receiver without taker",
+			call: func(ctx context.Context) error {
+				_, err := client.Swap.Order(ctx, swap.OrderRequest{
+					InputMint:  wrappedSOLMint,
+					OutputMint: usdcMint,
+					Amount:     "1",
+					Receiver:   takerAddress,
+				})
+
+				return err
 			},
 		},
 		{
-			name: "negative percentile",
-			configure: func(r *swap.BuildRequest) {
-				r.ComputeUnitPricePercentile = "-1"
+			name: "build with malformed fee account",
+			call: func(ctx context.Context) error {
+				_, err := client.Swap.Build(ctx, swap.BuildRequest{
+					InputMint:      wrappedSOLMint,
+					OutputMint:     usdcMint,
+					Amount:         "1",
+					Taker:          takerAddress,
+					PlatformFeeBps: 1,
+					FeeAccount:     "token-account",
+				})
+
+				return err
 			},
+			addressError: true,
 		},
 		{
-			name: "malformed tip",
-			configure: func(r *swap.BuildRequest) {
-				r.TipAmount = "invalid"
-			},
-			parseError: true,
-		},
-		{
-			name: "platform fee above maximum",
-			configure: func(r *swap.BuildRequest) {
-				r.PlatformFeeBps = swap.BasisPointsPerWhole + 1
+			name: "execute with malformed block height",
+			call: func(ctx context.Context) error {
+				_, err := client.Swap.Execute(ctx, swap.ExecuteRequest{
+					RequestID:            "order",
+					SignedTransaction:    "AQ==",
+					LastValidBlockHeight: "-1",
+				})
+
+				return err
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := swap.BuildRequest{
-				InputMint:  "in",
-				OutputMint: "out",
-				Amount:     "1",
-				Taker:      "owner",
-			}
-			test.configure(&request)
-
-			ctx, cancel := context.WithCancel(context.Background())
-			cancel()
-
-			_, err := client.Swap.Build(ctx, request)
+			err := test.call(context.Background())
 			if err == nil {
 				t.Fatal("invalid request accepted")
 			}
 
-			if errors.Is(err, context.Canceled) {
-				t.Fatalf("invalid request reached transport: %v", err)
-			}
-
-			var parseError *strconv.NumError
-			if errors.As(err, &parseError) != test.parseError {
-				t.Fatalf("unexpected parse cause: %v", err)
+			if errors.Is(err, swap.ErrInvalidAddress) != test.addressError {
+				t.Fatalf("unexpected address error classification: %v", err)
 			}
 		})
+	}
+}
+
+func TestReferralRequiresAddress(t *testing.T) {
+	_, err := jupiter.NewClient(jupiter.WithReferral("account", swap.MinReferralFeeBps))
+	if !errors.Is(err, swap.ErrInvalidAddress) {
+		t.Fatalf("expected invalid address error, got %v", err)
 	}
 }

@@ -5,9 +5,9 @@ The root package is the v1 implementation in development. See
 
 The current default collects no maintainer fee. Jupiter and network fees can
 still apply. `WithReferral(account, 50)` configures a 0.5% managed-order referral;
-provision the referral and applicable token accounts separately. Always inspect
-returned fee fields before signing. Missing referral token accounts can prevent
-referral collection.
+the account must be a base58 Solana address. Provision the referral and applicable
+token accounts separately. Always inspect returned fee fields before signing.
+Missing referral token accounts can prevent referral collection.
 
 Run a quote without signing or sending a transaction:
 

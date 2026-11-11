@@ -11,4 +11,8 @@ const (
 	BroadcastFeeExact        = "exactFee"
 	ExecutionStatusSuccess   = "Success"
 	ExecutionStatusFailed    = "Failed"
+	RouterMetis              = "metis"
+	RouterJupiterZ           = "jupiterz"
+	RouterDflow              = "dflow"
+	RouterOKX                = "okx"
 )
