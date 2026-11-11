@@ -41,7 +41,7 @@ state-changing GETs must not inherit a read-only policy.
 - trigger: 18 operations; all implemented.
 - prediction: 27 indexed operations plus the spec-only `GET /forecast`; all implemented (upstream beta).
 - send: 4 operations; all implemented (upstream beta).
-- studio: 5 operations; not implemented.
+- studio: 5 operations; all implemented (upstream beta).
 
 ## Operations
 
@@ -128,11 +128,11 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | send | `POST https://api.jup.ag/send/v1/craft-clawback` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Clawback](https://developers.jup.ag/docs/api-reference/send/craft-clawback.md) |
 | send | `GET https://api.jup.ag/send/v1/pending-invites` | ApiKeyAuth | page | Implemented / request and response contract tests | [Pending Invites](https://developers.jup.ag/docs/api-reference/send/pending-invites.md) |
 | send | `GET https://api.jup.ag/send/v1/invite-history` | ApiKeyAuth | page | Implemented / request and response contract tests | [Invite History](https://developers.jup.ag/docs/api-reference/send/invite-history.md) |
-| studio | `POST https://api.jup.ag/studio/v1/dbc-pool/create-tx` | ApiKeyAuth | — | Pending / none | [DBC Pool Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-create-tx.md) |
-| studio | `POST https://api.jup.ag/studio/v1/dbc-pool/submit` | ApiKeyAuth | — | Pending / none | [DBC Pool Submit](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-submit.md) |
-| studio | `GET https://api.jup.ag/studio/v1/dbc-pool/addresses/{mint}` | ApiKeyAuth | — | Pending / none | [DBC Pool Addresses by Mint](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-addresses-by-mint.md) |
-| studio | `POST https://api.jup.ag/studio/v1/dbc/fee` | ApiKeyAuth | — | Pending / none | [DBC Fee](https://developers.jup.ag/docs/api-reference/studio/dbc-fee.md) |
-| studio | `POST https://api.jup.ag/studio/v1/dbc/fee/create-tx` | ApiKeyAuth | — | Pending / none | [DBC Fee Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-fee-create-tx.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc-pool/create-tx` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Pool Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-create-tx.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc-pool/submit` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Pool Submit](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-submit.md) |
+| studio | `GET https://api.jup.ag/studio/v1/dbc-pool/addresses/{mint}` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Pool Addresses by Mint](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-addresses-by-mint.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc/fee` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Fee](https://developers.jup.ag/docs/api-reference/studio/dbc-fee.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc/fee/create-tx` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Fee Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-fee-create-tx.md) |
 
 ## Structural decisions before more clients
 

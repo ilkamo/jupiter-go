@@ -84,7 +84,7 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Studio, transaction submission, and Tokens verification. Audit the current documentation index for additional APIs.
+4. Implement transaction submission and Tokens verification. Audit the current documentation index for additional APIs.
    These are not implemented. Decide the compatibility boundary for upstream beta
    products (Lend, Prediction) during the compatibility review.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
@@ -672,6 +672,51 @@ documented seed and key layout; PDAs match solana-go `FindProgramAddress` for
 built send transaction signed by both sender and invite key with `solanatx`;
 clawback body, invite paging, and all `confirmed` forms; invalid inputs rejected
 before transport.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Studio
+
+Committed Send as `2ca80f7`. Fetched the Studio OpenAPI spec and its 5 reference
+pages (hashes match the manifest) and pinned them with the guides in
+`openapi/studio-v1`. Studio is beta upstream.
+
+Transport additions, kept generic:
+
+- `Request.Payload` sends pre-encoded bytes with their content type (used for
+  multipart forms); it is exclusive with the JSON `Body`.
+- `Request.ExternalURL` targets an absolute HTTPS URL outside the API, such as a
+  presigned upload. The API key, Accept header, and request headers are never
+  sent there, user info is rejected, and the URL's query (the presigned
+  signature) is used unchanged. Path, query, and headers cannot be combined with
+  it. The default client still refuses redirects.
+- A nil result ignores the response body.
+- `Do` now prepares the request once (URL, body, content type, credentials) and
+  replays it per attempt.
+
+`client.Studio`: `CreatePool` (unsigned launch transaction plus presigned URLs),
+`UploadImage` and `UploadMetadata` (presigned PUTs; overwriting is harmless, so
+`RepeatableRetry`), `Submit` (multipart form built with `mime/multipart`, with an
+explicit content type for the header image; one attempt; `ErrOutcomeUnknown` for
+ambiguous failures; an explicit `success: false` is a known failure),
+`PoolAddresses`, `Fee` (a POST that only reads, so `ReadOnlyRetry`), and
+`ClaimFeeTransaction`. Requests validate addresses, positive market caps with
+migration above initial, required non-negative vesting numbers
+(`NoLockedVesting` helper), and required fields; documented enum values are
+constants and other values pass through to the API, as for other products.
+
+Example: `examples/studio` (builds and signs; launches only with
+`JUPITER_LAUNCH_TOKEN=yes`).
+
+Tests: transport guarantees for external URLs (no key or headers, exact
+presigned query, HTTPS and user-info checks, path/header conflicts), payload
+content types, and body/payload exclusivity; the full launch flow over TLS
+checking exact curve numbers, omitted LP lock, upload methods, bodies, content
+types, the absence of the API key on uploads and its presence on API calls, and
+the parsed multipart form; submit outcomes (500 unknown; 400 and explicit
+failure known; single attempts); pool and fee reads with nulls; fee read retry;
+14 invalid inputs rejected before transport.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.

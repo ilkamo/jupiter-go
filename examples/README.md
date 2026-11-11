@@ -111,6 +111,21 @@ an ed25519 `crypto.Signer` for `solanatx`. A send transaction needs the sender
 and invite signatures; a clawback (`CraftClawback`) needs only the sender. An
 `InviteCode` prints as redacted; `Reveal` returns the code to share.
 
+## Studio
+
+```sh
+JUPITER_API_KEY=your-key SOLANA_PRIVATE_KEY=... TOKEN_NAME=... TOKEN_SYMBOL=... \
+  go run ./examples/studio
+```
+
+Builds and signs a token launch on a Dynamic Bonding Curve with the documented
+"Meme" preset and stops. With `JUPITER_LAUNCH_TOKEN=yes` and a PNG at
+`TOKEN_IMAGE`, it uploads the image and metadata to the presigned URLs and
+submits, which creates the token on-chain. Uploads go only to HTTPS presigned
+URLs and never carry the API key. `Submit` makes one attempt and wraps
+`studio.ErrOutcomeUnknown` when the launch may still land; check
+`PoolAddresses` for the mint before submitting again. Studio is beta upstream.
+
 ## Signing and execution
 
 Signing uses `solanatx`, the only new-SDK package that depends on solana-go.
