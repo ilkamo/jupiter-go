@@ -34,7 +34,7 @@ state-changing GETs must not inherit a read-only policy.
 ## Coverage
 
 - swap: 4 operations; 4 methods implemented, response parity review pending.
-- tokens: 7 operations; 4 discovery operations implemented, 3 verification operations pending.
+- tokens: 7 operations; all implemented (Express Verification on `Client.Express`).
 - price: 1 operation; implemented.
 - transaction: 1 operation; implemented on its own service URL.
 - lend: 15 operations; all implemented (upstream beta).
@@ -58,9 +58,9 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | tokens | `GET https://api.jup.ag/tokens/v2/tag` | ApiKeyAuth | — | Implemented / request and response contract tests | [Tag](https://developers.jup.ag/docs/api-reference/tokens/tag.md) |
 | tokens | `GET https://api.jup.ag/tokens/v2/{category}/{interval}` | ApiKeyAuth | limit | Implemented / request and response contract tests | [Category](https://developers.jup.ag/docs/api-reference/tokens/category.md) |
 | tokens | `GET https://api.jup.ag/tokens/v2/recent` | ApiKeyAuth | — | Implemented / request and response contract tests | [Recent](https://developers.jup.ag/docs/api-reference/tokens/recent.md) |
-| tokens | `GET https://api.jup.ag/tokens/v2/verify/express/check-eligibility` | ApiKeyAuth | — | Pending / none | [Check Eligibility](https://developers.jup.ag/docs/api-reference/tokens/verify-check-eligibility.md) |
-| tokens | `GET https://api.jup.ag/tokens/v2/verify/express/craft-txn` | ApiKeyAuth | — | Pending / none | [Craft Transaction](https://developers.jup.ag/docs/api-reference/tokens/verify-craft-txn.md) |
-| tokens | `POST https://api.jup.ag/tokens/v2/verify/express/execute` | ApiKeyAuth | — | Pending / none | [Execute Verification (Tokens API)](https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/verify/express/check-eligibility` | ApiKeyAuth | — | Implemented / request and response contract tests | [Check Eligibility](https://developers.jup.ag/docs/api-reference/tokens/verify-check-eligibility.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/verify/express/craft-txn` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Transaction](https://developers.jup.ag/docs/api-reference/tokens/verify-craft-txn.md) |
+| tokens | `POST https://api.jup.ag/tokens/v2/verify/express/execute` | ApiKeyAuth | — | Implemented / request and response contract tests | [Execute Verification (Tokens API)](https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md) |
 | price | `GET https://api.jup.ag/price/v3/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Price (Price API V3)](https://developers.jup.ag/docs/api-reference/price/index.md) |
 | transaction | `POST https://tx.jup.ag/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Send Transaction](https://developers.jup.ag/docs/api-reference/transaction/submit.md) |
 | lend | `POST https://api.jup.ag/lend/v1/earn/deposit` | ApiKeyAuth | — | Implemented / request and response contract tests | [Deposit](https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md) |

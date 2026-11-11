@@ -84,7 +84,9 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Tokens verification. Audit the current documentation index for additional APIs.
+4. All 82 indexed operations and the spec-only Prediction forecast are
+   implemented. Re-audit the documentation index for new APIs and guide-only
+   operations before the release candidate. Audit the current documentation index for additional APIs.
    These are not implemented. Decide the compatibility boundary for upstream beta
    products (Lend, Prediction) during the compatibility review.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
@@ -758,6 +760,42 @@ success, JSON-RPC rejection, persistent 500 (three attempts, unknown), wrong
 response ID, and 401, with byte-identical retries; invalid inputs and
 transaction URLs; tip instruction program, accounts, receiver set, encoded
 lamports, minimum, and use in `Assemble`.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Tokens Express Verification
+
+Committed transaction submission as `628ecfd`. The three Express Verification
+references (hashes match the manifest) are pinned in `openapi/tokens-v2`. With
+this step every operation in the inventory and manifest is implemented.
+
+`client.Tokens.Express` is separate from discovery because it pays for
+submissions (1000 JUP each):
+
+- `CheckEligibility(tokenID)` reads, with `ReadOnlyRetry`.
+- `CraftPayment(sender, currency)` builds the unsigned payment in JUP (default,
+  direct transfer) or SOL, USDC, or JUPUSD (an Ultra swap to JUP). Crafting
+  submits nothing and returns a fresh request ID, so it uses `RepeatableRetry`. A
+  response with an `error` or non-zero `code` returns `*ExpressError`.
+- `Execute` validates the signed transaction, request ID, sender and token
+  addresses, Twitter handle, description, optional metadata token, and raw
+  amounts; a non-JUP currency requires `PaymentAmount`, as documented. It makes
+  one attempt, requires an explicit `Success` (`*ExpressError` otherwise), and
+  wraps `ErrOutcomeUnknown` for ambiguous failures; an ended context sends
+  nothing.
+
+Currencies are constants and other values pass through. Metadata update fields
+are omitted when unset; its `Use*` flags are pointers so `false` is sent.
+
+Example: `examples/tokens` checks eligibility when `EXPRESS_TOKEN_ID` is set and
+never pays; the README documents the paid flow.
+
+Tests: eligibility and craft query encoding (no currency parameter for the JUP
+default), swap sizing fields, craft failure codes, execute body with canonical
+amounts, omitted fields, and explicit `false` metadata flags, execute outcomes
+(failed or missing status, 500 unknown, 409 known, single attempts), the JUP
+path without an amount, and 7 invalid inputs rejected before transport.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.

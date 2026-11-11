@@ -1,7 +1,7 @@
 // Package tokens implements Jupiter's Tokens V2 discovery operations.
 //
-// Token verification operations are not implemented: they craft and pay for
-// transactions and need a separate payment workflow.
+// Express Verification, which crafts and pays for a submission, is separate:
+// Client.Express.
 package tokens
 
 import (
@@ -47,10 +47,16 @@ var ErrInvalidAddress = address.ErrInvalid
 
 type Client struct {
 	transport *transport.Client
+
+	// Express submits tokens for paid VRFD Express Verification.
+	Express *ExpressClient
 }
 
 func NewClient(t *transport.Client) *Client {
-	return &Client{transport: t}
+	return &Client{
+		transport: t,
+		Express:   &ExpressClient{transport: t},
+	}
 }
 
 // Search finds tokens by symbol, name, or a single mint address. Jupiter returns up

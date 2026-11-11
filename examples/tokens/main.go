@@ -1,4 +1,6 @@
-// Command tokens searches for a token and prints USD prices without signing anything.
+// Command tokens searches for a token and prints USD prices without signing
+// anything. With EXPRESS_TOKEN_ID set, it also checks whether that token can be
+// submitted for paid Express Verification; it never pays.
 package main
 
 import (
@@ -63,5 +65,23 @@ func run() error {
 		}
 	}
 
-	return nil
+	tokenID := os.Getenv("EXPRESS_TOKEN_ID")
+	if tokenID == "" {
+		return nil
+	}
+
+	eligibility, err := client.Tokens.Express.CheckEligibility(ctx, tokenID)
+	if err != nil {
+		return fmt.Errorf("express eligibility: %w", err)
+	}
+
+	_, err = fmt.Printf(
+		"Express verification: can verify %t (%s), can update metadata %t (%s)\n",
+		eligibility.CanVerify,
+		eligibility.VerificationError,
+		eligibility.CanMetadata,
+		eligibility.MetadataError,
+	)
+
+	return err
 }

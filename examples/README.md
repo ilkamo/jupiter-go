@@ -31,6 +31,14 @@ takes one symbol, name, or mint; use `Tokens.Lookup` for up to 100 mints.
 `Missing`, since Jupiter omits them from the response. Numbers are
 `json.Number`; an empty value means the API reported null.
 
+Set `EXPRESS_TOKEN_ID` to also check Express Verification eligibility. Express
+submissions cost 1000 JUP (free standard submissions are on verified.jup.ag):
+`client.Tokens.Express.CraftPayment` builds the payment in JUP, SOL, USDC, or
+JUPUSD; sign it with `solanatx`, then `Execute` with the token details. For
+non-JUP payments pass the craft response's `QuotedInputAmount` as
+`PaymentAmount`. Execute makes one attempt; `tokens.ErrOutcomeUnknown` marks
+failures after which the payment may have landed.
+
 ## Trigger sessions
 
 ```sh

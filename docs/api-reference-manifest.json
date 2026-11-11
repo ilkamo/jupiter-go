@@ -120,7 +120,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "tokens",
@@ -133,7 +133,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "tokens",
@@ -146,7 +146,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "price",
