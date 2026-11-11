@@ -1,0 +1,4 @@
+# Shows a "Sponsor" button on the repository. After enrolling in GitHub
+# Sponsors, add: github: ilkamo
+custom:
+  - https://github.com/ilkamo/jupiter-go#donate
