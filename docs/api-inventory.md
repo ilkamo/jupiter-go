@@ -40,7 +40,7 @@ state-changing GETs must not inherit a read-only policy.
 - lend: 15 operations; all implemented (upstream beta).
 - trigger: 18 operations; all implemented.
 - prediction: 27 indexed operations plus the spec-only `GET /forecast`; all implemented (upstream beta).
-- send: 4 operations; not implemented.
+- send: 4 operations; all implemented (upstream beta).
 - studio: 5 operations; not implemented.
 
 ## Operations
@@ -124,10 +124,10 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | prediction | `GET https://api.jup.ag/prediction/v1/leaderboards` | ApiKeyAuth | limit | Implemented / request and response contract tests | [Get Leaderboards](https://developers.jup.ag/docs/api-reference/prediction/get-leaderboards.md) |
 | prediction | `GET https://api.jup.ag/prediction/v1/vault-info` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Vault Info](https://developers.jup.ag/docs/api-reference/prediction/get-vault-info.md) |
 | prediction | `GET https://api.jup.ag/prediction/v1/forecast` | ApiKeyAuth | — | Implemented / request and response contract tests | Spec only: [prediction.yaml](https://developers.jup.ag/docs/openapi-spec/prediction/prediction.yaml) |
-| send | `POST https://api.jup.ag/send/v1/craft-send` | ApiKeyAuth | — | Pending / none | [Craft Send](https://developers.jup.ag/docs/api-reference/send/craft-send.md) |
-| send | `POST https://api.jup.ag/send/v1/craft-clawback` | ApiKeyAuth | — | Pending / none | [Craft Clawback](https://developers.jup.ag/docs/api-reference/send/craft-clawback.md) |
-| send | `GET https://api.jup.ag/send/v1/pending-invites` | ApiKeyAuth | page | Pending / none | [Pending Invites](https://developers.jup.ag/docs/api-reference/send/pending-invites.md) |
-| send | `GET https://api.jup.ag/send/v1/invite-history` | ApiKeyAuth | page | Pending / none | [Invite History](https://developers.jup.ag/docs/api-reference/send/invite-history.md) |
+| send | `POST https://api.jup.ag/send/v1/craft-send` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Send](https://developers.jup.ag/docs/api-reference/send/craft-send.md) |
+| send | `POST https://api.jup.ag/send/v1/craft-clawback` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Clawback](https://developers.jup.ag/docs/api-reference/send/craft-clawback.md) |
+| send | `GET https://api.jup.ag/send/v1/pending-invites` | ApiKeyAuth | page | Implemented / request and response contract tests | [Pending Invites](https://developers.jup.ag/docs/api-reference/send/pending-invites.md) |
+| send | `GET https://api.jup.ag/send/v1/invite-history` | ApiKeyAuth | page | Implemented / request and response contract tests | [Invite History](https://developers.jup.ag/docs/api-reference/send/invite-history.md) |
 | studio | `POST https://api.jup.ag/studio/v1/dbc-pool/create-tx` | ApiKeyAuth | — | Pending / none | [DBC Pool Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-create-tx.md) |
 | studio | `POST https://api.jup.ag/studio/v1/dbc-pool/submit` | ApiKeyAuth | — | Pending / none | [DBC Pool Submit](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-submit.md) |
 | studio | `GET https://api.jup.ag/studio/v1/dbc-pool/addresses/{mint}` | ApiKeyAuth | — | Pending / none | [DBC Pool Addresses by Mint](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-addresses-by-mint.md) |

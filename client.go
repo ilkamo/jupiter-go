@@ -13,6 +13,7 @@ import (
 	"github.com/ilkamo/jupiter-go/lend"
 	"github.com/ilkamo/jupiter-go/prediction"
 	"github.com/ilkamo/jupiter-go/price"
+	"github.com/ilkamo/jupiter-go/send"
 	"github.com/ilkamo/jupiter-go/swap"
 	"github.com/ilkamo/jupiter-go/tokens"
 	"github.com/ilkamo/jupiter-go/trigger"
@@ -35,6 +36,7 @@ type Client struct {
 	Trigger    *trigger.Client
 	Lend       *lend.Client
 	Prediction *prediction.Client
+	Send       *send.Client
 }
 
 type config struct {
@@ -102,5 +104,6 @@ func NewClient(options ...Option) (*Client, error) {
 		Trigger:    trigger.NewClient(t),
 		Lend:       lend.NewClient(t),
 		Prediction: prediction.NewClient(t),
+		Send:       send.NewClient(t),
 	}, nil
 }

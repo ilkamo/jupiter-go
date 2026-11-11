@@ -97,6 +97,20 @@ unchanged. Execute makes one attempt, requires an explicit `Success`, and wraps
 `prediction.ErrOutcomeUnknown` when the transaction may still land. An executed
 order is open, not filled; poll `OrderStatus`.
 
+## Send
+
+```sh
+JUPITER_API_KEY=your-key SENDER_ADDRESS=... go run ./examples/send
+```
+
+Generates an invite code and builds an unsigned 0.01 SOL send to it. Send is beta
+upstream; recipients claim in Jupiter Mobile. Invite codes and their keys stay on
+the client: `send.NewInviteCode` generates one, `InviteCode.Signer` and
+`InviteCode.PDA` give the addresses the API needs, and `InviteCode.PrivateKey` is
+an ed25519 `crypto.Signer` for `solanatx`. A send transaction needs the sender
+and invite signatures; a clawback (`CraftClawback`) needs only the sender. An
+`InviteCode` prints as redacted; `Reveal` returns the code to share.
+
 ## Signing and execution
 
 Signing uses `solanatx`, the only new-SDK package that depends on solana-go.

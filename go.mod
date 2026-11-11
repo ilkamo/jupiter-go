@@ -3,6 +3,7 @@ module github.com/ilkamo/jupiter-go
 go 1.26.0
 
 require (
+	filippo.io/edwards25519 v1.2.0
 	github.com/gagliardetto/binary v0.8.0
 	github.com/gagliardetto/solana-go v1.26.0
 	github.com/mr-tron/base58 v1.2.0

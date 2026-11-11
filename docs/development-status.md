@@ -84,7 +84,7 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Send, Studio, transaction submission, and Tokens verification. Audit the current documentation index for additional APIs.
+4. Implement Studio, transaction submission, and Tokens verification. Audit the current documentation index for additional APIs.
    These are not implemented. Decide the compatibility boundary for upstream beta
    products (Lend, Prediction) during the compatibility review.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
@@ -631,6 +631,47 @@ close-all results; claims; Execute success, failed and missing status, 500 as
 unknown, 400 as known, single attempts, and opaque context; account reads with
 query encoding and nullable fields; 25 invalid inputs rejected before transport
 and never marked unknown.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Send
+
+Committed the shared test servers as `33bd08f` and Prediction as `b376116`.
+The 4 Send references (hashes match the manifest) and its guides are pinned in
+`openapi/send-v1`. Send is beta upstream.
+
+Invite codes (`send.InviteCode`), implemented from the invite-code and clawback
+guides with the standard library plus established parsers:
+
+- `NewInviteCode` takes 13 bytes from `crypto/rand`, base58-encodes them, and keeps
+  the first 12 characters, as documented. `ParseInviteCode` requires 12 base58
+  characters.
+- `PrivateKey` uses `SHA-256("invite:" + code)` as the ed25519 seed;
+  `ed25519.NewKeyFromSeed` produces the documented `[seed || public key]` layout.
+  It implements `crypto.Signer`, so `solanatx` signs with it.
+- `PDA`/`InvitePDA` derive the invite account for seeds `"invite"` and the signer
+  under program `inv1tEtSwRMtM44tbvJGNiTxMvDfPVnX9StyqXfDfks`, trying bumps 255 to 1
+  and using `filippo.io/edwards25519` (new direct dependency, v1.2.0) to reject
+  on-curve candidates. The package stays free of solana-go.
+- `InviteCode` formats as a redacted placeholder with `%v`, `%s`, `%+v`, and
+  `%#v`, including inside structs; `Reveal` returns the code deliberately.
+
+`client.Send`: `CraftSend` (canonical amount, optional mint; wrapped SOL by
+default), `CraftClawback`, `PendingInvites`, and `InviteHistory` (page from 1;
+zero uses the default). Builders use `RepeatableRetry`, reads `ReadOnlyRetry`.
+Schema conflicts: `confirmed` is declared an integer but returned as a boolean in
+examples (`send.Confirmed` accepts both and null); `expiry` is described as a
+Unix timestamp but shown as RFC 3339, so it stays a string.
+
+Example: `examples/send` (generates a code and builds an unsigned send).
+
+Tests: 200 generated codes parse and are unique; derivation matches the
+documented seed and key layout; PDAs match solana-go `FindProgramAddress` for
+200 random invites; redaction in every format verb; malformed codes rejected; a
+built send transaction signed by both sender and invite key with `solanatx`;
+clawback body, invite paging, and all `confirmed` forms; invalid inputs rejected
+before transport.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.
