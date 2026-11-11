@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org).
 
-## v1.0.0 (unreleased)
+## v1.0.0 (2026-11-11)
 
 v1 is a rewrite around a single root client, `jupiter.NewClient`, with typed
 product clients. It targets Jupiter's current APIs (Swap V2, Tokens V2, Price V3,
