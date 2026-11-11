@@ -42,7 +42,6 @@ func run() error {
 
 	client, err := jupiter.NewClient(
 		jupiter.WithAPIKey(os.Getenv("JUPITER_API_KEY")),
-		jupiter.WithoutMaintainerFee(),
 	)
 	if err != nil {
 		return err

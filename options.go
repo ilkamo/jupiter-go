@@ -59,22 +59,10 @@ func WithoutRetries() Option {
 	}
 }
 
-// WithoutMaintainerFee selects the current fee-free SDK policy.
-// Jupiter and network fees still apply.
-func WithoutMaintainerFee() Option {
-	return func(c *config) error {
-		if c.feeConfigured {
-			return fmt.Errorf("conflicting fee options")
-		}
-
-		c.feeConfigured = true
-		c.fee = swap.Referral{}
-
-		return nil
-	}
-}
-
-// WithReferral replaces the SDK fee policy for managed orders. Accounts must be provisioned separately.
+// WithReferral adds your own Jupiter referral fee, from 50 to 255 basis points, to
+// managed Swap orders. The SDK charges no fee of its own. Provision the referral
+// account and its token accounts separately: without them Jupiter executes orders
+// without collecting the fee. Configuring a referral twice is an error.
 func WithReferral(account string, bps uint16) Option {
 	return func(c *config) error {
 		referral := swap.Referral{Account: account, BasisPoints: bps}
@@ -82,12 +70,12 @@ func WithReferral(account string, bps uint16) Option {
 			return fmt.Errorf("referral: %w", err)
 		}
 
-		if c.feeConfigured {
-			return fmt.Errorf("conflicting fee options")
+		if c.referralConfigured {
+			return fmt.Errorf("referral configured more than once")
 		}
 
-		c.feeConfigured = true
-		c.fee = referral
+		c.referralConfigured = true
+		c.referral = referral
 
 		return nil
 	}

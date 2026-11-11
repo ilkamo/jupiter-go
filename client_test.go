@@ -138,7 +138,10 @@ func TestConfiguration(t *testing.T) {
 		{jupiter.WithTimeout(0)},
 		{jupiter.WithBaseURL("ftp://host")},
 		{jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps-1)},
-		{jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps), jupiter.WithoutMaintainerFee()},
+		{
+			jupiter.WithReferral(referralAccount, swap.MinReferralFeeBps),
+			jupiter.WithReferral(referralAccount, swap.MaxReferralFeeBps),
+		},
 		{nil},
 	}
 

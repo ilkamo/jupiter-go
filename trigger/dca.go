@@ -137,7 +137,7 @@ func (r DCAOrderRequest) validateType() error {
 		}
 
 		if r.JLEnabled {
-			return fmt.Errorf("Earn While You Wait requires time-based DCA")
+			return fmt.Errorf("earn while you wait requires time-based DCA")
 		}
 	default:
 		return fmt.Errorf("DCA order type must be %q or %q", DCATimeBased, DCAPriceConditional)
@@ -158,7 +158,7 @@ func (r DCAOrderRequest) validateType() error {
 	}
 
 	if r.JLEnabled != (r.JLMint != "") {
-		return fmt.Errorf("Earn While You Wait requires both JLEnabled and JLMint")
+		return fmt.Errorf("earn while you wait requires both JLEnabled and JLMint")
 	}
 
 	if r.JLMint != "" {

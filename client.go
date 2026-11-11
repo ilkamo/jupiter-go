@@ -44,18 +44,19 @@ type Client struct {
 }
 
 type config struct {
-	baseURL, apiKey string
-	transactionURL  string
-	http            HTTPClient
-	timeout         time.Duration
-	fee             swap.Referral
-	feeConfigured   bool
-	disableRetries  bool
+	baseURL, apiKey    string
+	transactionURL     string
+	http               HTTPClient
+	timeout            time.Duration
+	referral           swap.Referral
+	referralConfigured bool
+	disableRetries     bool
 }
 
 type Option func(*config) error
 
-// NewClient constructs a client without network calls or a maintainer fee.
+// NewClient constructs a client without network calls. The SDK charges no fee;
+// WithReferral adds your own referral fee to managed Swap orders.
 // WithTimeout bounds each operation, including its retries. Read-only operations,
 // order, and build retry transient failures; Swap execute never retries.
 // WithHTTPClient transfers redirect and credential-forwarding responsibility to the caller.
@@ -96,7 +97,7 @@ func NewClient(options ...Option) (*Client, error) {
 	t := c.transport(c.baseURL)
 
 	return &Client{
-		Swap:        swap.NewClient(t, c.fee),
+		Swap:        swap.NewClient(t, c.referral),
 		Tokens:      tokens.NewClient(t),
 		Price:       price.NewClient(t),
 		Trigger:     trigger.NewClient(t),

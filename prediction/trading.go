@@ -25,11 +25,9 @@ const (
 	BasisPointsPerWhole = 10000
 )
 
-var (
-	// ErrOutcomeUnknown marks Execute failures after which the transaction may still
-	// land. Check the order status or positions before building another order.
-	ErrOutcomeUnknown = errors.New("prediction execution outcome unknown")
-)
+// ErrOutcomeUnknown marks Execute failures after which the transaction may still
+// land. Check the order status or positions before building another order.
+var ErrOutcomeUnknown = errors.New("prediction execution outcome unknown")
 
 // ExecutionError reports an Execute response that did not confirm success.
 type ExecutionError struct {
