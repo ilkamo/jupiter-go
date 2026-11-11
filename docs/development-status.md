@@ -829,3 +829,29 @@ transactions. No funds were spent; all calls were keyless.
 
 Remaining live work is tier 3 (funded): one managed swap and one build submitted
 through tx.jup.ag, as described in `handoff.md`.
+
+## Funded smoke test (tier 3)
+
+Wallet `a throwaway test wallet` (key kept by the owner at
+a local keypair file, outside the repository), funded
+with 0.05 SOL. All calls were keyless. Both examples gained an optional
+`SWAP_AMOUNT_LAMPORTS` override; tests used 1,000,000 lamports (0.001 SOL).
+
+| Flow | Signature | Result |
+| - | - | - |
+| Managed swap (`Order` + `solanatx` + `Execute`) | (signature omitted) | Finalized; `Execute` reported 84,111 USDC raw out, matching the on-chain token balance change exactly; locally computed transaction ID matched the executed signature |
+| Build + `Assemble` + `Transaction.Send` (tx.jup.ag) | (signature omitted) | Finalized; 1,000,000-lamport tip to `HFqp6ErW…`; USDC 84,111 → 168,223 |
+| Same, second run | (signature omitted) | Finalized; tip to a different receiver (`3LoAYHuS…`), confirming randomization; USDC 168,223 → 252,360 |
+
+Findings:
+
+- tx.jup.ag accepts keyless submissions; a malformed payload returns JSON-RPC
+  -32602 (not among the documented codes), surfaced as `*transaction.RPCError`.
+- The build example reported "blockhash expired" although the transaction
+  landed: publicnode's `getBlockHeight` returns the slot (468,158,062 vs. the
+  true block height 446,174,438 on Solana's endpoint, which matched Jupiter's
+  `lastValidBlockHeight`). Not an SDK bug. The example now re-checks the
+  signature status before declaring expiry and documents the RPC requirement.
+  Solana's public endpoint blocked `getSignatureStatuses` (and simulation) by
+  IP, so full confirmation-loop verification needs a dedicated RPC provider.
+- Balance after the tests: 0.040392785 SOL and 252,360 USDC raw (0.25236 USDC).

@@ -34,7 +34,7 @@ const (
 	confirmationPoll     = 2 * time.Second
 	wrappedSOLMint       = "So11111111111111111111111111111111111111112"
 	usdcMint             = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-	swapAmountLamports   = "10000000"
+	defaultSwapLamports  = "10000000"
 	executeConfirmation  = "yes"
 	simulateConfirmation = "yes"
 	simulationLogLines   = 5
@@ -72,7 +72,7 @@ func run() error {
 	request := swap.BuildRequest{
 		InputMint:  wrappedSOLMint,
 		OutputMint: usdcMint,
-		Amount:     swapAmountLamports,
+		Amount:     swapAmount(),
 		Taker:      taker,
 	}
 	if viaJupiter {
@@ -210,7 +210,9 @@ func submit(
 	return solana.SignatureFromBase58(sent.Signature)
 }
 
-// awaitConfirmation polls until the transaction is confirmed, fails, or can no longer land.
+// awaitConfirmation polls until the transaction is confirmed, fails, or can no longer
+// land. SOLANA_RPC_URL must report the true block height: some providers return the
+// slot from getBlockHeight, which makes a fresh blockhash look expired.
 func awaitConfirmation(
 	ctx context.Context,
 	node *rpc.Client,
@@ -221,21 +223,9 @@ func awaitConfirmation(
 	defer ticker.Stop()
 
 	for {
-		statuses, err := node.GetSignatureStatuses(ctx, false, signature)
-		if err != nil {
-			return fmt.Errorf("signature status: %w", err)
-		}
-
-		if len(statuses.Value) > 0 && statuses.Value[0] != nil {
-			status := statuses.Value[0]
-			if status.Err != nil {
-				return fmt.Errorf("transaction failed: %v", status.Err)
-			}
-
-			switch status.ConfirmationStatus {
-			case rpc.ConfirmationStatusConfirmed, rpc.ConfirmationStatusFinalized:
-				return nil
-			}
+		confirmed, err := checkConfirmed(ctx, node, signature)
+		if err != nil || confirmed {
+			return err
 		}
 
 		height, err := node.GetBlockHeight(ctx, rpc.CommitmentConfirmed)
@@ -244,6 +234,12 @@ func awaitConfirmation(
 		}
 
 		if height > lastValidBlockHeight {
+			// The transaction may have landed since the last check.
+			confirmed, err := checkConfirmed(ctx, node, signature)
+			if err != nil || confirmed {
+				return err
+			}
+
 			return errBlockhashExpired
 		}
 
@@ -253,4 +249,38 @@ func awaitConfirmation(
 		case <-ticker.C:
 		}
 	}
+}
+
+// checkConfirmed reports whether the transaction reached confirmed commitment, or
+// an error if it failed on-chain.
+func checkConfirmed(ctx context.Context, node *rpc.Client, signature solana.Signature) (bool, error) {
+	statuses, err := node.GetSignatureStatuses(ctx, false, signature)
+	if err != nil {
+		return false, fmt.Errorf("signature status: %w", err)
+	}
+
+	if len(statuses.Value) == 0 || statuses.Value[0] == nil {
+		return false, nil
+	}
+
+	status := statuses.Value[0]
+	if status.Err != nil {
+		return false, fmt.Errorf("transaction failed: %v", status.Err)
+	}
+
+	switch status.ConfirmationStatus {
+	case rpc.ConfirmationStatusConfirmed, rpc.ConfirmationStatusFinalized:
+		return true, nil
+	default:
+		return false, nil
+	}
+}
+
+// swapAmount returns SWAP_AMOUNT_LAMPORTS, or 0.01 SOL when it is unset.
+func swapAmount() string {
+	if amount := os.Getenv("SWAP_AMOUNT_LAMPORTS"); amount != "" {
+		return amount
+	}
+
+	return defaultSwapLamports
 }

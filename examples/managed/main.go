@@ -24,7 +24,7 @@ const (
 	operationTimeout    = 30 * time.Second
 	wrappedSOLMint      = "So11111111111111111111111111111111111111112"
 	usdcMint            = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-	swapAmountLamports  = "10000000"
+	defaultSwapLamports = "10000000"
 	executeConfirmation = "yes"
 )
 
@@ -53,7 +53,7 @@ func run() error {
 	order, err := client.Swap.Order(ctx, swap.OrderRequest{
 		InputMint:  wrappedSOLMint,
 		OutputMint: usdcMint,
-		Amount:     swapAmountLamports,
+		Amount:     swapAmount(),
 		Taker:      wallet.PublicKey().String(),
 	})
 	if err != nil {
@@ -122,4 +122,13 @@ func run() error {
 	)
 
 	return err
+}
+
+// swapAmount returns SWAP_AMOUNT_LAMPORTS, or 0.01 SOL when it is unset.
+func swapAmount() string {
+	if amount := os.Getenv("SWAP_AMOUNT_LAMPORTS"); amount != "" {
+		return amount
+	}
+
+	return defaultSwapLamports
 }

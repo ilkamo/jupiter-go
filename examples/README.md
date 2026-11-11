@@ -191,7 +191,11 @@ Set `JUPITER_SUBMIT_VIA=tx` to submit through Jupiter's landing service
 transaction sent there must tip at least `transaction.MinTipLamports` (0.001 SOL)
 to one of `transaction.TipReceivers`: the example sets `BuildRequest.TipAmount`;
 for other transactions add `solanatx.TipInstruction`. The service is send-only,
-so confirmation still uses `SOLANA_RPC_URL`. JSON-RPC rejections are
+so confirmation still uses `SOLANA_RPC_URL`. That node must serve
+`getSignatureStatuses` and report the true block height: publicnode returns the
+slot from `getBlockHeight`, which makes a fresh blockhash look expired, and
+Solana's public endpoint may block status queries by IP. Use a dedicated RPC
+provider for submissions. JSON-RPC rejections are
 `*transaction.RPCError`; resubmitting the same signed bytes is safe, so transient
 failures are retried, and `transaction.ErrOutcomeUnknown` marks failures after
 which the transaction may have been forwarded.
