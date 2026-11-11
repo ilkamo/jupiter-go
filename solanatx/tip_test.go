@@ -33,7 +33,7 @@ func TestTipInstruction(t *testing.T) {
 		t.Fatalf("funding account = %+v", accounts[0])
 	}
 
-	if !slices.Contains(transaction.TipReceivers, accounts[1].PublicKey.String()) {
+	if !slices.Contains(transaction.TipReceivers(), accounts[1].PublicKey.String()) {
 		t.Fatalf("receiver %s is not a documented tip account", accounts[1].PublicKey)
 	}
 

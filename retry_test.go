@@ -185,7 +185,7 @@ func TestExecuteFailureClassification(t *testing.T) {
 				t.Fatalf("execute retried: %d calls", calls.Load())
 			}
 
-			if errors.Is(err, swap.ErrExecutionOutcomeUnknown) != test.unknown {
+			if errors.Is(err, swap.ErrOutcomeUnknown) != test.unknown {
 				t.Fatalf("unexpected outcome classification: %v", err)
 			}
 
@@ -211,7 +211,7 @@ func TestExecuteTransportFailureIsUnknown(t *testing.T) {
 		RequestID:         "order",
 		SignedTransaction: "AQ==",
 	})
-	if !errors.Is(err, swap.ErrExecutionOutcomeUnknown) {
+	if !errors.Is(err, swap.ErrOutcomeUnknown) {
 		t.Fatalf("expected unknown outcome, got %v", err)
 	}
 }
@@ -229,7 +229,7 @@ func TestExecuteWithEndedContextSendsNothing(t *testing.T) {
 		RequestID:         "order",
 		SignedTransaction: "AQ==",
 	})
-	if !errors.Is(err, context.Canceled) || errors.Is(err, swap.ErrExecutionOutcomeUnknown) {
+	if !errors.Is(err, context.Canceled) || errors.Is(err, swap.ErrOutcomeUnknown) {
 		t.Fatalf("expected known cancellation, got %v", err)
 	}
 }

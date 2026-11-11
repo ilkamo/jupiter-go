@@ -2,7 +2,7 @@
 // infrastructure at tx.jup.ag, a send-only, Solana RPC-compatible JSON-RPC
 // endpoint.
 //
-// Every transaction must transfer at least MinTipLamports to one of TipReceivers
+// Every transaction must transfer at least MinTipLamports to one of TipReceivers()
 // (solanatx.TipInstruction builds that instruction). A successful Send means the
 // transaction was accepted and forwarded, not that it landed: confirm it on your
 // own RPC node, which also serves blockhashes and simulation.
@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
+	"slices"
 
 	"github.com/ilkamo/jupiter-go/internal/transport"
 	"github.com/ilkamo/jupiter-go/response"
@@ -41,9 +42,8 @@ const (
 	rootPath       = "/"
 )
 
-// TipReceivers are the documented tip accounts. Spread tips across them, for
-// example with RandomTipReceiver, to reduce write-lock contention.
-var TipReceivers = []string{
+// tipReceivers are the documented tip accounts.
+var tipReceivers = []string{
 	"GGztQqQ6pCPaJQnNpXBgELr5cs3WwDakRbh1iEMzjgSJ",
 	"2MFoS3MPtvyQ4Wh4M9pdfPjz6UhVoNbFbGJAskCPCj3h",
 	"BQ72nSv9f3PRyRKCBnHLVrerrv37CYTHm5h3s9VSGQDV",
@@ -62,10 +62,16 @@ var TipReceivers = []string{
 	"7iWnBRRhBCiNXXPhqiGzvvBkKrvFSWqqmxRyu9VyYBxE",
 }
 
+// TipReceivers returns a copy of the documented tip accounts. Spread tips across
+// them, for example with RandomTipReceiver, to reduce write-lock contention.
+func TipReceivers() []string {
+	return slices.Clone(tipReceivers)
+}
+
 // RandomTipReceiver picks a tip account. The choice only spreads load, so it uses
 // a non-cryptographic generator.
 func RandomTipReceiver() string {
-	return TipReceivers[rand.N(len(TipReceivers))]
+	return tipReceivers[rand.N(len(tipReceivers))]
 }
 
 // ErrOutcomeUnknown marks Send failures after which the transaction may have been

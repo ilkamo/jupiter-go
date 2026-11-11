@@ -39,7 +39,7 @@ type SessionOptions struct {
 	// OnRefresh receives every rotated token pair, for example to persist it for
 	// Resume. Rotation invalidates the previous refresh token, so a stored copy that
 	// is not updated cannot resume the session. Calls are serialized.
-	OnRefresh func(context.Context, Tokens) error
+	OnRefresh func(context.Context, AuthTokens) error
 }
 
 // Session holds one wallet's tokens and authorizes Trigger operations for that
@@ -52,11 +52,11 @@ type Session struct {
 	now     func() time.Time
 
 	mu     sync.Mutex
-	tokens Tokens
+	tokens AuthTokens
 	closed bool
 }
 
-func newSession(c *Client, wallet string, tokens Tokens, options SessionOptions) *Session {
+func newSession(c *Client, wallet string, tokens AuthTokens, options SessionOptions) *Session {
 	return &Session{
 		client:  c,
 		wallet:  wallet,
@@ -71,8 +71,8 @@ func (s *Session) Wallet() string {
 	return s.wallet
 }
 
-// Tokens returns the current token pair, for example to persist it before exit.
-func (s *Session) Tokens() Tokens {
+// AuthTokens returns the current token pair, for example to persist it before exit.
+func (s *Session) AuthTokens() AuthTokens {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

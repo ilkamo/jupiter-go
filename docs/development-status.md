@@ -225,7 +225,7 @@ error. Request bodies are encoded once and replayed byte-for-byte.
 `response.Metadata.Attempts` reports the attempts made. `WithoutRetries()` forces
 single attempts for callers whose HTTP client already retries.
 
-Execute failures that may still have landed wrap `swap.ErrExecutionOutcomeUnknown`:
+Execute failures that may still have landed wrap `swap.ErrOutcomeUnknown`:
 transport failures, timeouts, 5xx responses (the documented 500 body can carry a
 signature), and unreadable success bodies. 4xx responses, including 429, are
 definitive rejections. If the context has already ended before execute, nothing

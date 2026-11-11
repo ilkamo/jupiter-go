@@ -360,8 +360,11 @@ type priceOrderUpdateBody struct {
 	SLSlippageBps   *uint16     `json:"slSlippageBps,omitempty"`
 }
 
-type orderID struct {
+// OrderUpdate is the result of UpdatePriceOrder.
+type OrderUpdate struct {
 	ID string `json:"id"`
+
+	Metadata response.Metadata `json:"-"`
 }
 
 func (u PriceOrderUpdate) body() (priceOrderUpdateBody, error) {
@@ -399,15 +402,19 @@ func (u PriceOrderUpdate) body() (priceOrderUpdateBody, error) {
 
 // UpdatePriceOrder changes an open order. Updates set absolute values, so
 // transient failures are retried.
-func (s *Session) UpdatePriceOrder(ctx context.Context, id string, u PriceOrderUpdate) (string, error) {
+func (s *Session) UpdatePriceOrder(
+	ctx context.Context,
+	id string,
+	u PriceOrderUpdate,
+) (*OrderUpdate, error) {
 	path, err := orderPath("/orders/price/", id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	body, err := u.body()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	request := transport.Request{
@@ -417,12 +424,14 @@ func (s *Session) UpdatePriceOrder(ctx context.Context, id string, u PriceOrderU
 		Retry:  repeatableRetry,
 	}
 
-	var result orderID
-	if _, err := s.do(ctx, request, &result); err != nil {
-		return "", err
+	var result OrderUpdate
+	metadata, err := s.do(ctx, request, &result)
+	result.Metadata = metadata
+	if err != nil {
+		return &result, err
 	}
 
-	return result.ID, nil
+	return &result, nil
 }
 
 // Cancellation is an unsigned withdrawal transaction from step one of a

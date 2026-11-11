@@ -102,7 +102,7 @@ func run() error {
 		RequestID:         order.RequestID,
 		SignedTransaction: tx.Base64(),
 	})
-	if errors.Is(err, swap.ErrExecutionOutcomeUnknown) {
+	if errors.Is(err, swap.ErrOutcomeUnknown) {
 		return fmt.Errorf(
 			"check transaction %s and wallet activity before ordering again: %w",
 			transactionID,

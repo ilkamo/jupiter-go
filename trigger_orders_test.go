@@ -283,14 +283,18 @@ func TestUpdatePriceOrderSendsOnlyChanges(t *testing.T) {
 	fake.route(http.MethodPatch, "/orders/price/"+escapedOrderID, http.StatusOK, `{"id":"order/1"}`)
 
 	update := trigger.PriceOrderUpdate{OrderType: trigger.OrderSubTypeSingle, TriggerPriceUSD: "210"}
-	id, err := session.UpdatePriceOrder(context.Background(), orderID, update)
+	updated, err := session.UpdatePriceOrder(context.Background(), orderID, update)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	body := decodeBody(t, lastRequest(t, fake).body)
-	if id != orderID || len(body) != 2 || string(body["triggerPriceUsd"]) != "210" {
-		t.Fatalf("id=%q body=%v", id, body)
+	if updated.ID != orderID || len(body) != 2 || string(body["triggerPriceUsd"]) != "210" {
+		t.Fatalf("update=%+v body=%v", updated, body)
+	}
+
+	if updated.Metadata.StatusCode != http.StatusOK || updated.Metadata.Attempts != singleAttempt {
+		t.Fatalf("metadata = %+v", updated.Metadata)
 	}
 }
 
@@ -491,7 +495,7 @@ func TestInvalidTriggerOrdersDoNotReachTransport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tokens := trigger.Tokens{
+	tokens := trigger.AuthTokens{
 		AuthMode:     "access_refresh",
 		AccessToken:  "access",
 		RefreshToken: "refresh",

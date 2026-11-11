@@ -162,7 +162,7 @@ Requests an order with a taker, signs the returned transaction, and calls
 `client.Swap.Execute` with the order's request ID. Gasless and RFQ orders may
 list another fee payer or cosigner that Jupiter signs during execution, so the
 transaction ID can be unknown before execution. Execute is never retried; if it
-returns `swap.ErrExecutionOutcomeUnknown`, check the transaction and wallet
+returns `swap.ErrOutcomeUnknown`, check the transaction and wallet
 activity before ordering again.
 
 ### Custom build
@@ -189,7 +189,7 @@ well formed and correctly signed.
 Set `JUPITER_SUBMIT_VIA=tx` to submit through Jupiter's landing service
 (`client.Transaction.Send`, `https://tx.jup.ag`) instead of the RPC node. Every
 transaction sent there must tip at least `transaction.MinTipLamports` (0.001 SOL)
-to one of `transaction.TipReceivers`: the example sets `BuildRequest.TipAmount`;
+to one of `transaction.TipReceivers()`: the example sets `BuildRequest.TipAmount`;
 for other transactions add `solanatx.TipInstruction`. The service is send-only,
 so confirmation still uses `SOLANA_RPC_URL`. That node must serve
 `getSignatureStatuses` and report the true block height: publicnode returns the

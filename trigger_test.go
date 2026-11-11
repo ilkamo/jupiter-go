@@ -105,13 +105,13 @@ func newFakeTrigger(t *testing.T) (*fakeTrigger, *jupiter.Client) {
 }
 
 // issue rotates to a new token pair; callers hold the lock.
-func (f *fakeTrigger) issue(ttl time.Duration) trigger.Tokens {
+func (f *fakeTrigger) issue(ttl time.Duration) trigger.AuthTokens {
 	f.generation++
 	f.accessToken = fmt.Sprintf("access-%d", f.generation)
 	f.refreshToken = fmt.Sprintf("refresh-%d", f.generation)
 	f.revokedAccess = false
 
-	return trigger.Tokens{
+	return trigger.AuthTokens{
 		AuthMode:     "access_refresh",
 		AccessToken:  f.accessToken,
 		RefreshToken: f.refreshToken,
@@ -304,8 +304,8 @@ func TestTriggerLoginRequestsRefreshTokens(t *testing.T) {
 	fake, client := newFakeTrigger(t)
 	session := login(t, client, trigger.SessionOptions{})
 
-	if session.Wallet() != triggerWallet() || session.Tokens().AccessToken != "access-1" {
-		t.Fatalf("wallet=%s tokens=%+v", session.Wallet(), session.Tokens())
+	if session.Wallet() != triggerWallet() || session.AuthTokens().AccessToken != "access-1" {
+		t.Fatalf("wallet=%s tokens=%+v", session.Wallet(), session.AuthTokens())
 	}
 
 	body := fake.verifyBodies[0]
@@ -400,9 +400,9 @@ func TestTriggerRefreshesBeforeExpiryAndReportsRotation(t *testing.T) {
 	tokens := fake.issue(nearlyExpiredTTL)
 	fake.mu.Unlock()
 
-	var rotated []trigger.Tokens
+	var rotated []trigger.AuthTokens
 	options := trigger.SessionOptions{
-		OnRefresh: func(_ context.Context, tokens trigger.Tokens) error {
+		OnRefresh: func(_ context.Context, tokens trigger.AuthTokens) error {
 			rotated = append(rotated, tokens)
 
 			return nil
@@ -422,8 +422,8 @@ func TestTriggerRefreshesBeforeExpiryAndReportsRotation(t *testing.T) {
 		t.Fatalf("rotations = %+v", rotated)
 	}
 
-	if session.Tokens().AccessToken != "access-2" {
-		t.Fatalf("session kept stale tokens: %+v", session.Tokens())
+	if session.AuthTokens().AccessToken != "access-2" {
+		t.Fatalf("session kept stale tokens: %+v", session.AuthTokens())
 	}
 }
 
@@ -508,7 +508,7 @@ func TestTriggerPersistenceFailureKeepsRotatedTokens(t *testing.T) {
 
 	storeFailure := errors.New("disk full")
 	options := trigger.SessionOptions{
-		OnRefresh: func(context.Context, trigger.Tokens) error {
+		OnRefresh: func(context.Context, trigger.AuthTokens) error {
 			return storeFailure
 		},
 	}
@@ -523,7 +523,7 @@ func TestTriggerPersistenceFailureKeepsRotatedTokens(t *testing.T) {
 		t.Fatalf("expected persistence failure, got %v", err)
 	}
 
-	if session.Tokens().RefreshToken != "refresh-2" {
+	if session.AuthTokens().RefreshToken != "refresh-2" {
 		t.Fatal("session discarded the rotated tokens")
 	}
 }
@@ -593,7 +593,7 @@ func TestInvalidTriggerRequestsDoNotReachTransport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	validTokens := trigger.Tokens{
+	validTokens := trigger.AuthTokens{
 		AuthMode:     "access_refresh",
 		AccessToken:  "access",
 		RefreshToken: "refresh",

@@ -252,7 +252,7 @@ func (r ExecuteRequest) validate() error {
 
 // Execute submits a signed order transaction, which Jupiter lands. It makes one
 // attempt and requires an explicit success status and zero code; failures after
-// which the transaction may still land wrap ErrExecutionOutcomeUnknown.
+// which the transaction may still land wrap ErrOutcomeUnknown.
 func (c *Client) Execute(
 	ctx context.Context,
 	r ExecuteRequest,

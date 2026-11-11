@@ -98,7 +98,7 @@ func Example_managedSwap() {
 		RequestID:         order.RequestID,
 		SignedTransaction: tx.Base64(),
 	})
-	if errors.Is(err, swap.ErrExecutionOutcomeUnknown) {
+	if errors.Is(err, swap.ErrOutcomeUnknown) {
 		log.Fatalf("check %s on-chain before ordering again: %v", tx.ID(), err)
 	}
 

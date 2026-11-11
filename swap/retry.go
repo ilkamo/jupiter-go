@@ -16,16 +16,16 @@ var quoteRetryPolicy = transport.RepeatableRetry
 // guarantee for repeating a signed transaction and request ID.
 var executeRetryPolicy = transport.NoRetry
 
-// ErrExecutionOutcomeUnknown marks execute failures after which the transaction may
+// ErrOutcomeUnknown marks execute failures after which the transaction may
 // still land: transport failures, timeouts, server errors, and unreadable success
 // responses. Check the transaction signature on-chain before requesting a new order;
 // a new order creates a new transaction that could also land.
-var ErrExecutionOutcomeUnknown = errors.New("swap execution outcome unknown")
+var ErrOutcomeUnknown = errors.New("swap execution outcome unknown")
 
 func classifyExecuteFailure(err error) error {
 	if !transport.MayHaveBeenProcessed(err) {
 		return err
 	}
 
-	return fmt.Errorf("%w: %w", ErrExecutionOutcomeUnknown, err)
+	return fmt.Errorf("%w: %w", ErrOutcomeUnknown, err)
 }

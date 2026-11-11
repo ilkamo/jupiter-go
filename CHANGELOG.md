@@ -30,6 +30,17 @@ Trigger V2, Lend, Prediction, Send, Studio, and tx.jup.ag).
 - Input validation before any request: Solana addresses, raw integer amounts,
   documented ranges and parameter combinations.
 
+### API review before release
+
+- `swap.ErrExecutionOutcomeUnknown` is now `swap.ErrOutcomeUnknown`, matching
+  every other product.
+- `trigger.Tokens` is now `trigger.AuthTokens` (and `Session.Tokens` is
+  `Session.AuthTokens`), so it is not confused with the Tokens product.
+- `transaction.TipReceivers` is a function returning a copy, so callers cannot
+  alter the shared list.
+- `trigger.Session.UpdatePriceOrder` returns `*trigger.OrderUpdate` with response
+  metadata instead of a bare ID.
+
 ### Notes
 
 - The SDK charges no fee. `WithReferral` only adds your own Jupiter referral to

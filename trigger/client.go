@@ -126,9 +126,9 @@ type verifyBody struct {
 	AuthMode          string `json:"authMode"`
 }
 
-// Tokens is an access and refresh token pair. Treat it as a secret: keep it out of
+// AuthTokens is an access and refresh token pair. Treat it as a secret: keep it out of
 // logs. The refresh token rotates on every refresh.
-type Tokens struct {
+type AuthTokens struct {
 	AuthMode     string    `json:"authMode"`
 	AccessToken  string    `json:"accessToken"`
 	RefreshToken string    `json:"refreshToken"`
@@ -136,7 +136,7 @@ type Tokens struct {
 	TokenType    string    `json:"tokenType"`
 }
 
-func (t Tokens) validate() error {
+func (t AuthTokens) validate() error {
 	if t.AuthMode != authModeAccessRefresh || t.TokenType != tokenTypeBearer {
 		return fmt.Errorf(
 			"%w: auth mode %q, token type %q",
@@ -195,7 +195,7 @@ func (c *Client) Verify(
 		Retry:  transport.NoRetry,
 	}
 
-	var tokens Tokens
+	var tokens AuthTokens
 	if _, err := c.transport.Do(ctx, request, &tokens); err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (c *Client) Login(
 // with ErrSessionExpired.
 func (c *Client) Resume(
 	wallet string,
-	tokens Tokens,
+	tokens AuthTokens,
 	options SessionOptions,
 ) (*Session, error) {
 	if err := address.Validate(wallet); err != nil {
@@ -288,7 +288,7 @@ func (c *Client) logout(ctx context.Context, refreshToken string) error {
 	return nil
 }
 
-func (c *Client) refresh(ctx context.Context, refreshToken string) (Tokens, error) {
+func (c *Client) refresh(ctx context.Context, refreshToken string) (AuthTokens, error) {
 	request := transport.Request{
 		Method: http.MethodPost,
 		Path:   basePath + "/auth/refresh",
@@ -296,13 +296,13 @@ func (c *Client) refresh(ctx context.Context, refreshToken string) (Tokens, erro
 		Retry:  repeatableRetry,
 	}
 
-	var tokens Tokens
+	var tokens AuthTokens
 	if _, err := c.transport.Do(ctx, request, &tokens); err != nil {
-		return Tokens{}, err
+		return AuthTokens{}, err
 	}
 
 	if err := tokens.validate(); err != nil {
-		return Tokens{}, err
+		return AuthTokens{}, err
 	}
 
 	return tokens, nil
