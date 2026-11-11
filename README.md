@@ -222,6 +222,22 @@ built with `Swap.Build`; use a dedicated RPC provider for that.
 `solanatx` parses and signs legacy, version 0 (with address lookup tables), and
 version 1 transactions without modifying the message or other signatures.
 
+### How do I protect a Solana swap from sandwich attacks?
+
+For transactions you assemble yourself (`Swap.Build` and `solanatx.Assemble`),
+attach Jito's sandwich-mitigation account to an instruction whose program
+ignores extra accounts, such as the tip transfer:
+
+```go
+tip, err := solanatx.TipInstruction(wallet, transaction.MinTipLamports)
+tip, err = solanatx.WithReadOnlyAccount(tip, solanatx.JitoDontFront)
+tx, err := solanatx.Assemble(build, wallet, tip)
+```
+
+Jito's block engine then rejects bundles that place the transaction anywhere
+but first. This reduces sandwiching on Jito validators; it is not a guarantee.
+Managed swap transactions come from Jupiter and cannot be changed.
+
 ### Is jupiter-go an official Jupiter SDK?
 
 No. It is an independent, community-maintained open-source library. It charges

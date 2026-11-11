@@ -105,6 +105,15 @@ tracked in GitHub issues; conventions are in [AGENTS.md](../AGENTS.md).
   `Assemble` builds v0 only, because v1 builds need a compute-unit limit the
   build response does not provide.
 - **Latest solana-go (v1.26.0)**, which added v1 transactions.
+- **v1 assembly is deferred** (issue #59, closed): v1 messages need a
+  compute-unit limit the build response does not provide, and v0 is accepted
+  by every RPC node and tx.jup.ag. Revisit if Jupiter returns a limit.
+- **Jito sandwich mitigation is opt-in and generic** (issue #47):
+  `WithReadOnlyAccount` adds any read-only account to a copy of an instruction,
+  and `JitoDontFront` is the canonical key. The SDK does not choose where to
+  attach it, because appending accounts is only safe for programs that ignore
+  extras; the System Program transfer does (checked by mainnet simulation).
+  Managed swap messages come from Jupiter and cannot carry it.
 
 ## Product decisions
 

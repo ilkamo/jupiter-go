@@ -190,7 +190,10 @@ Set `JUPITER_SUBMIT_VIA=tx` to submit through Jupiter's landing service
 (`client.Transaction.Send`, `https://tx.jup.ag`) instead of the RPC node. Every
 transaction sent there must tip at least `transaction.MinTipLamports` (0.001 SOL)
 to one of `transaction.TipReceivers()`: the example sets `BuildRequest.TipAmount`;
-for other transactions add `solanatx.TipInstruction`. The service is send-only,
+for other transactions add `solanatx.TipInstruction`. Add `JUPITER_DONT_FRONT=yes`
+to attach Jito's sandwich-mitigation account (`solanatx.JitoDontFront`) to the
+tip transfer with `solanatx.WithReadOnlyAccount`; the example then builds the tip
+itself instead of setting `TipAmount`. The service is send-only,
 so confirmation still uses `SOLANA_RPC_URL`. That node must serve
 `getSignatureStatuses` and report the true block height: publicnode returns the
 slot from `getBlockHeight`, which makes a fresh blockhash look expired, and

@@ -7,7 +7,9 @@
 // SOLANA_RPC_URL, which verifies the signatures and runs it against current
 // mainnet state without sending it. Build transactions cannot use Jupiter's execute endpoint. Submitting
 // through tx.jup.ag adds the required 0.001 SOL tip; confirmation always uses
-// SOLANA_RPC_URL because the landing service is send-only.
+// SOLANA_RPC_URL because the landing service is send-only. With
+// JUPITER_SUBMIT_VIA=tx, JUPITER_DONT_FRONT=yes also attaches Jito's
+// sandwich-mitigation account to the tip transfer.
 package main
 
 import (
@@ -40,9 +42,13 @@ const (
 	simulationLogLines   = 5
 	decimalBase          = 10
 	submitViaJupiter     = "tx"
+	dontFrontRequested   = "yes"
 )
 
-var errBlockhashExpired = errors.New("blockhash expired before confirmation")
+var (
+	errBlockhashExpired    = errors.New("blockhash expired before confirmation")
+	errDontFrontNeedsTipTx = errors.New("JUPITER_DONT_FRONT=yes needs JUPITER_SUBMIT_VIA=tx")
+)
 
 func main() {
 	if err := run(); err != nil {
@@ -68,6 +74,11 @@ func run() error {
 
 	taker := wallet.PublicKey().String()
 	viaJupiter := os.Getenv("JUPITER_SUBMIT_VIA") == submitViaJupiter
+	dontFront := os.Getenv("JUPITER_DONT_FRONT") == dontFrontRequested
+
+	if dontFront && !viaJupiter {
+		return errDontFrontNeedsTipTx
+	}
 
 	request := swap.BuildRequest{
 		InputMint:  wrappedSOLMint,
@@ -75,7 +86,18 @@ func run() error {
 		Amount:     swapAmount(),
 		Taker:      taker,
 	}
-	if viaJupiter {
+
+	var additional []solana.Instruction
+
+	switch {
+	case dontFront:
+		tip, err := protectedTip(taker)
+		if err != nil {
+			return err
+		}
+
+		additional = append(additional, tip)
+	case viaJupiter:
 		// tx.jup.ag rejects transactions without the Jupiter tip.
 		request.TipAmount = strconv.Itoa(transaction.MinTipLamports)
 	}
@@ -85,7 +107,7 @@ func run() error {
 		return fmt.Errorf("build: %w", err)
 	}
 
-	tx, err := solanatx.Assemble(build, taker)
+	tx, err := solanatx.Assemble(build, taker, additional...)
 	if err != nil {
 		return fmt.Errorf("assemble: %w", err)
 	}
@@ -283,4 +305,20 @@ func swapAmount() string {
 	}
 
 	return defaultSwapLamports
+}
+
+// protectedTip builds the Jupiter tip transfer with Jito's sandwich-mitigation
+// account attached. The System Program ignores the extra read-only account.
+func protectedTip(taker string) (solana.Instruction, error) {
+	tip, err := solanatx.TipInstruction(taker, transaction.MinTipLamports)
+	if err != nil {
+		return nil, fmt.Errorf("tip: %w", err)
+	}
+
+	protected, err := solanatx.WithReadOnlyAccount(tip, solanatx.JitoDontFront)
+	if err != nil {
+		return nil, fmt.Errorf("attach %s: %w", solanatx.JitoDontFront, err)
+	}
+
+	return protected, nil
 }
