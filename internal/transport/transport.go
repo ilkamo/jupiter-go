@@ -13,6 +13,11 @@ import (
 	"github.com/ilkamo/jupiter-go/response"
 )
 
+const (
+	jsonContentType = "application/json"
+	schemeHTTPS     = "https"
+)
+
 type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -56,11 +61,82 @@ type Request struct {
 	Method string
 	Path   string
 	Query  url.Values
-	Body   any
 	Retry  RetryPolicy
+
+	// Body is encoded as JSON. Payload instead sends pre-encoded bytes, such as a
+	// multipart form; at most one of them may be set.
+	Body    any
+	Payload *Payload
 
 	// Header adds request-specific headers, such as a wallet session's Authorization.
 	Header http.Header
+
+	// ExternalURL targets an absolute HTTPS URL outside the API, such as a presigned
+	// upload URL, instead of Path. The API key and request headers are never sent
+	// to it, and its query string is used unchanged.
+	ExternalURL string
+}
+
+// Payload is a pre-encoded request body.
+type Payload struct {
+	ContentType string
+	Data        []byte
+}
+
+// prepared is a request encoded once and replayed on every attempt.
+type prepared struct {
+	url         string
+	body        []byte
+	contentType string
+	credentials bool
+}
+
+func (r Request) prepare(baseURL string) (prepared, error) {
+	var p prepared
+
+	switch {
+	case r.Body != nil && r.Payload != nil:
+		return prepared{}, fmt.Errorf("request has both a JSON body and a payload")
+	case r.Body != nil:
+		encoded, err := json.Marshal(r.Body)
+		if err != nil {
+			return prepared{}, fmt.Errorf("encode request: %w", err)
+		}
+
+		p.body = encoded
+		p.contentType = jsonContentType
+	case r.Payload != nil:
+		if r.Payload.ContentType == "" {
+			return prepared{}, fmt.Errorf("payload requires a content type")
+		}
+
+		p.body = r.Payload.Data
+		p.contentType = r.Payload.ContentType
+	}
+
+	if r.ExternalURL == "" {
+		p.url = baseURL + r.Path
+		p.credentials = true
+
+		return p, nil
+	}
+
+	if r.Path != "" || len(r.Query) > 0 || len(r.Header) > 0 {
+		return prepared{}, fmt.Errorf("external requests take no API path, query, or headers")
+	}
+
+	external, err := url.Parse(r.ExternalURL)
+	if err != nil {
+		return prepared{}, fmt.Errorf("parse external URL: %w", err)
+	}
+
+	if external.Scheme != schemeHTTPS || external.Host == "" || external.User != nil {
+		return prepared{}, fmt.Errorf("external URL must be an absolute HTTPS URL without credentials")
+	}
+
+	p.url = r.ExternalURL
+
+	return p, nil
 }
 
 type attemptOutcome struct {
@@ -86,24 +162,20 @@ func (c *Client) Do(
 		return metadata, err
 	}
 
+	target, err := request.prepare(c.BaseURL)
+	if err != nil {
+		return metadata, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
-	var payload []byte
-	if request.Body != nil {
-		encoded, err := json.Marshal(request.Body)
-		if err != nil {
-			return metadata, fmt.Errorf("encode request: %w", err)
-		}
-
-		payload = encoded
-	}
-
 	for attempt := 1; ; attempt++ {
-		outcome := c.attempt(ctx, request, payload)
+		outcome := c.attempt(ctx, request, target)
 		outcome.metadata.Attempts = attempt
 
-		if outcome.err == nil {
+		// A nil result ignores the response body, for example after an upload.
+		if outcome.err == nil && result != nil {
 			if err := json.Unmarshal(outcome.data, result); err != nil {
 				return outcome.metadata, fmt.Errorf("decode response: %w", err)
 			}
@@ -162,13 +234,13 @@ func (c *Client) wait(ctx context.Context, delay time.Duration) error {
 func (c *Client) attempt(
 	ctx context.Context,
 	request Request,
-	payload []byte,
+	target prepared,
 ) (outcome attemptOutcome) {
 	req, err := http.NewRequestWithContext(
 		ctx,
 		request.Method,
-		c.BaseURL+request.Path,
-		bytes.NewReader(payload),
+		target.url,
+		bytes.NewReader(target.body),
 	)
 	if err != nil {
 		outcome.err = fmt.Errorf("create request: %w", err)
@@ -176,22 +248,24 @@ func (c *Client) attempt(
 		return outcome
 	}
 
-	req.URL.RawQuery = request.Query.Encode()
+	if target.contentType != "" {
+		req.Header.Set("Content-Type", target.contentType)
+	}
 
-	for name, values := range request.Header {
-		for _, value := range values {
-			req.Header.Add(name, value)
+	if target.credentials {
+		req.URL.RawQuery = request.Query.Encode()
+
+		for name, values := range request.Header {
+			for _, value := range values {
+				req.Header.Add(name, value)
+			}
 		}
-	}
 
-	req.Header.Set("Accept", "application/json")
+		req.Header.Set("Accept", jsonContentType)
 
-	if request.Body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	if c.APIKey != "" {
-		req.Header.Set("x-api-key", c.APIKey)
+		if c.APIKey != "" {
+			req.Header.Set("x-api-key", c.APIKey)
+		}
 	}
 
 	resp, err := c.HTTP.Do(req)
