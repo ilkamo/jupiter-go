@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -52,6 +53,40 @@ type fakeTrigger struct {
 	verifyBodies     []map[string]string
 	logoutTokens     []string
 	accessOnly       bool
+
+	routes   map[string]fakeRoute
+	requests []fakeRequest
+}
+
+// fakeRoute is a canned response for an authorized "METHOD path" route.
+type fakeRoute struct {
+	status int
+	body   string
+}
+
+type fakeRequest struct {
+	method string
+	path   string
+	query  map[string][]string
+	body   []byte
+}
+
+func (f *fakeTrigger) route(method string, path string, status int, body string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if f.routes == nil {
+		f.routes = make(map[string]fakeRoute)
+	}
+
+	f.routes[method+" "+path] = fakeRoute{status: status, body: body}
+}
+
+func (f *fakeTrigger) recorded() []fakeRequest {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return append([]fakeRequest(nil), f.requests...)
 }
 
 func newFakeTrigger(t *testing.T) (*fakeTrigger, *jupiter.Client) {
@@ -89,14 +124,20 @@ func (f *fakeTrigger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	var body map[string]string
-	if r.Body != nil && r.Method == http.MethodPost {
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			f.t.Errorf("decode %s body: %v", r.URL.Path, err)
-		}
+	raw, err := io.ReadAll(r.Body)
+	if err != nil {
+		f.t.Errorf("read %s body: %v", r.URL.Path, err)
 	}
 
-	path := strings.TrimPrefix(r.URL.Path, "/trigger/v2")
+	body := stringFields(f.t, raw)
+	path := strings.TrimPrefix(r.URL.EscapedPath(), "/trigger/v2")
+	f.requests = append(f.requests, fakeRequest{
+		method: r.Method,
+		path:   path,
+		query:  r.URL.Query(),
+		body:   raw,
+	})
+
 	switch path {
 	case "/auth/challenge":
 		f.reply(w, http.StatusOK, map[string]string{"type": body["type"], "challenge": challengeText})
@@ -201,8 +242,43 @@ func (f *fakeTrigger) authorized(
 		f.refreshToken = ""
 		f.reply(w, http.StatusOK, map[string]bool{"success": true})
 	default:
-		f.reply(w, http.StatusNotFound, map[string]string{"error": "unknown path " + path})
+		route, ok := f.routes[r.Method+" "+path]
+		if !ok {
+			f.reply(w, http.StatusNotFound, map[string]string{"error": "unknown path " + path})
+
+			return
+		}
+
+		w.WriteHeader(route.status)
+
+		if _, err := w.Write([]byte(route.body)); err != nil {
+			f.t.Errorf("write response: %v", err)
+		}
 	}
+}
+
+// stringFields returns the string-valued top-level fields of a JSON object body.
+func stringFields(t *testing.T, raw []byte) map[string]string {
+	fields := make(map[string]string)
+	if len(raw) == 0 {
+		return fields
+	}
+
+	var values map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &values); err != nil {
+		t.Errorf("decode body: %v", err)
+
+		return fields
+	}
+
+	for key, value := range values {
+		var text string
+		if err := json.Unmarshal(value, &text); err == nil {
+			fields[key] = text
+		}
+	}
+
+	return fields
 }
 
 func (f *fakeTrigger) reply(w http.ResponseWriter, status int, payload any) {

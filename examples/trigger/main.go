@@ -1,14 +1,16 @@
 // Command trigger authenticates a wallet with the Trigger V2 API, resolves its
-// vault, and crafts (but does not submit) a deposit.
+// vault, crafts and signs a deposit, and lists active orders.
 //
 // Trigger V2 is custodial: deposited funds sit in a Jupiter-managed vault until
-// orders fill or are cancelled. This example moves no funds. It registers a vault
-// only when JUPITER_REGISTER_VAULT=yes.
+// orders fill or are cancelled. The example registers a vault only when
+// JUPITER_REGISTER_VAULT=yes, and creates a limit order (selling 0.1 SOL for USDC
+// when SOL rises above TRIGGER_PRICE_USD) only when JUPITER_CREATE_ORDER=yes.
 package main
 
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -18,15 +20,17 @@ import (
 	"github.com/gagliardetto/solana-go"
 
 	jupiter "github.com/ilkamo/jupiter-go"
+	"github.com/ilkamo/jupiter-go/solanatx"
 	"github.com/ilkamo/jupiter-go/trigger"
 )
 
 const (
-	operationTimeout     = 30 * time.Second
-	wrappedSOLMint       = "So11111111111111111111111111111111111111112"
-	usdcMint             = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-	depositAmount        = "100000000"
-	registerConfirmation = "yes"
+	operationTimeout = 60 * time.Second
+	orderValidity    = 7 * 24 * time.Hour
+	wrappedSOLMint   = "So11111111111111111111111111111111111111112"
+	usdcMint         = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+	depositAmount    = "100000000"
+	confirmation     = "yes"
 )
 
 func main() {
@@ -62,7 +66,7 @@ func run() (resultErr error) {
 
 	vault, err := session.Vault(ctx)
 	if errors.Is(err, trigger.ErrNoVault) {
-		if os.Getenv("JUPITER_REGISTER_VAULT") != registerConfirmation {
+		if os.Getenv("JUPITER_REGISTER_VAULT") != confirmation {
 			_, err = fmt.Println("No vault: set JUPITER_REGISTER_VAULT=yes to register one.")
 
 			return err
@@ -90,12 +94,90 @@ func run() (resultErr error) {
 		return fmt.Errorf("craft deposit: %w", err)
 	}
 
+	tx, err := solanatx.Parse(deposit.Transaction)
+	if err != nil {
+		return fmt.Errorf("parse deposit: %w", err)
+	}
+
+	if err := tx.Sign(ed25519.PrivateKey(wallet)); err != nil {
+		return fmt.Errorf("sign deposit: %w", err)
+	}
+
+	if os.Getenv("JUPITER_CREATE_ORDER") == confirmation {
+		if err := createOrder(ctx, session, deposit, tx); err != nil {
+			return err
+		}
+	} else {
+		_, err := fmt.Println("Signed the deposit but did not submit it: set JUPITER_CREATE_ORDER=yes.")
+		if err != nil {
+			return err
+		}
+	}
+
+	return listActiveOrders(ctx, session)
+}
+
+func createOrder(
+	ctx context.Context,
+	session *trigger.Session,
+	deposit *trigger.Deposit,
+	tx *solanatx.Transaction,
+) error {
+	triggerPrice := os.Getenv("TRIGGER_PRICE_USD")
+	if triggerPrice == "" {
+		return fmt.Errorf("TRIGGER_PRICE_USD is required to create an order")
+	}
+
+	order, err := session.CreatePriceOrder(ctx, trigger.PriceOrderRequest{
+		OrderType:                trigger.OrderSubTypeSingle,
+		DepositRequestID:         deposit.RequestID,
+		DepositSignedTransaction: tx.Base64(),
+		InputMint:                wrappedSOLMint,
+		InputAmount:              deposit.Amount,
+		OutputMint:               usdcMint,
+		TriggerMint:              wrappedSOLMint,
+		TriggerCondition:         trigger.TriggerAbove,
+		TriggerPriceUSD:          json.Number(triggerPrice),
+		ExpiresAt:                time.Now().Add(orderValidity),
+	})
+	if errors.Is(err, trigger.ErrOutcomeUnknown) {
+		return fmt.Errorf("check active orders before creating another: %w", err)
+	}
+
+	if err != nil {
+		return fmt.Errorf("create order: %w", err)
+	}
+
 	_, err = fmt.Printf(
-		"Crafted deposit %s of %s raw units to %s; not signed or submitted\n",
-		deposit.RequestID,
-		deposit.Amount,
-		deposit.ReceiverAddress,
+		"Created order %s (deposit %s, confirmed=%t)\n",
+		order.ID,
+		order.TxSignature,
+		order.DepositConfirmed,
 	)
+
+	return err
+}
+
+func listActiveOrders(ctx context.Context, session *trigger.Session) error {
+	history, err := session.PriceOrderHistory(ctx, trigger.HistoryRequest{State: trigger.HistoryActive})
+	if err != nil {
+		return fmt.Errorf("order history: %w", err)
+	}
+
+	for _, order := range history.Orders {
+		_, err := fmt.Printf(
+			"%s %s %s at $%s\n",
+			order.ID,
+			order.OrderState,
+			order.TriggerCondition,
+			order.TriggerPriceUSD,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = fmt.Printf("%d active orders\n", history.Pagination.Total)
 
 	return err
 }

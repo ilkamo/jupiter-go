@@ -21,6 +21,11 @@ var (
 	// reused). Authenticate again to obtain a new session.
 	ErrSessionExpired = errors.New("trigger session expired")
 
+	// ErrOutcomeUnknown marks failures of operations that submit a signed
+	// transaction (order creation and cancellation confirmation) after which the
+	// transaction may still land. Check order history before creating another order.
+	ErrOutcomeUnknown = errors.New("trigger submission outcome unknown")
+
 	// ErrSessionClosed means Logout was called on the session.
 	ErrSessionClosed = errors.New("trigger session closed")
 
@@ -142,12 +147,32 @@ func (s *Session) do(
 	request transport.Request,
 	result any,
 ) (response.Metadata, error) {
+	return s.authorized(ctx, request, result, false)
+}
+
+// submit sends a request that submits a signed transaction. Failures after which
+// the transaction may still land wrap ErrOutcomeUnknown; failures before anything
+// was sent, such as an expired session, do not.
+func (s *Session) submit(
+	ctx context.Context,
+	request transport.Request,
+	result any,
+) (response.Metadata, error) {
+	return s.authorized(ctx, request, result, true)
+}
+
+func (s *Session) authorized(
+	ctx context.Context,
+	request transport.Request,
+	result any,
+	submits bool,
+) (response.Metadata, error) {
 	token, err := s.accessToken(ctx)
 	if err != nil {
 		return response.Metadata{}, err
 	}
 
-	metadata, err := s.client.transport.Do(ctx, withBearer(request, token), result)
+	metadata, err := s.send(ctx, request, result, token, submits)
 	if !isUnauthorized(err) {
 		return metadata, err
 	}
@@ -157,7 +182,27 @@ func (s *Session) do(
 		return metadata, err
 	}
 
-	return s.client.transport.Do(ctx, withBearer(request, token), result)
+	return s.send(ctx, request, result, token, submits)
+}
+
+func (s *Session) send(
+	ctx context.Context,
+	request transport.Request,
+	result any,
+	token string,
+	submits bool,
+) (response.Metadata, error) {
+	// An ended context guarantees nothing is sent, so the outcome is known.
+	if err := ctx.Err(); err != nil {
+		return response.Metadata{}, err
+	}
+
+	metadata, err := s.client.transport.Do(ctx, withBearer(request, token), result)
+	if err != nil && submits && transport.MayHaveBeenProcessed(err) {
+		return metadata, fmt.Errorf("%w: %w", ErrOutcomeUnknown, err)
+	}
+
+	return metadata, err
 }
 
 func withBearer(request transport.Request, token string) transport.Request {

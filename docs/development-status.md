@@ -84,10 +84,9 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement the 10 Trigger V2 order operations (price orders, DCA, two-step
-   cancellation, history) on `trigger.Session`, then Lend, Prediction, Send,
-   Studio, transaction submission, and Tokens verification. Audit the current
-   documentation index for additional APIs. These are not implemented.
+4. Implement Lend, then Prediction, Send, Studio, transaction submission, and
+   Tokens verification. Audit the current documentation index for additional
+   APIs. These are not implemented.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
    migration documentation, and compatibility review from `v1-plan.md`.
 6. Resolve the maintainer fee recipient/default and beta API compatibility before
@@ -460,6 +459,65 @@ access_refresh, rejection of access_only, transaction-challenge verification,
 refresh, expired session, persistence failure keeping rotated tokens, logout and
 logout-all closing the session, deposit wallet and amount canonicalization,
 retry choices, and 15 invalid inputs rejected before transport.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Trigger V2 orders
+
+Committed the helpers as `aafb852` and sessions as `b0ca797`. All 18 Trigger
+operations are now implemented; the remaining 10 references and the order guides
+are pinned in `openapi/trigger-v2`.
+
+Session methods:
+
+- `CreatePriceOrder` (single, oco, otoco, trailing stop). Per-variant rules from
+  the create-order guide: single needs a condition and exactly one of trigger
+  price or trailing distance (50–9000 bps); a trailing order triggers on the input
+  mint for `below` and the output mint for `above`; oco takes no trigger fields
+  and needs take-profit above stop-loss; otoco needs condition, trigger price,
+  and the pair; single takes no pair fields; only single can trail. Slippage
+  ≤ 10000 bps, a future `ExpiresAt` (sent as Unix milliseconds), distinct mints,
+  a base64 signed deposit, and a raw amount are required. `userPubkey` is always
+  the session wallet.
+- `UpdatePriceOrder` validates the same field rules and rejects empty updates.
+- `CancelPriceOrder`/`ConfirmCancelPriceOrder`, `CreateDCAOrder`,
+  `CancelDCAOrder`/`ConfirmCancelDCAOrder`, `PriceOrderHistory`,
+  `DCAOrderHistory`, and `DCAOrder`. Order IDs are path-escaped.
+- DCA: at least 2 rounds, a whole-second interval from 1 minute to 365 days, a
+  start at most 30 days ahead (RFC 3339), price bounds and trigger mint only for
+  price-conditional (trigger mint required there, minimum below maximum), and
+  Earn While You Wait only time-based with both the flag and JL mint. A price
+  band without bounds is not rejected because the docs do not require one.
+
+USD prices are `json.Number`, validated as positive JSON numbers (`json.Valid`
+plus `big.Rat`, which rejects fractions, hexadecimal, and infinities) and sent
+unchanged. History filters (state, sort, direction) accept upstream additions,
+format-checked like tags; limit is 1–100. Price-order timestamps are Unix
+milliseconds (`int64`, pointers when nullable); DCA timestamps are strings.
+
+Submission safety: order creation and cancellation confirmation submit signed
+transactions, make one attempt, and wrap `ErrOutcomeUnknown` when the
+transaction may have landed (`transport.MayHaveBeenProcessed`: anything but an
+HTTP status below 500). Swap execute now uses the same helper. The create-order
+response mentions "idempotent retries" while the error guide lists duplicate
+deposits as 400, so automatic retries are not assumed. Session errors before
+sending, and an already ended context, are reported without the marker. Update
+(absolute values) and cancel step one (crafts a withdrawal; DCA cancel is
+documented idempotent) retry briefly; history uses `ReadOnlyRetry`.
+
+Example: `examples/trigger` now signs the deposit with `solanatx`, creates a
+single limit order only with `JUPITER_CREATE_ORDER=yes` and `TRIGGER_PRICE_USD`,
+and lists active orders.
+
+Tests: exact create bodies (precise USD numbers, canonical amounts, millisecond
+expiry, session wallet, omitted unset fields) for single, trailing, oco, and
+otoco; outcome classification for all four submission operations across 500,
+503, 400, and 429 with single attempts; update sending only changed fields with
+an escaped ID; price cancellation round trip; DCA creation fields and
+cancellation refund; history query encoding and decoding of nulls, precision,
+pagination, and events; 46 invalid inputs rejected before transport and never
+marked unknown; DCA interval and Earn While You Wait boundaries accepted.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.

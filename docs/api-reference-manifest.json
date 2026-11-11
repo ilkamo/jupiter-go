@@ -489,7 +489,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -503,7 +503,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -517,7 +517,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -531,7 +531,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -545,7 +545,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -559,7 +559,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -573,7 +573,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -590,7 +590,7 @@
         "limit",
         "offset"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -604,7 +604,7 @@
         "BearerAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
@@ -621,7 +621,7 @@
         "limit",
         "offset"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",

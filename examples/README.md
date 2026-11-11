@@ -38,9 +38,18 @@ JUPITER_API_KEY=your-key SOLANA_PRIVATE_KEY=... go run ./examples/trigger
 ```
 
 Trigger V2 is custodial: deposits move funds into a Jupiter-managed (Privy) vault
-until orders fill or are cancelled. The example logs in, resolves the vault, and
-crafts a deposit without signing or submitting it, then logs out. It registers a
-vault only when `JUPITER_REGISTER_VAULT=yes`.
+until orders fill or are cancelled. The example logs in, resolves the vault,
+crafts and signs a deposit, lists active price orders, and logs out. It registers
+a vault only when `JUPITER_REGISTER_VAULT=yes`, and creates a single limit order
+only when `JUPITER_CREATE_ORDER=yes` and `TRIGGER_PRICE_USD` are set.
+
+Order creation and cancellation confirmation submit signed transactions, so they
+make one attempt; failures after which a transaction may have landed wrap
+`trigger.ErrOutcomeUnknown`. Check `PriceOrderHistory` or `DCAOrderHistory`
+before creating another order. Cancelling is two steps: `CancelPriceOrder` or
+`CancelDCAOrder` returns an unsigned withdrawal to sign with `solanatx`, then
+`ConfirmCancelPriceOrder` or `ConfirmCancelDCAOrder` submits it. USD prices are
+`json.Number` values, sent exactly as given.
 
 `client.Trigger.Login` signs a message challenge with any ed25519
 `crypto.Signer`. Hardware wallets that sign only transactions use

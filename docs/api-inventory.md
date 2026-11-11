@@ -38,7 +38,7 @@ state-changing GETs must not inherit a read-only policy.
 - price: 1 operation; implemented.
 - transaction: 1 operation; not implemented.
 - lend: 15 operations; not implemented.
-- trigger: 18 operations; 8 authentication, vault, and deposit operations implemented, 10 order operations pending.
+- trigger: 18 operations; all implemented.
 - prediction: 27 operations; not implemented.
 - send: 4 operations; not implemented.
 - studio: 5 operations; not implemented.
@@ -86,16 +86,16 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | trigger | `GET https://api.jup.ag/trigger/v2/vault` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Get Vault](https://developers.jup.ag/docs/api-reference/trigger/vault.md) |
 | trigger | `GET https://api.jup.ag/trigger/v2/vault/register` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Register Vault](https://developers.jup.ag/docs/api-reference/trigger/vault-register.md) |
 | trigger | `POST https://api.jup.ag/trigger/v2/deposit/craft` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Craft Deposit](https://developers.jup.ag/docs/api-reference/trigger/deposit-craft.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/orders/price` | ApiKeyAuth, BearerAuth | — | Pending / none | [Create Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/create-order.md) |
-| trigger | `PATCH https://api.jup.ag/trigger/v2/orders/price/{orderId}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Update Order](https://developers.jup.ag/docs/api-reference/trigger/update-order.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/orders/price/cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Cancel Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/cancel-order.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/orders/price/confirm-cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Confirm Cancel](https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca` | ApiKeyAuth, BearerAuth | — | Pending / none | [Create DCA Order](https://developers.jup.ag/docs/api-reference/trigger/create-dca.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca/cancel/{id}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Cancel DCA Order](https://developers.jup.ag/docs/api-reference/trigger/cancel-dca.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca/confirm-cancel/{id}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Confirm Cancel DCA Order](https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel-dca.md) |
-| trigger | `GET https://api.jup.ag/trigger/v2/orders/history/dca` | ApiKeyAuth, BearerAuth | limit, offset | Pending / none | [List DCA Orders](https://developers.jup.ag/docs/api-reference/trigger/dca-history.md) |
-| trigger | `GET https://api.jup.ag/trigger/v2/orders/history/dca/{id}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Get DCA Order](https://developers.jup.ag/docs/api-reference/trigger/dca-order.md) |
-| trigger | `GET https://api.jup.ag/trigger/v2/orders/history` | ApiKeyAuth, BearerAuth | limit, offset | Pending / none | [Order History (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/order-history.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/price` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Create Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/create-order.md) |
+| trigger | `PATCH https://api.jup.ag/trigger/v2/orders/price/{orderId}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Update Order](https://developers.jup.ag/docs/api-reference/trigger/update-order.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/price/cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Cancel Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/cancel-order.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/price/confirm-cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Confirm Cancel](https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Create DCA Order](https://developers.jup.ag/docs/api-reference/trigger/create-dca.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca/cancel/{id}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Cancel DCA Order](https://developers.jup.ag/docs/api-reference/trigger/cancel-dca.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca/confirm-cancel/{id}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Confirm Cancel DCA Order](https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel-dca.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/orders/history/dca` | ApiKeyAuth, BearerAuth | limit, offset | Implemented / request and response contract tests | [List DCA Orders](https://developers.jup.ag/docs/api-reference/trigger/dca-history.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/orders/history/dca/{id}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Get DCA Order](https://developers.jup.ag/docs/api-reference/trigger/dca-order.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/orders/history` | ApiKeyAuth, BearerAuth | limit, offset | Implemented / request and response contract tests | [Order History (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/order-history.md) |
 | prediction | `GET https://api.jup.ag/prediction/v1/events` | ApiKeyAuth | end, start | Pending / none | [Get Events](https://developers.jup.ag/docs/api-reference/prediction/get-events.md) |
 | prediction | `GET https://api.jup.ag/prediction/v1/events/search` | ApiKeyAuth | limit | Pending / none | [Search Events](https://developers.jup.ag/docs/api-reference/prediction/search-events.md) |
 | prediction | `GET https://api.jup.ag/prediction/v1/events/{eventId}` | ApiKeyAuth | — | Pending / none | [Get Event](https://developers.jup.ag/docs/api-reference/prediction/get-event.md) |
@@ -162,7 +162,7 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
    baseline, not proof of complete response coverage.
 2. Tokens discovery and Price are implemented with exact numeric response types
    and explicit missing-price reporting. Add verification after its payment workflow.
-3. Design wallet-scoped Trigger sessions before adding its order methods.
+3. Trigger V2 is implemented with wallet-scoped sessions.
 4. Add Lend, Prediction, Send, Studio, and transaction submission using the
    boundaries above. Confirm schema stability, nullability, response envelopes,
    pagination semantics, and replay guarantees per operation before coding.
