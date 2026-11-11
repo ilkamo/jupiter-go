@@ -2,11 +2,15 @@
 
 ## Development workflow
 
-- Develop the new v1 SDK on the `v1` branch.
-- Follow `docs/v1-plan.md` and record decisions and their reasons in
-  `docs/development-status.md`; keep it free of wallet addresses, transaction
-  signatures, balances, keys, and local paths. It is a history of decisions,
-  not a work log; track remaining work in `docs/handoff.md`.
+- Work on a branch from `main` and open a pull request; track planned work in
+  GitHub issues.
+- Record significant decisions and their reasons in `docs/decisions.md`; keep it
+  free of wallet addresses, transaction signatures, balances, keys, and local
+  paths. It is a history of decisions, not a work log.
+- To check for upstream API changes, compare Jupiter's docs index with
+  `docs/api-reference-manifest.json` and parse the linked OpenAPI specs with a
+  YAML parser; record new or changed operations in `docs/api-inventory.md` and
+  pin their references in `docs/openapi/`.
 - Provide clear, runnable examples for implemented workflows.
 
 ## Go readability and design

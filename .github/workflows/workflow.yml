@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ "main" ]
   push:
-    branches: [ "main", "v1" ]
+    branches: [ "main" ]
 
 jobs:
   golangci-lint:

@@ -1,7 +1,7 @@
 # v1 decision log
 
-The decisions behind the v1 rewrite and the reason for each. Remaining work is
-tracked in [handoff.md](handoff.md); conventions are in [AGENTS.md](../AGENTS.md).
+The decisions behind the v1 rewrite and the reason for each. Planned work is
+tracked in GitHub issues; conventions are in [AGENTS.md](../AGENTS.md).
 
 ## Scope and release policy
 
