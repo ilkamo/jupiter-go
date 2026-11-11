@@ -191,7 +191,7 @@ func (s *Session) CreateDCAOrder(ctx context.Context, r DCAOrderRequest) (*Submi
 	metadata, err := s.submit(ctx, request, &submission)
 	submission.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &submission, err
 	}
 
 	return &submission, nil

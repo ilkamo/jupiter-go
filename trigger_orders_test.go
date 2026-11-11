@@ -882,3 +882,19 @@ func TestDCABoundariesAreAccepted(t *testing.T) {
 		})
 	}
 }
+
+func TestTriggerFailuresKeepResponseMetadata(t *testing.T) {
+	fake, session := priceSession(t)
+	fake.route(http.MethodPost, "/orders/price", http.StatusBadRequest, `{"error":"invalid"}`)
+
+	order, err := session.CreatePriceOrder(context.Background(), singleOrder())
+	if err == nil || order == nil || order.Metadata.StatusCode != http.StatusBadRequest {
+		t.Fatalf("order=%+v err=%v", order, err)
+	}
+
+	vault, err := session.Vault(context.Background())
+	missingKept := vault != nil && vault.Metadata.StatusCode == http.StatusNotFound
+	if !errors.Is(err, trigger.ErrNoVault) || !missingKept {
+		t.Fatalf("vault=%+v err=%v", vault, err)
+	}
+}

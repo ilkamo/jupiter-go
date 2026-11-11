@@ -330,7 +330,7 @@ func (s *Session) CreatePriceOrder(ctx context.Context, r PriceOrderRequest) (*P
 	metadata, err := s.submit(ctx, request, &order)
 	order.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &order, err
 	}
 
 	return &order, nil
@@ -496,7 +496,7 @@ func (s *Session) cancel(ctx context.Context, prefix string, id string) (*Cancel
 	metadata, err := s.do(ctx, request, &cancellation)
 	cancellation.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &cancellation, err
 	}
 
 	return &cancellation, nil
@@ -528,7 +528,7 @@ func (s *Session) confirmCancel(
 	metadata, err := s.submit(ctx, request, &submission)
 	submission.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &submission, err
 	}
 
 	return &submission, nil

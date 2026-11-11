@@ -46,11 +46,11 @@ func (s *Session) Vault(ctx context.Context) (*Vault, error) {
 	metadata, err := s.do(ctx, request, &vault)
 	vault.Metadata = metadata
 	if statusIs(err, http.StatusNotFound) {
-		return nil, fmt.Errorf("%w: %w", ErrNoVault, err)
+		return &vault, fmt.Errorf("%w: %w", ErrNoVault, err)
 	}
 
 	if err != nil {
-		return nil, err
+		return &vault, err
 	}
 
 	return &vault, nil
@@ -70,7 +70,7 @@ func (s *Session) RegisterVault(ctx context.Context) (*Vault, error) {
 	metadata, err := s.do(ctx, request, &vault)
 	vault.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &vault, err
 	}
 
 	return &vault, nil
@@ -209,7 +209,7 @@ func (s *Session) CraftDeposit(ctx context.Context, r DepositRequest) (*Deposit,
 	metadata, err := s.do(ctx, request, &deposit)
 	deposit.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &deposit, err
 	}
 
 	return &deposit, nil

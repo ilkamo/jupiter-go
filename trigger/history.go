@@ -135,7 +135,7 @@ func (s *Session) PriceOrderHistory(ctx context.Context, r HistoryRequest) (*Pri
 	metadata, err := s.history(ctx, "/orders/history", r, &history)
 	history.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &history, err
 	}
 
 	return &history, nil
@@ -204,7 +204,7 @@ func (s *Session) DCAOrderHistory(ctx context.Context, r HistoryRequest) (*DCAOr
 	metadata, err := s.history(ctx, "/orders/history/dca", r, &history)
 	history.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &history, err
 	}
 
 	return &history, nil
@@ -227,7 +227,7 @@ func (s *Session) DCAOrder(ctx context.Context, id string) (*DCAOrderRecord, err
 	metadata, err := s.do(ctx, request, &order)
 	order.Metadata = metadata
 	if err != nil {
-		return nil, err
+		return &order, err
 	}
 
 	return &order, nil
