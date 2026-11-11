@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/ilkamo/jupiter-go/instruction"
 	"github.com/ilkamo/jupiter-go/internal/amount"
 	"github.com/ilkamo/jupiter-go/internal/listparam"
 	"github.com/ilkamo/jupiter-go/internal/transport"
@@ -38,17 +39,11 @@ type BuildRequest struct {
 	TransactionVersion         *uint8
 }
 
-type AccountMeta struct {
-	Pubkey     string `json:"pubkey"`
-	IsSigner   bool   `json:"isSigner"`
-	IsWritable bool   `json:"isWritable"`
-}
-
-type Instruction struct {
-	ProgramID string        `json:"programId"`
-	Accounts  []AccountMeta `json:"accounts"`
-	Data      string        `json:"data"`
-}
+// Instruction and AccountMeta are shared with other instruction-building APIs.
+type (
+	Instruction = instruction.Instruction
+	AccountMeta = instruction.AccountMeta
+)
 
 type BuildResponse struct {
 	Metadata                      response.Metadata   `json:"-"`

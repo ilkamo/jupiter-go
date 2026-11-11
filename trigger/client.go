@@ -33,11 +33,6 @@ const (
 
 	basePath = "/trigger/v2"
 
-	repeatableMaxAttempts    = 3
-	repeatableInitialBackoff = 100 * time.Millisecond
-	repeatableMaxBackoff     = 500 * time.Millisecond
-	repeatableMaxRetryAfter  = 1 * time.Second
-
 	// pureEd25519 selects Ed25519 over the full message rather than a prehash.
 	pureEd25519 = crypto.Hash(0)
 )
@@ -46,12 +41,7 @@ const (
 // challenge or crafting a deposit returns a fresh single-use value, logout is
 // documented as idempotent, and refresh tolerates a repeated request within a
 // short grace window, so waits stay short.
-var repeatableRetry = transport.RetryPolicy{
-	MaxAttempts:    repeatableMaxAttempts,
-	InitialBackoff: repeatableInitialBackoff,
-	MaxBackoff:     repeatableMaxBackoff,
-	MaxRetryAfter:  repeatableMaxRetryAfter,
-}
+var repeatableRetry = transport.RepeatableRetry
 
 var (
 	// ErrInvalidAddress is the same value as swap.ErrInvalidAddress.

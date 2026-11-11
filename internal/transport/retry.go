@@ -51,6 +51,24 @@ var ReadOnlyRetry = RetryPolicy{
 	MaxRetryAfter:  readOnlyMaxRetryAfter,
 }
 
+const (
+	repeatableMaxAttempts    = 3
+	repeatableInitialBackoff = 100 * time.Millisecond
+	repeatableMaxBackoff     = 500 * time.Millisecond
+	repeatableMaxRetryAfter  = 1 * time.Second
+)
+
+// RepeatableRetry suits operations whose repetition changes no outcome but whose
+// results are time-sensitive, such as building unsigned transactions or quotes:
+// each attempt returns a fresh value and an unused earlier one simply expires.
+// Waits stay short. Callers document why their operation qualifies.
+var RepeatableRetry = RetryPolicy{
+	MaxAttempts:    repeatableMaxAttempts,
+	InitialBackoff: repeatableInitialBackoff,
+	MaxBackoff:     repeatableMaxBackoff,
+	MaxRetryAfter:  repeatableMaxRetryAfter,
+}
+
 // NoRetry makes exactly one attempt. Use it for operations without a documented
 // replay guarantee.
 var NoRetry = RetryPolicy{MaxAttempts: singleAttempt}

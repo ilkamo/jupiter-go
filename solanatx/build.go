@@ -7,6 +7,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 
+	"github.com/ilkamo/jupiter-go/instruction"
 	"github.com/ilkamo/jupiter-go/swap"
 )
 
@@ -35,8 +36,8 @@ func Instructions(build *swap.BuildResponse) ([]solana.Instruction, error) {
 	}
 
 	instructions := make([]solana.Instruction, 0, len(ordered))
-	for i, instruction := range ordered {
-		converted, err := ConvertInstruction(instruction)
+	for i, ix := range ordered {
+		converted, err := ConvertInstruction(ix)
 		if err != nil {
 			return nil, fmt.Errorf("instruction %d: %w", i, err)
 		}
@@ -47,15 +48,16 @@ func Instructions(build *swap.BuildResponse) ([]solana.Instruction, error) {
 	return instructions, nil
 }
 
-// ConvertInstruction converts one Jupiter instruction, decoding its base64 data.
-func ConvertInstruction(instruction swap.Instruction) (solana.Instruction, error) {
-	programID, err := solana.PublicKeyFromBase58(instruction.ProgramID)
+// ConvertInstruction converts one Jupiter instruction, such as a swap build or Lend
+// instruction, decoding its base64 data.
+func ConvertInstruction(ix instruction.Instruction) (solana.Instruction, error) {
+	programID, err := solana.PublicKeyFromBase58(ix.ProgramID)
 	if err != nil {
 		return nil, fmt.Errorf("program ID: %w", err)
 	}
 
-	accounts := make(solana.AccountMetaSlice, 0, len(instruction.Accounts))
-	for i, account := range instruction.Accounts {
+	accounts := make(solana.AccountMetaSlice, 0, len(ix.Accounts))
+	for i, account := range ix.Accounts {
 		address, err := solana.PublicKeyFromBase58(account.Pubkey)
 		if err != nil {
 			return nil, fmt.Errorf("account %d: %w", i, err)
@@ -64,7 +66,7 @@ func ConvertInstruction(instruction swap.Instruction) (solana.Instruction, error
 		accounts = append(accounts, solana.NewAccountMeta(address, account.IsWritable, account.IsSigner))
 	}
 
-	data, err := base64.StdEncoding.DecodeString(instruction.Data)
+	data, err := base64.StdEncoding.DecodeString(ix.Data)
 	if err != nil {
 		return nil, fmt.Errorf("decode instruction data: %w", err)
 	}

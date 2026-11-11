@@ -3,28 +3,14 @@ package swap
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/ilkamo/jupiter-go/internal/transport"
 )
 
-const (
-	quoteMaxAttempts    = 3
-	quoteInitialBackoff = 100 * time.Millisecond
-	quoteMaxBackoff     = 500 * time.Millisecond
-	quoteMaxRetryAfter  = 1 * time.Second
-)
-
 // quoteRetryPolicy covers order and build. Repeating these GETs changes no state:
 // each attempt returns a fresh quote, blockhash, and request ID, and an unused
-// earlier quote simply expires. Waits stay short because the results are
-// time-sensitive.
-var quoteRetryPolicy = transport.RetryPolicy{
-	MaxAttempts:    quoteMaxAttempts,
-	InitialBackoff: quoteInitialBackoff,
-	MaxBackoff:     quoteMaxBackoff,
-	MaxRetryAfter:  quoteMaxRetryAfter,
-}
+// earlier quote simply expires.
+var quoteRetryPolicy = transport.RepeatableRetry
 
 // executeRetryPolicy makes one attempt: the execute documentation gives no replay
 // guarantee for repeating a signed transaction and request ID.
