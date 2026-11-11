@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
+	"github.com/ilkamo/jupiter-go/internal/listparam"
 	"github.com/ilkamo/jupiter-go/internal/transport"
 )
 
@@ -118,11 +118,11 @@ func (r OrderRequest) validate() error {
 	}
 
 	// Router names are format-checked only, so routers added upstream remain usable.
-	if err := validateLabels("excluded routers", r.ExcludeRouters); err != nil {
+	if err := listparam.Validate("excluded routers", r.ExcludeRouters); err != nil {
 		return err
 	}
 
-	return validateLabels("excluded DEXes", r.ExcludeDexes)
+	return listparam.Validate("excluded DEXes", r.ExcludeDexes)
 }
 
 func (r OrderRequest) query(referral Referral) (url.Values, error) {
@@ -166,8 +166,8 @@ func (r OrderRequest) query(referral Referral) (url.Values, error) {
 	}
 
 	set(q, "broadcastFeeType", r.BroadcastFeeType)
-	set(q, "excludeRouters", strings.Join(r.ExcludeRouters, labelSeparator))
-	set(q, "excludeDexes", strings.Join(r.ExcludeDexes, labelSeparator))
+	set(q, "excludeRouters", listparam.Join(r.ExcludeRouters))
+	set(q, "excludeDexes", listparam.Join(r.ExcludeDexes))
 
 	if referral.Account != "" {
 		q.Set("referralAccount", referral.Account)
@@ -294,7 +294,7 @@ func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, err
 	request := transport.Request{
 		Method: http.MethodGet,
 		Path:   "/swap/v2/program-id-to-label",
-		Retry:  referenceRetryPolicy,
+		Retry:  transport.ReadOnlyRetry,
 	}
 
 	metadata, err := c.transport.Do(ctx, request, &result.Labels)

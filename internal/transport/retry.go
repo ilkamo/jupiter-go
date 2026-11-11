@@ -34,6 +34,23 @@ type RetryPolicy struct {
 	MaxRetryAfter time.Duration
 }
 
+const (
+	readOnlyMaxAttempts    = 4
+	readOnlyInitialBackoff = 250 * time.Millisecond
+	readOnlyMaxBackoff     = 2 * time.Second
+	readOnlyMaxRetryAfter  = 5 * time.Second
+)
+
+// ReadOnlyRetry suits operations that only read data and create nothing, such as
+// program labels, token discovery, and prices. Do not use it for operations with
+// side effects, including GETs that create state or build transactions.
+var ReadOnlyRetry = RetryPolicy{
+	MaxAttempts:    readOnlyMaxAttempts,
+	InitialBackoff: readOnlyInitialBackoff,
+	MaxBackoff:     readOnlyMaxBackoff,
+	MaxRetryAfter:  readOnlyMaxRetryAfter,
+}
+
 // NoRetry makes exactly one attempt. Use it for operations without a documented
 // replay guarantee.
 var NoRetry = RetryPolicy{MaxAttempts: singleAttempt}

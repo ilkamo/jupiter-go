@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
+	"github.com/ilkamo/jupiter-go/internal/listparam"
 	"github.com/ilkamo/jupiter-go/internal/transport"
 	"github.com/ilkamo/jupiter-go/response"
 )
@@ -136,11 +136,11 @@ func (r BuildRequest) validateRouting() error {
 		return fmt.Errorf("dexes and excludeDexes are mutually exclusive")
 	}
 
-	if err := validateLabels("DEXes", r.Dexes); err != nil {
+	if err := listparam.Validate("DEXes", r.Dexes); err != nil {
 		return err
 	}
 
-	if err := validateLabels("excluded DEXes", r.ExcludeDexes); err != nil {
+	if err := listparam.Validate("excluded DEXes", r.ExcludeDexes); err != nil {
 		return err
 	}
 
@@ -262,8 +262,8 @@ func (r BuildRequest) query() (url.Values, error) {
 
 	set(q, "slippageBps", r.SlippageBps)
 	set(q, "mode", r.Mode)
-	set(q, "dexes", strings.Join(r.Dexes, labelSeparator))
-	set(q, "excludeDexes", strings.Join(r.ExcludeDexes, labelSeparator))
+	set(q, "dexes", listparam.Join(r.Dexes))
+	set(q, "excludeDexes", listparam.Join(r.ExcludeDexes))
 
 	if r.PlatformFeeBps > 0 {
 		q.Set("platformFeeBps", strconv.Itoa(int(r.PlatformFeeBps)))

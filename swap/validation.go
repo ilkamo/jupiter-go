@@ -3,15 +3,12 @@ package swap
 import (
 	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/ilkamo/jupiter-go/internal/address"
 )
 
 // ErrInvalidAddress identifies request fields that are not Solana account addresses.
 var ErrInvalidAddress = address.ErrInvalid
-
-const labelSeparator = ","
 
 func validateAddress(field string, value string) error {
 	if err := address.Validate(value); err != nil {
@@ -61,23 +58,4 @@ func parseRawAmount(amount string) (string, error) {
 	}
 
 	return rawAmount.String(), nil
-}
-
-// validateLabels rejects entries that would change meaning when joined into a comma-separated list.
-func validateLabels(field string, labels []string) error {
-	for _, label := range labels {
-		if label == "" {
-			return fmt.Errorf("%s: empty label", field)
-		}
-
-		if strings.Contains(label, labelSeparator) {
-			return fmt.Errorf("%s: label %q contains a separator", field, label)
-		}
-
-		if strings.TrimSpace(label) != label {
-			return fmt.Errorf("%s: label %q has surrounding whitespace", field, label)
-		}
-	}
-
-	return nil
 }

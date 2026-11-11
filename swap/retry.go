@@ -14,11 +14,6 @@ const (
 	quoteInitialBackoff = 100 * time.Millisecond
 	quoteMaxBackoff     = 500 * time.Millisecond
 	quoteMaxRetryAfter  = 1 * time.Second
-
-	referenceMaxAttempts    = 4
-	referenceInitialBackoff = 250 * time.Millisecond
-	referenceMaxBackoff     = 2 * time.Second
-	referenceMaxRetryAfter  = 5 * time.Second
 )
 
 // quoteRetryPolicy covers order and build. Repeating these GETs changes no state:
@@ -30,14 +25,6 @@ var quoteRetryPolicy = transport.RetryPolicy{
 	InitialBackoff: quoteInitialBackoff,
 	MaxBackoff:     quoteMaxBackoff,
 	MaxRetryAfter:  quoteMaxRetryAfter,
-}
-
-// referenceRetryPolicy covers read-only reference data such as program labels.
-var referenceRetryPolicy = transport.RetryPolicy{
-	MaxAttempts:    referenceMaxAttempts,
-	InitialBackoff: referenceInitialBackoff,
-	MaxBackoff:     referenceMaxBackoff,
-	MaxRetryAfter:  referenceMaxRetryAfter,
 }
 
 // executeRetryPolicy makes one attempt: the execute documentation gives no replay
