@@ -23,6 +23,9 @@ tracked in GitHub issues; conventions are in [AGENTS.md](../AGENTS.md).
   further maintenance. `CHANGELOG.md` maps v0 calls to v1.
 - **Module path unchanged.** `github.com/ilkamo/jupiter-go` moves from v0 to v1
   without a `/v1` suffix.
+- **Releases come from commits, not merges.** release-please opens a release
+  pull request from Conventional Commit types; merging it tags the version.
+  Docs, test, build, and CI commits alone never trigger a release.
 - **Docs stay out of the download.** `docs/` (plans, inventory, pinned
   references in `docs/openapi/`, images in `docs/assets/`) has its own `go.mod`,
   so Go excludes it from the library's module zip.

@@ -4,6 +4,12 @@
 
 - Work on a branch from `main` and open a pull request; track planned work in
   GitHub issues.
+- Releases are automated: release-please derives the next version and the
+  changelog from Conventional Commit types (`fix` is a patch, `feat` a minor
+  release). Do not tag by hand. Mark a commit breaking (`!` or a
+  `BREAKING CHANGE:` footer) only for breaking changes to stable packages, which
+  require a new `/v2` module path; changes to beta packages (Lend, Prediction,
+  Send, Studio) use `feat` or `fix` and ship in minor releases.
 - Record significant decisions and their reasons in `docs/decisions.md`; keep it
   free of wallet addresses, transaction signatures, balances, keys, and local
   paths. It is a history of decisions, not a work log.
