@@ -1,0 +1,1118 @@
+{
+  "reviewed_at": "2026-11-11",
+  "index_url": "https://developers.jup.ag/docs/llms.txt",
+  "index_sha256": "4cc6a35b1f91f82f07174e75f37d676df4f71ec3cbfcef360f19f32acb836f47",
+  "operations": [
+    {
+      "product": "swap",
+      "method": "GET",
+      "url": "https://api.jup.ag/swap/v2/order",
+      "reference": "https://developers.jup.ag/docs/api-reference/swap/order.md",
+      "schema": "openapi-spec/swap/v2/swap.yaml",
+      "sha256": "359f9bca6329284bb64ee48d1436d7248d59330f788ce602ecb72dca8f8059b8",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": true
+    },
+    {
+      "product": "swap",
+      "method": "POST",
+      "url": "https://api.jup.ag/swap/v2/execute",
+      "reference": "https://developers.jup.ag/docs/api-reference/swap/execute.md",
+      "schema": "openapi-spec/swap/v2/swap.yaml",
+      "sha256": "c553d91df952dc56d5b6783cba18d51142f9247321179264e184da2b7209d6f9",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": true
+    },
+    {
+      "product": "swap",
+      "method": "GET",
+      "url": "https://api.jup.ag/swap/v2/build",
+      "reference": "https://developers.jup.ag/docs/api-reference/swap/build.md",
+      "schema": "openapi-spec/swap/v2/swap.yaml",
+      "sha256": "d589a1f937af9f83e4b5b94899976a48a48a8e71d3987c0ee9c7895136b2b22e",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": true
+    },
+    {
+      "product": "swap",
+      "method": "GET",
+      "url": "https://api.jup.ag/swap/v2/program-id-to-label",
+      "reference": "https://developers.jup.ag/docs/api-reference/swap/program-id-to-label.md",
+      "schema": "openapi-spec/swap/v2/swap.yaml",
+      "sha256": "659c7b30adab89804411660fd0058bfc5b3493ccab81e11374e5f755f5e5b0c2",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": true
+    },
+    {
+      "product": "tokens",
+      "method": "GET",
+      "url": "https://api.jup.ag/tokens/v2/search",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/search.md",
+      "schema": "openapi-spec/tokens/v2/tokens.yaml",
+      "sha256": "52b28036623d93687dc3e47eb494cd3ce18055e14a8f4da73fec19a92f9137c5",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "tokens",
+      "method": "GET",
+      "url": "https://api.jup.ag/tokens/v2/tag",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/tag.md",
+      "schema": "openapi-spec/tokens/v2/tokens.yaml",
+      "sha256": "cfa5831241b844787a55f0cf1d2ae79a2193a376d5abea7deaa4d894b60f80db",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "tokens",
+      "method": "GET",
+      "url": "https://api.jup.ag/tokens/v2/{category}/{interval}",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/category.md",
+      "schema": "openapi-spec/tokens/v2/tokens.yaml",
+      "sha256": "bf8f22cc33a8d50d8ea0196db89d4490248070cf6b79daff77f145058f13e806",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "limit"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "tokens",
+      "method": "GET",
+      "url": "https://api.jup.ag/tokens/v2/recent",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/recent.md",
+      "schema": "openapi-spec/tokens/v2/tokens.yaml",
+      "sha256": "bbbafdb55376f0ce5e2c4aa71e9c5516c4ee169ba0eafb4d70abff068cff6087",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "tokens",
+      "method": "GET",
+      "url": "https://api.jup.ag/tokens/v2/verify/express/check-eligibility",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/verify-check-eligibility.md",
+      "schema": "openapi-spec/tokens/v2/verification.yaml",
+      "sha256": "c2875fa78d5697ed17da566b14faf73342b35404de5aa26bb8c9be9b4f26de98",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "tokens",
+      "method": "GET",
+      "url": "https://api.jup.ag/tokens/v2/verify/express/craft-txn",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/verify-craft-txn.md",
+      "schema": "openapi-spec/tokens/v2/verification.yaml",
+      "sha256": "f34e5bdf1e787e1a21b12d605cbe3fa226feb79beee094cc1351a2c16547dfa8",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "tokens",
+      "method": "POST",
+      "url": "https://api.jup.ag/tokens/v2/verify/express/execute",
+      "reference": "https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md",
+      "schema": "openapi-spec/tokens/v2/verification.yaml",
+      "sha256": "d7494b919c39ca9a14ec17b013b6d11d33845d2c88838a9937a6538ad8480642",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "price",
+      "method": "GET",
+      "url": "https://api.jup.ag/price/v3/",
+      "reference": "https://developers.jup.ag/docs/api-reference/price/index.md",
+      "schema": "openapi-spec/price/v3/price.yaml",
+      "sha256": "f55dbc4cd48aebb59fb2f4d237279117e2d1d9bdef27a6f2c31333cab0623abd",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "transaction",
+      "method": "POST",
+      "url": "https://tx.jup.ag/",
+      "reference": "https://developers.jup.ag/docs/api-reference/transaction/submit.md",
+      "schema": "openapi-spec/transaction/transaction.yaml",
+      "sha256": "4484a65e1a95dd0998554f6cc737ba1181105ed1e915da1f4b4c6da8ae5365d3",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/deposit",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "e2b6d5dc40894d2fda668efa7f354b5b810ff0d014a98b52fbddfcea54e4f0a0",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/withdraw",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/withdraw.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "306f679414b9aa7dbd7767e927026b4ec3b04a81c0be3dceeac277d22290f71f",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/mint",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/mint.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "12fc53b49bc0e125bcad86a13f615b5c1b091327b68402b188e164c2d2b2a274",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/redeem",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/redeem.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "efabd4dab231073618779b219ff655be88ec7b2e5c89f4bd0661f3c48455d2db",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/deposit-instructions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/deposit-instructions.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "403d0089cee384d98b184c0525ab7022a06fc5ccbd354ab78cb7e545281d11be",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/withdraw-instructions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/withdraw-instructions.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "ebd40693d2de2e217a054c101bb0521afd7fea231d63e745f4393e70d2cb5ef4",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/mint-instructions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/mint-instructions.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "72bf07127ee8a5bbc64578f80460591dc9e1079d153d3758f351f0c5c984ccb5",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/earn/redeem-instructions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/redeem-instructions.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "ccf63b951c25a6dbdeaa1ac081ce2a8e5a5640bb8be03bf9f56f225cdaf6c244",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "GET",
+      "url": "https://api.jup.ag/lend/v1/earn/tokens",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/tokens.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "8037e88fc313127afc6cfc3a3f340982740801d51245b7ff04bf910305280101",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "GET",
+      "url": "https://api.jup.ag/lend/v1/earn/positions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/positions.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "750fe3c8505843326880ab8fa2a8d5473ec00dd7714e9a624ce13f658cd84457",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "GET",
+      "url": "https://api.jup.ag/lend/v1/earn/earnings",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/earn/earnings.md",
+      "schema": "openapi-spec/lend/lend.yaml",
+      "sha256": "8c6258c5f61995b7700339e58a2c4fc7d56f46074d896cf3e991b850a2476709",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "GET",
+      "url": "https://api.jup.ag/lend/v1/borrow/vaults",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/borrow/vaults.md",
+      "schema": "openapi-spec/lend/borrow.yaml",
+      "sha256": "6dd5d77d4cb5946dc7eb90ecf8b4dd79e6f131bc5b3db49eacea17cb4a0944f4",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "GET",
+      "url": "https://api.jup.ag/lend/v1/borrow/positions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/borrow/positions.md",
+      "schema": "openapi-spec/lend/borrow.yaml",
+      "sha256": "41bd8a1200e762013ebae80c7c30fdc4cc93d508bc97bf303b90ca9127dcf38a",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/borrow/operate",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/borrow/operate.md",
+      "schema": "openapi-spec/lend/borrow.yaml",
+      "sha256": "145f2d8610f80204da21199cd9a6bcce3efdf269ae629f4e9bbfcebc74af0d52",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "lend",
+      "method": "POST",
+      "url": "https://api.jup.ag/lend/v1/borrow/operate-instructions",
+      "reference": "https://developers.jup.ag/docs/api-reference/lend/borrow/operate-instructions.md",
+      "schema": "openapi-spec/lend/borrow.yaml",
+      "sha256": "5eb737f3803e0eb5b6400496d3f2bb4d2f40a01acfcdb8538211c7c361f79ea2",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/auth/challenge",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/challenge.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "89481e5734d5eebd34961bf45e4a059cf4347338ce696709fc5a0d91f6134d5c",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/auth/verify",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/verify.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "f9379d18edc18a54ee6705aaedf59508dc96cd66becfb94684454c35cb0cf06a",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/auth/refresh",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/refresh.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "e4184be55479e9cf096e6addac738b177b5d607f20c99d95eea3115a1be390d0",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/auth/logout",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/logout.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "14a3f8ced689115bfd7b19b25bf621f5ba73d3282ace371b9d1c2bff842c81b0",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/auth/logout-all",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/logout-all.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "a5b0f4c0317b885161685d6abaf14dd4ff78424cf727ed477be271662b1e119c",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "GET",
+      "url": "https://api.jup.ag/trigger/v2/vault",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/vault.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "182b97f925460382056fc5946ad71d1522161c81fb2f82ddf91c68c72bcf7c84",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "GET",
+      "url": "https://api.jup.ag/trigger/v2/vault/register",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/vault-register.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "4946ebc942c2780596252abce79606e9e7c7510a6e79754bd60cdd2800f7b86d",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/deposit/craft",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/deposit-craft.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "e69814d949dcfbe9eac5cccf84a05734dcf819024c4563549c44bcf1de505d74",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/orders/price",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/create-order.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "29beef4ad96047a66c8eeac9f1bc18938cb55f8861bbfdc5d034160b8745577b",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "PATCH",
+      "url": "https://api.jup.ag/trigger/v2/orders/price/{orderId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/update-order.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "5010f7c62ca0bb02b1c718ff0222871ae364e712ef8382ff34b187b216395e83",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/orders/price/cancel/{orderId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/cancel-order.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "1704f5f0646f4bb23ff620041a48c856fa8827d6cbf8c5e9b3f661901918bc71",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/orders/price/confirm-cancel/{orderId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "f83908d0e56c428efafdb47c57a3a18955cecc817e65c9dd3a983085ee260bb1",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/orders/dca",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/create-dca.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "a89c57ca6af8991549944a6d2579a918498ff57e9b8defb3286d2ba558bcd68c",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/orders/dca/cancel/{id}",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/cancel-dca.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "21da98884779ca6143cc1e2c92e069abb589cae813d971930b2aa1ef98a30a39",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "POST",
+      "url": "https://api.jup.ag/trigger/v2/orders/dca/confirm-cancel/{id}",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel-dca.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "9bc4f84f00640a0403a59a57319f13e2b95349461f60e8c275a5f2413b51269f",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "GET",
+      "url": "https://api.jup.ag/trigger/v2/orders/history/dca",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/dca-history.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "f0c410ec23377c240dbcbce0df5fbe3961bad5aacf60c2c89e4de001c1cd0a31",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [
+        "limit",
+        "offset"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "GET",
+      "url": "https://api.jup.ag/trigger/v2/orders/history/dca/{id}",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/dca-order.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "dcfcdc8410bb43969cbced9c7524c409ae99046bc73b1f66031ba691ecaeedd0",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "trigger",
+      "method": "GET",
+      "url": "https://api.jup.ag/trigger/v2/orders/history",
+      "reference": "https://developers.jup.ag/docs/api-reference/trigger/order-history.md",
+      "schema": "openapi-spec/trigger/v2/trigger.yaml",
+      "sha256": "aba89dd7690f336ec8f540f16da632b20bba97ab450ce6e25ad75132a91699fb",
+      "security_requirements": [
+        "ApiKeyAuth",
+        "BearerAuth"
+      ],
+      "pagination_parameters": [
+        "limit",
+        "offset"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-events.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "7fa685fe93c3c5653b7b036e06988e9ebb75a27f7ac936869708e55b4360e926",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "end",
+        "start"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/search",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/search-events.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "4ab3b35ec9adca6c69ac2ba40b1233105cc956ed06e35974c5761ef723c6c2ee",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "limit"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/{eventId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-event.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "9829ab4a7e75b87367a9ae20759fb9313d522f553d745b1edbcae0a1fc0176a2",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/suggested/{pubkey}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-suggested-events.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "3e8a6a42c558bb8a2a8dec88457d06a98a44e75ad4ec407dfa28250671c8470a",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/scores",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-event-scores.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "761faa9bdeb11088388f16457ce88ce4ec8a590f1b85e1ee019c10eccaed9f30",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/{eventId}/score",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-event-score.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "62a969512015897d42d75a45f73fd5eef82e6600d9194adbe050afbdbba1885c",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/{eventId}/markets",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-event-markets.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "87d84b9e23cf29a7ebabf3d3777477e5557750e28506ea152a435f3aab6a0392",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "end",
+        "start"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/events/{eventId}/markets/{marketId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-event-market.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "465724ed99c4a74a3014ae617aca992fea443bb3153959258cd21397d451f99f",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/markets/{marketId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-market.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "a67306f7714988678abbbf1b9e567764df09f370f74957f48d4d8b427666bf6d",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/orders",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-orders.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "0248fa1dc9bd0c40dd599b687127d996adb9e4a49053d656a9c211437f068dc4",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "end",
+        "start"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/orders/{orderPubkey}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-order.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "4b30ba07e5c4c0c40e0dfd70485f8098f762076742cf334ce35b228a5ffea772",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/orders/status/{orderPubkey}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-order-status.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "e9d379b8264a80b6cc22cdadd162d7366dbfdf087f43b01086d73e374b10273c",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "POST",
+      "url": "https://api.jup.ag/prediction/v1/orders",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/create-order.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "789c7933af0750c18e2ce70fa56a0c3785ef09bff5b828719ea5fa4985df4a13",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "POST",
+      "url": "https://api.jup.ag/prediction/v1/execute",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/execute.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "af2cd3238ca9498623278da4b2877fd111127e6c38ee4c765aeaefa8c31ef4ef",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/positions",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-positions.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "d9464ef1136a0455a202033e30b2ce73a530543d7c03f37ac8996299f00cc321",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "end",
+        "start"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/positions/{positionPubkey}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-position.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "48667a2bf5452cd62caa7c602e0c65a85a8384edf7a636a60b86b6d0f9e659be",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "DELETE",
+      "url": "https://api.jup.ag/prediction/v1/positions/{positionPubkey}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/close-position.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "9c5c35f14a8b0fc6e8e418d696d3910cdc53e8d7dc3ae9e3de51bdb8877b709e",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "DELETE",
+      "url": "https://api.jup.ag/prediction/v1/positions",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/close-all-positions.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "10d1dcb1b305cdbc9abaeb7d8957c204bc934bf5bc956b0f8482126c47bfa2ca",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "POST",
+      "url": "https://api.jup.ag/prediction/v1/positions/{positionPubkey}/claim",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/claim-position.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "fc4999d2f89b7faea548291c34c05e520c402f89749c1f37ed41608ed4adc426",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/history",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-history.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "5eaf3e5e624a3a1b6267611c44d4d38cbec5b98933fe5d7d69524ab5e6c92308",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "end",
+        "start"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/orderbook/{marketId}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-orderbook.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "3e464d32b371ad7ccff45d186d1a426d200ddeffa95484403507aac580853f9e",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/trading-status",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-trading-status.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "583abaabfa1abe1f4ee8aeb918c3a1105b4777c1c300b5831f394912e5b71f57",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/profiles/{ownerPubkey}",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-profile.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "b2d81ae52d98c6920b5d062242bb9d23f1cab93fdd84c5525967249701dfdbdb",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/profiles/{ownerPubkey}/pnl-history",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-pnl-history.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "b9d7a14c2c3fec278b5d2b9c1b4519015f500933cc9024d004a50e9d9b17f56f",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/trades",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-trades.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "000bfae56a6d2547cf6372909c575c52f1ea0c51aec8176ea547e6110a0c7210",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/leaderboards",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-leaderboards.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "ed47e15e1b0a75a2af086fab0b486a6ebcb72c07f4ff0d2f16469c14e9b0ac08",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "limit"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "prediction",
+      "method": "GET",
+      "url": "https://api.jup.ag/prediction/v1/vault-info",
+      "reference": "https://developers.jup.ag/docs/api-reference/prediction/get-vault-info.md",
+      "schema": "openapi-spec/prediction/prediction.yaml",
+      "sha256": "856ccae4042bfe71a07b08fb21f63e81e51ebf9241f535582ec765be95447613",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "send",
+      "method": "POST",
+      "url": "https://api.jup.ag/send/v1/craft-send",
+      "reference": "https://developers.jup.ag/docs/api-reference/send/craft-send.md",
+      "schema": "openapi-spec/send/send.yaml",
+      "sha256": "8db265568c2cadcb74bcf87972e263ff08833e34d7ab03b7e3052d9d8bffd720",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "send",
+      "method": "POST",
+      "url": "https://api.jup.ag/send/v1/craft-clawback",
+      "reference": "https://developers.jup.ag/docs/api-reference/send/craft-clawback.md",
+      "schema": "openapi-spec/send/send.yaml",
+      "sha256": "4fc5a29cbe3b7905ec193c0660e5371398ed81d861359351fad3d379be91780f",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "send",
+      "method": "GET",
+      "url": "https://api.jup.ag/send/v1/pending-invites",
+      "reference": "https://developers.jup.ag/docs/api-reference/send/pending-invites.md",
+      "schema": "openapi-spec/send/send.yaml",
+      "sha256": "5ae05a73ef82d148f25058c7d9662ae83b33f6774466ea34ed209b247d841306",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "page"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "send",
+      "method": "GET",
+      "url": "https://api.jup.ag/send/v1/invite-history",
+      "reference": "https://developers.jup.ag/docs/api-reference/send/invite-history.md",
+      "schema": "openapi-spec/send/send.yaml",
+      "sha256": "3aced26cbbdccf0f60ea3b4392c38b8eadf2d48e11da71d3037b59e65d1b1951",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [
+        "page"
+      ],
+      "implemented": false
+    },
+    {
+      "product": "studio",
+      "method": "POST",
+      "url": "https://api.jup.ag/studio/v1/dbc-pool/create-tx",
+      "reference": "https://developers.jup.ag/docs/api-reference/studio/dbc-pool-create-tx.md",
+      "schema": "openapi-spec/studio/studio.yaml",
+      "sha256": "c975ba92e54b751fcfc5130efa5aa6219602dde055b7e88cc38417a7d12a31d0",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "studio",
+      "method": "POST",
+      "url": "https://api.jup.ag/studio/v1/dbc-pool/submit",
+      "reference": "https://developers.jup.ag/docs/api-reference/studio/dbc-pool-submit.md",
+      "schema": "openapi-spec/studio/studio.yaml",
+      "sha256": "e85976c1e130598efd412ec270da02ba11770f61ab2deaee5929e72eaed95706",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "studio",
+      "method": "GET",
+      "url": "https://api.jup.ag/studio/v1/dbc-pool/addresses/{mint}",
+      "reference": "https://developers.jup.ag/docs/api-reference/studio/dbc-pool-addresses-by-mint.md",
+      "schema": "openapi-spec/studio/studio.yaml",
+      "sha256": "d7f0d9795240f696bb43b3e57b33b706ecc1b34f74a0dac2a6a64211b4b33a9c",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "studio",
+      "method": "POST",
+      "url": "https://api.jup.ag/studio/v1/dbc/fee",
+      "reference": "https://developers.jup.ag/docs/api-reference/studio/dbc-fee.md",
+      "schema": "openapi-spec/studio/studio.yaml",
+      "sha256": "1fb35bd631b755059590c548ca4814b5662c2741a192417757e965431c303e96",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    },
+    {
+      "product": "studio",
+      "method": "POST",
+      "url": "https://api.jup.ag/studio/v1/dbc/fee/create-tx",
+      "reference": "https://developers.jup.ag/docs/api-reference/studio/dbc-fee-create-tx.md",
+      "schema": "openapi-spec/studio/studio.yaml",
+      "sha256": "90ff5f59c874af96eb8124b2662ca39cf046eab8117adb5b07b734de69bbab72",
+      "security_requirements": [
+        "ApiKeyAuth"
+      ],
+      "pagination_parameters": [],
+      "implemented": false
+    }
+  ]
+}

@@ -16,6 +16,25 @@ constructor calls in tests, and output writes; never discard an error with `_`.
 Use descriptive constants with explicit units for policy limits. Prefer standard
 library mechanisms over manual sentinel-byte arithmetic or clever shortcuts.
 
+## API inventory completed
+
+Added [the API inventory](api-inventory.md) and its
+[source manifest](api-reference-manifest.json). All 82 API-reference pages linked
+from the current documentation index were fetched and catalogued across nine
+products. The inventory records operations, servers, declared authentication,
+pagination controls, source hashes, and SDK/test coverage. Full schema and replay
+semantics remain per-operation implementation prerequisites.
+
+Key design findings: transaction submission uses a separate JSON-RPC endpoint;
+Trigger vault registration is a state-changing GET; Tokens includes payment-based
+verification operations. These require explicit component boundaries before the
+corresponding clients are implemented.
+
+Validation for this documentation step: all references fetched successfully;
+unique reference URLs and method/URL pairs; JSON manifest parsed successfully;
+`git diff --check` passed. Go code was unchanged, so the previously passing code
+validation remains applicable.
+
 ## Implemented
 
 - Root `jupiter.NewClient` and functional options for HTTP injection, gateway URL,
@@ -49,8 +68,8 @@ module until the migration strategy is finalized.
   constructor documents this; caller-owned HTTP clients are never mutated.
 - No signing adapter is supplied yet. Execute accepts caller-signed base64 bytes
   unchanged. It does not parse transaction messages or claim wallet verification.
-- The public API is provisional until the compatibility review. Response metadata,
-  complete optional fields, and input address validation need further review.
+- The public API is provisional until the compatibility review.
+  input address validation and optional-field presence semantics need further review.
 - The repository's Go 1.26 baseline is unchanged. Validation uses the installed
   Go 1.27.4 toolchain; support-range CI remains pending.
 
@@ -58,9 +77,10 @@ module until the migration strategy is finalized.
 
 1. Run `go test -race ./...` and `go vet ./...`; inspect this document's validation
    section before repeating already completed checks.
-2. Finish the full endpoint inventory, including auth, pagination, idempotency,
-   schema provenance, and test status. Do not infer total coverage from the four
-   implemented Swap operations.
+2. Use `docs/api-inventory.md` and the source manifest as the endpoint checklist.
+   Verify full schemas, effective authentication, pagination semantics, and
+   idempotency per operation before implementing it. Discovery is complete for
+   the 82 indexed references; guide-only operations still need reconciliation.
 3. Complete Swap response-field parity, success metadata, bounded retry policy,
    amount/address validation, and fixture tests for build and managed execution.
 4. Add signing adapters and examples for managed execution and custom builds,
@@ -112,3 +132,26 @@ checked for positivity, and serialized canonically. This replaces custom digit
 scanning and supports values beyond machine integer widths. Fractional and
 scientific notation are rejected because the API expects raw whole-token units;
 decimal arithmetic belongs in fractional price or human-unit conversion code.
+
+## Swap contract and metadata update
+
+Compared the pinned order/build/execute success properties with public response
+fields. Added missing order RFQ details, timing, swap USD value, legacy impact/type
+fields, route USD value, and build swap mode/slippage. Added the order `swapMode`
+parameter with ExactIn validation. Nullable taker and transaction fields retain
+pointer representations; exact numbers remain `json.Number`.
+
+Added public `response.Metadata` and changed the shared transport to return it
+per call. Every Swap result now carries HTTP status, request ID, and copied headers
+on success and response failures. API errors also expose copied headers. Program
+labels now return `*ProgramLabelsResponse` with `Labels` and `Metadata`, replacing
+the provisional map-only return. There is no shared last-response state.
+
+Tests cover RFQ/route numeric precision, order mode encoding, build mode and zero
+slippage, program-label success responses, HTTP versus order IDs, metadata on
+failures, and header-copy ownership. Remaining work includes optional-field
+presence semantics, address validation, retries, and signing adapters. This step
+does not mark the full Swap milestone or v1 release complete.
+
+Validation for this update: `go test -race ./...`, `go vet ./...`, and
+`git diff --check` passed. No live trading requests were sent.

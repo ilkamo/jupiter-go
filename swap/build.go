@@ -2,9 +2,12 @@ package swap
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/ilkamo/jupiter-go/response"
 )
 
 type BuildRequest struct {
@@ -37,6 +40,9 @@ type Instruction struct {
 }
 
 type BuildResponse struct {
+	Metadata                      response.Metadata   `json:"-"`
+	SwapMode                      string              `json:"swapMode"`
+	SlippageBps                   json.Number         `json:"slippageBps"`
 	InputMint                     string              `json:"inputMint"`
 	OutputMint                    string              `json:"outputMint"`
 	InAmount                      string              `json:"inAmount"`
@@ -188,8 +194,10 @@ func (c *Client) Build(
 	set(q, "computeUnitPricePercentile", r.ComputeUnitPricePercentile)
 
 	var result BuildResponse
-	if err := c.transport.Do(ctx, "GET", "/swap/v2/build", q, nil, &result); err != nil {
-		return nil, err
+	metadata, err := c.transport.Do(ctx, "GET", "/swap/v2/build", q, nil, &result)
+	result.Metadata = metadata
+	if err != nil {
+		return &result, err
 	}
 
 	return &result, nil

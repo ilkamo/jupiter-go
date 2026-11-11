@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ilkamo/jupiter-go/response"
 )
 
 type HTTPClient interface {
@@ -22,6 +24,7 @@ type APIError struct {
 	Message    string
 	Body       json.RawMessage
 	Cause      error
+	Headers    http.Header
 }
 
 func (e *APIError) Error() string {
@@ -47,20 +50,20 @@ func (c *Client) Do(
 	query url.Values,
 	body any,
 	result any,
-) (resultErr error) {
+) (metadata response.Metadata, resultErr error) {
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
 	var payload bytes.Buffer
 	if body != nil {
 		if err := json.NewEncoder(&payload).Encode(body); err != nil {
-			return fmt.Errorf("encode request: %w", err)
+			return metadata, fmt.Errorf("encode request: %w", err)
 		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, &payload)
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return metadata, fmt.Errorf("create request: %w", err)
 	}
 
 	req.URL.RawQuery = query.Encode()
@@ -76,7 +79,13 @@ func (c *Client) Do(
 
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return fmt.Errorf("jupiter request: %w", err)
+		return metadata, fmt.Errorf("jupiter request: %w", err)
+	}
+
+	metadata = response.Metadata{
+		StatusCode: resp.StatusCode,
+		RequestID:  resp.Header.Get("x-request-id"),
+		Headers:    resp.Header.Clone(),
 	}
 
 	defer func() {
@@ -87,7 +96,7 @@ func (c *Client) Do(
 
 	data, err := readResponseBody(resp.Body, maxResponseBodyBytes)
 	if err != nil {
-		return fmt.Errorf("read response: %w", err)
+		return metadata, fmt.Errorf("read response: %w", err)
 	}
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
@@ -99,7 +108,8 @@ func (c *Client) Do(
 
 		decodeErr := json.Unmarshal(data, &detail)
 		if decodeErr != nil {
-			return &APIError{
+			return metadata, &APIError{
+				Headers:    resp.Header.Clone(),
 				StatusCode: resp.StatusCode,
 				RequestID:  resp.Header.Get("x-request-id"),
 				Message:    http.StatusText(resp.StatusCode),
@@ -116,7 +126,8 @@ func (c *Client) Do(
 			detail.Error = http.StatusText(resp.StatusCode)
 		}
 
-		return &APIError{
+		return metadata, &APIError{
+			Headers:    resp.Header.Clone(),
 			StatusCode: resp.StatusCode,
 			RequestID:  resp.Header.Get("x-request-id"),
 			Code:       detail.Code,
@@ -126,8 +137,8 @@ func (c *Client) Do(
 	}
 
 	if err := json.Unmarshal(data, result); err != nil {
-		return fmt.Errorf("decode response: %w", err)
+		return metadata, fmt.Errorf("decode response: %w", err)
 	}
 
-	return nil
+	return metadata, nil
 }

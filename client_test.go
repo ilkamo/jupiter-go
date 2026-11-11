@@ -210,6 +210,8 @@ func TestBuildPreservesInstructionsAndSeparatesFees(t *testing.T) {
 
 		if _, err := w.Write([]byte(`{
   "transactionVersion": 1,
+ "swapMode": "ExactIn",
+ "slippageBps": 0,
   "computeUnitPrice": "12345678901234567890",
   "swapInstruction": {
     "programId": "program",
@@ -250,6 +252,10 @@ func TestBuildPreservesInstructionsAndSeparatesFees(t *testing.T) {
 	)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if result.SwapMode != swap.SwapModeExactIn || result.SlippageBps.String() != "0" {
+		t.Fatal("build mode or explicit zero slippage lost")
 	}
 
 	if result.ComputeUnitPrice != "12345678901234567890" ||

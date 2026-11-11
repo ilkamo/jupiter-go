@@ -35,6 +35,9 @@
 
 ## Errors and implementation choices
 
+- Never add technical debt, workarounds, or hacks, not even temporarily. When a
+  change does not fit the existing structure, rework the existing code first so
+  that it does, then make the change.
 - Never leave returned errors unchecked or discard them with `_`. This applies
   to production code, examples, tests, decoding, constructors, output writes,
   and resource cleanup.

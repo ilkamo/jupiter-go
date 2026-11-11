@@ -28,3 +28,10 @@ The SDK does not automatically re-create or retry an ambiguous execution.
 For custom transactions, `client.Swap.Build` returns raw instructions. Assemble,
 simulate, sign, and submit them through your own pipeline; these transactions
 cannot be passed to `Swap.Execute`.
+
+Every Swap result exposes `Metadata.StatusCode`, `Metadata.RequestID`, and
+`Metadata.Headers`. Headers include upstream rate limits and `Retry-After`.
+The HTTP request ID is separate from `OrderResponse.RequestID`, which belongs to
+order execution. Program labels are available as `result.Labels` alongside the
+same metadata. Always check the error before using response data; a non-nil
+response may accompany an error so its metadata remains inspectable.

@@ -41,7 +41,11 @@ func TestMalformedErrorPreservesStatusAndCause(t *testing.T) {
 	}
 
 	var result any
-	err := client.Do(context.Background(), "GET", "/", nil, nil, &result)
+	metadata, err := client.Do(context.Background(), "GET", "/", nil, nil, &result)
+
+	if metadata.StatusCode != http.StatusBadGateway {
+		t.Fatalf("missing failure metadata: %+v", metadata)
+	}
 
 	var apiErr *APIError
 	if !errors.As(err, &apiErr) || apiErr.StatusCode != http.StatusBadGateway || apiErr.RequestID != "request" {
@@ -55,5 +59,31 @@ func TestMalformedErrorPreservesStatusAndCause(t *testing.T) {
 
 	if !errors.Is(err, closeErr) {
 		t.Fatalf("close error lost: %v", err)
+	}
+}
+
+func TestMetadataDoesNotAliasHTTPHeaders(t *testing.T) {
+	headers := http.Header{"X-Request-Id": {"original"}}
+	client := Client{
+		BaseURL: "https://example.com",
+		Timeout: time.Second,
+		HTTP: doer(func(*http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     headers,
+				Body:       io.NopCloser(strings.NewReader(`{}`)),
+			}, nil
+		}),
+	}
+
+	var result map[string]string
+	metadata, err := client.Do(context.Background(), http.MethodGet, "/", nil, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	headers.Set("x-request-id", "changed")
+	if metadata.Headers.Get("x-request-id") != "original" {
+		t.Fatal("metadata aliases the HTTP response headers")
 	}
 }

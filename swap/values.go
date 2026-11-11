@@ -1,6 +1,7 @@
 package swap
 
 const (
+	SwapModeExactIn          = "ExactIn"
 	BuildModeFast            = "fast"
 	SlippageRTSE             = "rtse"
 	ComputeUnitPriceMedium   = "medium"

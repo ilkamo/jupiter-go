@@ -34,6 +34,7 @@ func (c *Client) Referral() Referral {
 type OrderRequest struct {
 	InputMint, OutputMint, Amount, Taker string
 	Receiver, Payer                      string
+	SwapMode                             string
 	SlippageBps                          *uint16
 	PriorityFeeLamports, JitoTipLamports *uint64
 	BroadcastFeeType                     string
@@ -77,6 +78,11 @@ func (c *Client) Order(
 		return nil, err
 	}
 
+	if r.SwapMode != "" && r.SwapMode != SwapModeExactIn {
+		return nil, fmt.Errorf("unsupported swap mode")
+	}
+
+	set(q, "swapMode", r.SwapMode)
 	set(q, "taker", r.Taker)
 	set(q, "receiver", r.Receiver)
 	set(q, "payer", r.Payer)
@@ -121,8 +127,10 @@ func (c *Client) Order(
 	}
 
 	var result OrderResponse
-	if err := c.transport.Do(ctx, "GET", "/swap/v2/order", q, nil, &result); err != nil {
-		return nil, err
+	metadata, err := c.transport.Do(ctx, "GET", "/swap/v2/order", q, nil, &result)
+	result.Metadata = metadata
+	if err != nil {
+		return &result, err
 	}
 
 	if result.ErrorCode != nil {
@@ -155,8 +163,10 @@ func (c *Client) Execute(
 	}
 
 	var result ExecuteResponse
-	if err := c.transport.Do(ctx, "POST", "/swap/v2/execute", nil, r, &result); err != nil {
-		return nil, err
+	metadata, err := c.transport.Do(ctx, "POST", "/swap/v2/execute", nil, r, &result)
+	result.Metadata = metadata
+	if err != nil {
+		return &result, err
 	}
 
 	if result.Status != ExecutionStatusSuccess || result.Code != executionSuccessCode {
@@ -171,11 +181,15 @@ func (c *Client) Execute(
 	return &result, nil
 }
 
-func (c *Client) ProgramLabels(ctx context.Context) (map[string]string, error) {
-	var result map[string]string
-	err := c.transport.Do(ctx, "GET", "/swap/v2/program-id-to-label", nil, nil, &result)
+func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, error) {
+	var result ProgramLabelsResponse
+	metadata, err := c.transport.Do(ctx, "GET", "/swap/v2/program-id-to-label", nil, nil, &result.Labels)
+	result.Metadata = metadata
+	if err != nil {
+		return &result, err
+	}
 
-	return result, err
+	return &result, nil
 }
 
 type ExecutionError struct {

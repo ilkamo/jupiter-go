@@ -86,7 +86,9 @@ generic utility packages without a concrete need.
 
 ## Coverage contract
 
-The first implementation artifact should be an endpoint inventory. For every
+The endpoint discovery inventory is recorded in [api-inventory.md](api-inventory.md).
+Its source manifest covers all 82 currently indexed API-reference operations.
+Full per-operation contract review is required before implementation. For every
 endpoint, record the product, upstream version, method/path, schema source and
 revision, authentication, pagination, response semantics, idempotency, upstream
 stability, implementation status, and test status.
