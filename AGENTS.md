@@ -3,9 +3,10 @@
 ## Development workflow
 
 - Develop the new v1 SDK on the `v1` branch.
-- Follow `docs/v1-plan.md` and keep `docs/development-status.md` current with
-  completed work, validation results, decisions, limitations, and next steps so
-  another session can resume the work.
+- Follow `docs/v1-plan.md` and record decisions and their reasons in
+  `docs/development-status.md`; keep it free of wallet addresses, transaction
+  signatures, balances, keys, and local paths. It is a history of decisions,
+  not a work log; track remaining work in `docs/handoff.md`.
 - Provide clear, runnable examples for implemented workflows.
 
 ## Go readability and design

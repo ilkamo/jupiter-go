@@ -1,6 +1,6 @@
 # Jupiter-go v1 implementation plan
 
-Status: implementation in progress. See [development status](development-status.md)
+Status: implementation in progress. See the [decision log](development-status.md)
 for completed components, validation, decisions, and remaining work.
 
 Prepared on 2026-11-11 from the repository review and discussion. API details

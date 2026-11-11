@@ -1,8 +1,8 @@
 # v1 release handoff
 
 Start here. This is the to-do list for finishing the v1 release on branch `v1`.
-Read `AGENTS.md` for conventions; `docs/development-status.md` is the detailed
-history of every step (decisions, tests, validation).
+Read `AGENTS.md` for conventions; `docs/development-status.md` is the decision
+log (each decision and its reason).
 
 ## Decisions already made (owner, 2026-11-11)
 
@@ -24,7 +24,7 @@ history of every step (decisions, tests, validation).
   including gofumpt) pass under Go 1.26.0 and 1.27.4. Run the linter with
   `GOTOOLCHAIN=go1.26.0` if your golangci-lint build cannot read newer export
   data. `make check` runs everything CI runs.
-- No live requests or funded transactions have been made.
+- Verified live on mainnet (see "Verification approach" in the decision log).
 
 ## Done in the release-preparation pass
 
@@ -33,7 +33,7 @@ history of every step (decisions, tests, validation).
 - `examples/README.md` header updated; `CHANGELOG.md` added with the v1.0.0 entry
   and the v0 migration table.
 - `docs/v1-plan.md` updated (fee decision, milestones); the summary sections of
-  `docs/development-status.md` rewritten.
+  `docs/development-status.md` rewritten as a decision log.
 - Godoc examples in `example_test.go` (`ExampleNewClient` and
   `Example_sendInviteCode` run with checked output; quote, managed swap, and
   Trigger session examples compile only, because they need the network).
@@ -46,16 +46,16 @@ history of every step (decisions, tests, validation).
 
 ## Remaining work, in order
 
-1. **Smoke test: done** (see "Funded smoke test" in `development-status.md`):
+1. **Smoke test: done** (see "Verification approach" in `development-status.md`):
    a managed swap and three tx.jup.ag build swaps finalized on mainnet, and the
    example's confirmation loop succeeded end to end with a dedicated RPC
    provider. Optional: re-check the two Prediction routes that returned 404
    upstream (`pnl-history`, `events/suggested`).
-2. **Re-audit: done** (see "Upstream re-audit and fuzzing"). Repeat right
+2. **Re-audit: done** (82 reference pages and 83 spec operations unchanged). Repeat right
    before tagging if time has passed: compare the index with the manifest and
    parse the linked OpenAPI specs with a real YAML parser.
-3. **API review: done.** Four changes applied (see "API settlement and docs
-   layout" in `development-status.md`). The stable packages are frozen at
+3. **API review: done.** Four changes applied (see "API settled before freezing"
+   in `development-status.md`). The stable packages are frozen at
    v1.0.0; beta packages may still change in minor releases.
 4. **Optional:** `solanatx.Assemble` support for version 1 builds (needs a
    compute-unit-limit policy, since builds return a unit price but no limit);
