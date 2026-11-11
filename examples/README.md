@@ -19,15 +19,48 @@ A key may be omitted where Jupiter permits keyless access. The example requests
 0.1 SOL in raw units and prints the USDC output amount in raw units. It omits a
 `taker`, so the response is a quote without a signable transaction.
 
-For managed execution, request an order with a taker, review its fees and output,
-partially sign the returned transaction with an appropriate Solana signing
-library, then call `client.Swap.Execute` with the same request ID and signed
-base64 transaction. Preserve the message, blockhash, and existing signatures.
-The SDK does not automatically re-create or retry an ambiguous execution.
+## Signing and execution
 
-For custom transactions, `client.Swap.Build` returns raw instructions. Assemble,
-simulate, sign, and submit them through your own pipeline; these transactions
-cannot be passed to `Swap.Execute`.
+Signing uses `solanatx`, the only new-SDK package that depends on solana-go.
+It accepts any standard `crypto.Signer` with an ed25519 key, including
+`ed25519.PrivateKey`, so hardware or remote signers can be plugged in. Signing
+covers the exact received message bytes and writes only the signer's own slot;
+the message, blockhash, and other signatures are never rewritten. Legacy,
+version 0, and version 1 transactions can be signed, so managed orders may set
+`MaxSupportedTransactionVersion` to 1. Other versions return
+`solanatx.ErrUnsupportedVersion`. `solanatx.Assemble` builds version 0 only.
+
+Both swap examples below read a base58 secret key from `SOLANA_PRIVATE_KEY`
+and stop after signing unless `JUPITER_EXECUTE_SWAP=yes` is set. With that flag
+they spend real funds (0.01 SOL for USDC), so use a dedicated wallet.
+
+### Managed order
+
+```sh
+JUPITER_API_KEY=your-key SOLANA_PRIVATE_KEY=... go run ./examples/managed
+```
+
+Requests an order with a taker, signs the returned transaction, and calls
+`client.Swap.Execute` with the order's request ID. Gasless and RFQ orders may
+list another fee payer or cosigner that Jupiter signs during execution, so the
+transaction ID can be unknown before execution. Execute is never retried; if it
+returns `swap.ErrExecutionOutcomeUnknown`, check the transaction and wallet
+activity before ordering again.
+
+### Custom build
+
+```sh
+JUPITER_API_KEY=your-key SOLANA_PRIVATE_KEY=... SOLANA_RPC_URL=https://... \
+  go run ./examples/build
+```
+
+Requests raw instructions, assembles a version 0 transaction with
+`solanatx.Assemble` using the returned blockhash and lookup tables, signs it, and
+submits it through your RPC node. Build transactions cannot use `Swap.Execute`.
+The example waits for confirmation and stops when the blockhash expires; a
+submitted signature alone does not prove success. `solanatx.Assemble` accepts
+extra instructions to run after Jupiter's, and `solanatx.Instructions` and
+`solanatx.AddressTables` support assembling the transaction yourself.
 
 Every Swap result exposes `Metadata.StatusCode`, `Metadata.RequestID`, and
 `Metadata.Headers`. Headers include upstream rate limits and `Retry-After`.

@@ -1,4 +1,5 @@
-// Package jupiter provides clients for Jupiter APIs. Signing remains the caller's responsibility.
+// Package jupiter provides clients for Jupiter APIs. It performs no signing and has no
+// Solana library dependency; package solanatx signs and assembles swap transactions.
 package jupiter
 
 import (

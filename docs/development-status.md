@@ -66,8 +66,8 @@ module until the migration strategy is finalized.
   Execute makes one attempt and reports ambiguous failures explicitly.
 - A custom HTTP implementation is responsible for its own redirect policy. The
   constructor documents this; caller-owned HTTP clients are never mutated.
-- No signing adapter is supplied yet. Execute accepts caller-signed base64 bytes
-  unchanged. It does not parse transaction messages or claim wallet verification.
+- Signing lives in `solanatx`, separate from the HTTP clients. Execute still
+  accepts caller-signed base64 bytes unchanged and does not parse them.
 - The public API is provisional until the compatibility review.
 - The repository's Go 1.26 baseline is unchanged. Validation uses the installed
   Go 1.27.4 toolchain; support-range CI remains pending.
@@ -80,17 +80,16 @@ module until the migration strategy is finalized.
    Verify full schemas, effective authentication, pagination semantics, and
    idempotency per operation before implementing it. Discovery is complete for
    the 82 indexed references; guide-only operations still need reconciliation.
-3. Add fixture tests for build and managed execution. Retry policies and
-   request validation are complete for Swap.
-4. Add signing adapters and examples for managed execution and custom builds,
-   preserving blockhashes and existing signatures. Test transaction versions
-   explicitly before declaring adapter support.
-5. Implement Tokens and Price, then Trigger V2 authentication/vaults/orders/DCA,
+3. Swap is functionally complete: validation, retries, signing adapters, and
+   examples. Remaining Swap work: version 1 assembly for build responses (needs a
+   compute-unit-limit policy) and a live smoke test with a funded wallet before
+   release.
+4. Implement Tokens and Price, then Trigger V2 authentication/vaults/orders/DCA,
    Lend, Prediction, Send, Studio, and transaction submission. Audit the current
    documentation index for additional APIs. These clients are not implemented.
-6. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
+5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
    migration documentation, and compatibility review from `v1-plan.md`.
-7. Resolve the maintainer fee recipient/default and beta API compatibility before
+6. Resolve the maintainer fee recipient/default and beta API compatibility before
    release candidates. Publishing and funded on-chain account setup are pending.
 
 ## Validation
@@ -273,3 +272,91 @@ belongs with the signing and confirmation adapters (next step).
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Signing adapters and Swap examples
+
+Committed retry policies as `1fda6a1`. Added package `solanatx`, the only new-SDK
+package that imports solana-go (already a module dependency through the legacy
+packages, so no separate module is needed yet). The root `jupiter` package does
+not import it.
+
+- `Parse` decodes a base64 wire transaction. It reads the signature count with
+  gagliardetto/binary and checks the message version byte itself before parsing,
+  because solana-go v1.14 decodes every versioned message as version 0. Legacy and
+  v0 are supported; other versions return `ErrUnsupportedVersion`. The message must
+  re-encode byte-for-byte through solana-go, which also rejects trailing data, and
+  the signature count must equal the required signers.
+- `Sign` accepts standard-library `crypto.Signer` values with ed25519 keys, so
+  `ed25519.PrivateKey`, HSMs, and remote signers fit. It signs the exact received
+  message bytes (solana-go's own signing re-encodes the message) and writes only
+  each signer's slot. Every signature is verified before any is written, so a
+  failure leaves the transaction unchanged. Errors: `ErrSignerNotRequired`,
+  `ErrInvalidSignature`, `ErrUnsupportedSigner`, plus wrapped signer failures.
+- `RequiredSigners`, `MissingSigners`, `ID` (fee-payer signature; empty until the
+  fee payer signs, which for gasless orders happens during execution), `Base64`,
+  and `Bytes`.
+- `Assemble` builds an unsigned v0 transaction from a build response using its
+  blockhash and lookup tables, plus optional extra instructions. It rejects v1
+  builds and missing or wrong-length blockhashes. `Instructions`,
+  `ConvertInstruction`, and `AddressTables` support custom assembly.
+
+Decision: build instructions are ordered compute budget, setup, swap, cleanup,
+other, tip. The pinned docs do not place `otherInstructions`; this is recorded in
+the `Instructions` documentation. Jupiter's compute budget instructions set only
+the unit price, not the limit.
+
+Examples: `examples/managed` (order, sign, execute) and `examples/build` (build,
+assemble, sign, submit through `SOLANA_RPC_URL`, poll confirmation until the
+blockhash expires). Both stop after signing unless `JUPITER_EXECUTE_SWAP=yes`.
+`examples/quote` covers quote-only use and `WithoutMaintainerFee`. The examples
+README documents signing, gasless transaction IDs, and unknown outcomes.
+
+Tests: partial signing by two parties with message and existing-signature
+preservation; cross-check with solana-go `VerifySignatures` and transaction ID;
+atomic rejection for outsiders, non-verifying signatures, non-ed25519 keys, and
+signer failures; unsupported versions 1 and 127; malformed base64, empty,
+missing message, truncation, trailing data, and signature-count mismatch;
+assembly order, lookup-table use, blockhash preservation, forced v0 without
+lookups, and rejection of v1, missing/short blockhash, and malformed fields.
+
+Not done: examples were compiled and vetted but not run against the live API or
+chain. v1 transactions are rejected rather than supported.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4.
+
+## solana-go v1.26.0 upgrade and version 1 signing
+
+Upgraded `github.com/gagliardetto/solana-go` from v1.14.0 to v1.26.0, the latest
+release (`go list -m -versions`). `go mod tidy` also raised indirect dependencies
+and testify (v1.12.1) as required. gagliardetto/binary v0.8.0 remains current.
+The `_examples` legacy modules depend on the published jupiter-go v0.2.2 and were
+not changed.
+
+v1.26 parses and encodes SIMD-0385 version 1 transactions, whose layout is the
+message followed by exactly the required signatures with no count. `solanatx`
+now locates both layouts itself before parsing: a high-bit leading byte is a
+version prefix (a counted layout would need at least 128 signatures, which no
+transaction size limit allows), 0x81 selects version 1, and other prefixes return
+`ErrUnsupportedVersion`. A version 1 message inside a counted layout is also
+unsupported. Byte-exact re-encoding and signature-count checks apply to all
+layouts. `Version1` was added.
+
+`Assemble` now selects version 0 with `solana.TransactionMessageVersion` instead
+of calling `Message.SetVersion`, whose new error return was being discarded. It
+relies on `MarshalBinary` to write empty signature slots. Version 1 builds remain
+rejected: their compute budget belongs in the message config, and the build
+response provides a unit price but no compute unit limit.
+
+Legacy package fixes required by the upgrade: `solana.subscriber.Pull` uses the
+new `SignatureSubscription.Recv` (the `Response` channel was removed) and wraps
+the context error; a legacy test now matches `base58.ErrInvalidChar` with
+`errors.Is` instead of the old library's error text.
+
+Tests: version 1 partial signing with message and existing-signature
+preservation, solana-go signature verification and ID cross-check; unsupported
+prefixes 0x82 and 0xff and version 1/127 messages in a counted layout; version 1
+missing signature bytes, trailing data, and header-only input.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4.
