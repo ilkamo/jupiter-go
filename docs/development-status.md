@@ -84,9 +84,10 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Trigger V2 authentication/vaults/orders/DCA, then Lend, Prediction,
-   Send, Studio, transaction submission, and Tokens verification. Audit the
-   current documentation index for additional APIs. These are not implemented.
+4. Implement the 10 Trigger V2 order operations (price orders, DCA, two-step
+   cancellation, history) on `trigger.Session`, then Lend, Prediction, Send,
+   Studio, transaction submission, and Tokens verification. Audit the current
+   documentation index for additional APIs. These are not implemented.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
    migration documentation, and compatibility review from `v1-plan.md`.
 6. Resolve the maintainer fee recipient/default and beta API compatibility before
@@ -403,6 +404,62 @@ path segments; rejection before transport of empty or comma queries, 0 or 101
 mints, malformed mints (`ErrInvalidAddress`), separator tags, missing interval,
 and limits 0 and 101; read-only retry; price missing-mint reporting, null
 `blockId` and change, 50-mint maximum, and 0, 51, and malformed inputs.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Trigger V2 sessions, vault, and deposits
+
+Committed shared helpers as `b5221bb` and Tokens/Price as `50830fd`. Fetched all 18
+Trigger references (hashes match the manifest) and pinned the 8 implemented ones
+plus the authentication, error, and deposit guides in `openapi/trigger-v2`.
+
+Design (package `trigger`, `client.Trigger`):
+
+- `Client` holds no wallet identity. Authenticated operations run on a
+  `Session`, which belongs to one wallet and is safe for concurrent use.
+- `Login(ctx, crypto.Signer, SessionOptions)` runs the message challenge with
+  any ed25519 signer, verifying the signature locally before sending it.
+  Hardware wallets use `RequestChallenge` (`ChallengeTransaction`), sign with
+  `solanatx`, then `Verify`. The trigger package does not import solana-go.
+- Only `access_refresh` is requested and accepted; the deprecated 24-hour
+  `access_only` mode returns `ErrUnexpectedTokenType`.
+- Sessions refresh one minute before expiry and once after a 401 (a rejected
+  request was not processed, so it is resent once regardless of retry policy).
+  Refreshes run under the session mutex: presenting a rotated refresh token
+  revokes the session upstream, so concurrent refreshes must not happen. A
+  request whose token was already replaced by a concurrent refresh reuses the
+  new token instead of refreshing again.
+- `SessionOptions.OnRefresh` receives each rotated pair for persistence; `Resume`
+  restores a stored pair. A persistence failure returns `ErrTokenPersistence`
+  but the session keeps the new tokens. A rejected refresh returns
+  `ErrSessionExpired`. `Logout`/`LogoutAll` close the session
+  (`ErrSessionClosed` afterwards).
+- `Vault` (`ErrNoVault` on 404), `RegisterVault`, and `EnsureVault`. The
+  register reference says repeat calls return the vault, while the error guide
+  documents 409; `EnsureVault` handles both by re-reading the vault on 409.
+- `CraftDeposit` always uses the session wallet as `userAddress`, validates mints
+  and the raw amount, requires a sub-type for price deposits, forbids it for DCA,
+  and allows `JLMint` only for DCA. Order types and sub-types are validated
+  strictly because they determine required parameters.
+
+Retry policies: verify (single-use challenge) and vault registration (creates
+state) make one attempt; challenge, refresh (documented grace window), logout,
+logout-all, and deposit crafting use a short repeatable policy; vault lookup
+uses `transport.ReadOnlyRetry`. `transport.Request.Header` was added for the
+bearer token. Raw amount parsing moved to `internal/amount` for Swap and Trigger.
+
+Example: `examples/trigger` (login, vault, craft deposit without submitting,
+logout; registers a vault only with `JUPITER_REGISTER_VAULT=yes`).
+
+Tests use an in-memory server that verifies challenge signatures, rotates refresh
+tokens, revokes reused ones, and enforces bearer tokens: login with
+access_refresh, rejection of access_only, transaction-challenge verification,
+`EnsureVault` (missing, existing, concurrent 409), proactive refresh with
+`OnRefresh`, refresh once after 401, eight concurrent requests sharing one
+refresh, expired session, persistence failure keeping rotated tokens, logout and
+logout-all closing the session, deposit wallet and amount canonicalization,
+retry choices, and 15 invalid inputs rejected before transport.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.

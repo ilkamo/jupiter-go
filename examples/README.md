@@ -31,6 +31,27 @@ takes one symbol, name, or mint; use `Tokens.Lookup` for up to 100 mints.
 `Missing`, since Jupiter omits them from the response. Numbers are
 `json.Number`; an empty value means the API reported null.
 
+## Trigger sessions
+
+```sh
+JUPITER_API_KEY=your-key SOLANA_PRIVATE_KEY=... go run ./examples/trigger
+```
+
+Trigger V2 is custodial: deposits move funds into a Jupiter-managed (Privy) vault
+until orders fill or are cancelled. The example logs in, resolves the vault, and
+crafts a deposit without signing or submitting it, then logs out. It registers a
+vault only when `JUPITER_REGISTER_VAULT=yes`.
+
+`client.Trigger.Login` signs a message challenge with any ed25519
+`crypto.Signer`. Hardware wallets that sign only transactions use
+`RequestChallenge` with `trigger.ChallengeTransaction`, sign the challenge
+transaction with `solanatx`, and call `Verify`. Sessions belong to one wallet and
+always use 15-minute access tokens with rotating refresh tokens; the deprecated
+24-hour `access_only` mode is not supported. Sessions refresh shortly before
+expiry and once after a 401. Pass `SessionOptions.OnRefresh` to persist rotated
+tokens and `client.Trigger.Resume` to restore them; a stale refresh token returns
+`trigger.ErrSessionExpired`.
+
 ## Signing and execution
 
 Signing uses `solanatx`, the only new-SDK package that depends on solana-go.

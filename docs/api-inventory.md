@@ -38,7 +38,7 @@ state-changing GETs must not inherit a read-only policy.
 - price: 1 operation; implemented.
 - transaction: 1 operation; not implemented.
 - lend: 15 operations; not implemented.
-- trigger: 18 operations; not implemented.
+- trigger: 18 operations; 8 authentication, vault, and deposit operations implemented, 10 order operations pending.
 - prediction: 27 operations; not implemented.
 - send: 4 operations; not implemented.
 - studio: 5 operations; not implemented.
@@ -78,14 +78,14 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | lend | `GET https://api.jup.ag/lend/v1/borrow/positions` | ApiKeyAuth | — | Pending / none | [Borrow Positions](https://developers.jup.ag/docs/api-reference/lend/borrow/positions.md) |
 | lend | `POST https://api.jup.ag/lend/v1/borrow/operate` | ApiKeyAuth | — | Pending / none | [Operate](https://developers.jup.ag/docs/api-reference/lend/borrow/operate.md) |
 | lend | `POST https://api.jup.ag/lend/v1/borrow/operate-instructions` | ApiKeyAuth | — | Pending / none | [Operate Instructions](https://developers.jup.ag/docs/api-reference/lend/borrow/operate-instructions.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/auth/challenge` | ApiKeyAuth | — | Pending / none | [Request Challenge](https://developers.jup.ag/docs/api-reference/trigger/challenge.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/auth/verify` | ApiKeyAuth | — | Pending / none | [Verify Challenge](https://developers.jup.ag/docs/api-reference/trigger/verify.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/auth/refresh` | ApiKeyAuth | — | Pending / none | [Refresh Token](https://developers.jup.ag/docs/api-reference/trigger/refresh.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/auth/logout` | ApiKeyAuth | — | Pending / none | [Log Out](https://developers.jup.ag/docs/api-reference/trigger/logout.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/auth/logout-all` | ApiKeyAuth, BearerAuth | — | Pending / none | [Log Out All](https://developers.jup.ag/docs/api-reference/trigger/logout-all.md) |
-| trigger | `GET https://api.jup.ag/trigger/v2/vault` | ApiKeyAuth, BearerAuth | — | Pending / none | [Get Vault](https://developers.jup.ag/docs/api-reference/trigger/vault.md) |
-| trigger | `GET https://api.jup.ag/trigger/v2/vault/register` | ApiKeyAuth, BearerAuth | — | Pending / none | [Register Vault](https://developers.jup.ag/docs/api-reference/trigger/vault-register.md) |
-| trigger | `POST https://api.jup.ag/trigger/v2/deposit/craft` | ApiKeyAuth, BearerAuth | — | Pending / none | [Craft Deposit](https://developers.jup.ag/docs/api-reference/trigger/deposit-craft.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/challenge` | ApiKeyAuth | — | Implemented / request and response contract tests | [Request Challenge](https://developers.jup.ag/docs/api-reference/trigger/challenge.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/verify` | ApiKeyAuth | — | Implemented / request and response contract tests | [Verify Challenge](https://developers.jup.ag/docs/api-reference/trigger/verify.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/refresh` | ApiKeyAuth | — | Implemented / request and response contract tests | [Refresh Token](https://developers.jup.ag/docs/api-reference/trigger/refresh.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/logout` | ApiKeyAuth | — | Implemented / request and response contract tests | [Log Out](https://developers.jup.ag/docs/api-reference/trigger/logout.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/logout-all` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Log Out All](https://developers.jup.ag/docs/api-reference/trigger/logout-all.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/vault` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Get Vault](https://developers.jup.ag/docs/api-reference/trigger/vault.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/vault/register` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Register Vault](https://developers.jup.ag/docs/api-reference/trigger/vault-register.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/deposit/craft` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Craft Deposit](https://developers.jup.ag/docs/api-reference/trigger/deposit-craft.md) |
 | trigger | `POST https://api.jup.ag/trigger/v2/orders/price` | ApiKeyAuth, BearerAuth | — | Pending / none | [Create Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/create-order.md) |
 | trigger | `PATCH https://api.jup.ag/trigger/v2/orders/price/{orderId}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Update Order](https://developers.jup.ag/docs/api-reference/trigger/update-order.md) |
 | trigger | `POST https://api.jup.ag/trigger/v2/orders/price/cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Pending / none | [Cancel Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/cancel-order.md) |

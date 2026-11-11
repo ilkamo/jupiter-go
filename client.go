@@ -13,6 +13,7 @@ import (
 	"github.com/ilkamo/jupiter-go/price"
 	"github.com/ilkamo/jupiter-go/swap"
 	"github.com/ilkamo/jupiter-go/tokens"
+	"github.com/ilkamo/jupiter-go/trigger"
 )
 
 const (
@@ -26,9 +27,10 @@ type HTTPClient = transport.HTTPClient
 type APIError = transport.APIError
 
 type Client struct {
-	Swap   *swap.Client
-	Tokens *tokens.Client
-	Price  *price.Client
+	Swap    *swap.Client
+	Tokens  *tokens.Client
+	Price   *price.Client
+	Trigger *trigger.Client
 }
 
 type config struct {
@@ -90,8 +92,9 @@ func NewClient(options ...Option) (*Client, error) {
 	}
 
 	return &Client{
-		Swap:   swap.NewClient(t, c.fee),
-		Tokens: tokens.NewClient(t),
-		Price:  price.NewClient(t),
+		Swap:    swap.NewClient(t, c.fee),
+		Tokens:  tokens.NewClient(t),
+		Price:   price.NewClient(t),
+		Trigger: trigger.NewClient(t),
 	}, nil
 }
