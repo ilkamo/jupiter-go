@@ -26,9 +26,10 @@ alone does not imply that the result supports fetching successive pages. `—`
 means no named pagination control was found, not that results are unlimited.
 
 No write-operation replay guarantee has been established by this inventory.
-Retries remain disabled until the operation's documentation and lifecycle are
-reviewed. Read-only discovery calls can be considered for bounded retries;
-transaction-building GETs and state-changing GETs need independent decisions.
+Every operation declares its own retry policy in the transport request. Swap
+order, build, and program labels retry transient failures; Swap execute makes one
+attempt. Operations in other products must be reviewed before choosing a policy;
+state-changing GETs must not inherit a read-only policy.
 
 ## Coverage
 

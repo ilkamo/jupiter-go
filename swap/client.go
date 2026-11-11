@@ -193,7 +193,14 @@ func (c *Client) Order(
 	}
 
 	var result OrderResponse
-	metadata, err := c.transport.Do(ctx, http.MethodGet, "/swap/v2/order", q, nil, &result)
+	request := transport.Request{
+		Method: http.MethodGet,
+		Path:   "/swap/v2/order",
+		Query:  q,
+		Retry:  quoteRetryPolicy,
+	}
+
+	metadata, err := c.transport.Do(ctx, request, &result)
 	result.Metadata = metadata
 	if err != nil {
 		return &result, err
@@ -243,11 +250,23 @@ func (c *Client) Execute(
 		return nil, err
 	}
 
+	// A context that has already ended guarantees nothing was sent, so the outcome is known.
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	request := transport.Request{
+		Method: http.MethodPost,
+		Path:   "/swap/v2/execute",
+		Body:   r,
+		Retry:  executeRetryPolicy,
+	}
+
 	var result ExecuteResponse
-	metadata, err := c.transport.Do(ctx, http.MethodPost, "/swap/v2/execute", nil, r, &result)
+	metadata, err := c.transport.Do(ctx, request, &result)
 	result.Metadata = metadata
 	if err != nil {
-		return &result, err
+		return &result, classifyExecuteFailure(err)
 	}
 
 	confirmed := result.Status == ExecutionStatusSuccess &&
@@ -272,14 +291,13 @@ func (c *Client) Execute(
 
 func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, error) {
 	var result ProgramLabelsResponse
-	metadata, err := c.transport.Do(
-		ctx,
-		http.MethodGet,
-		"/swap/v2/program-id-to-label",
-		nil,
-		nil,
-		&result.Labels,
-	)
+	request := transport.Request{
+		Method: http.MethodGet,
+		Path:   "/swap/v2/program-id-to-label",
+		Retry:  referenceRetryPolicy,
+	}
+
+	metadata, err := c.transport.Do(ctx, request, &result.Labels)
 	result.Metadata = metadata
 	if err != nil {
 		return &result, err

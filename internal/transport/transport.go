@@ -39,37 +39,144 @@ type Client struct {
 	BaseURL string
 	APIKey  string
 	HTTP    HTTPClient
+
+	// Timeout bounds a whole operation, including retries and the waits between them.
 	Timeout time.Duration
+
+	// DisableRetries forces one attempt regardless of the operation's policy.
+	DisableRetries bool
+
+	// sleep waits between attempts; nil selects a context-aware timer.
+	sleep func(context.Context, time.Duration) error
 }
 
-// Do never retries: an ambiguous execution response must not create another order.
+// Request describes one API operation. Retry must reflect the operation's replay
+// semantics, not only its HTTP method.
+type Request struct {
+	Method string
+	Path   string
+	Query  url.Values
+	Body   any
+	Retry  RetryPolicy
+}
+
+type attemptOutcome struct {
+	metadata  response.Metadata
+	data      []byte
+	err       error
+	retryable bool
+}
+
 func (c *Client) Do(
 	ctx context.Context,
-	method string,
-	path string,
-	query url.Values,
-	body any,
+	request Request,
 	result any,
-) (metadata response.Metadata, resultErr error) {
+) (response.Metadata, error) {
+	var metadata response.Metadata
+
+	policy := request.Retry
+	if c.DisableRetries {
+		policy = NoRetry
+	}
+
+	if err := policy.validate(); err != nil {
+		return metadata, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
-	var payload bytes.Buffer
-	if body != nil {
-		if err := json.NewEncoder(&payload).Encode(body); err != nil {
+	var payload []byte
+	if request.Body != nil {
+		encoded, err := json.Marshal(request.Body)
+		if err != nil {
 			return metadata, fmt.Errorf("encode request: %w", err)
 		}
+
+		payload = encoded
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, &payload)
+	for attempt := 1; ; attempt++ {
+		outcome := c.attempt(ctx, request, payload)
+		outcome.metadata.Attempts = attempt
+
+		if outcome.err == nil {
+			if err := json.Unmarshal(outcome.data, result); err != nil {
+				return outcome.metadata, fmt.Errorf("decode response: %w", err)
+			}
+
+			return outcome.metadata, nil
+		}
+
+		if !outcome.retryable || attempt >= policy.MaxAttempts {
+			return outcome.metadata, outcome.err
+		}
+
+		delay, ok := retryDelay(ctx, policy, attempt, outcome.metadata.Headers)
+		if !ok {
+			return outcome.metadata, outcome.err
+		}
+
+		if err := c.wait(ctx, delay); err != nil {
+			return outcome.metadata, errors.Join(outcome.err, fmt.Errorf("wait before retry: %w", err))
+		}
+	}
+}
+
+// retryDelay chooses the wait before the next attempt. It declines to retry when the
+// server asks for a longer wait than the policy accepts or than the deadline allows.
+func retryDelay(
+	ctx context.Context,
+	policy RetryPolicy,
+	completedAttempts int,
+	headers http.Header,
+) (time.Duration, bool) {
+	delay, requested := retryAfter(headers, time.Now())
+	if requested && delay > policy.MaxRetryAfter {
+		return 0, false
+	}
+
+	if !requested {
+		delay = policy.backoff(completedAttempts - 1)
+	}
+
+	deadline, hasDeadline := ctx.Deadline()
+	if hasDeadline && time.Until(deadline) <= delay {
+		return 0, false
+	}
+
+	return delay, true
+}
+
+func (c *Client) wait(ctx context.Context, delay time.Duration) error {
+	if c.sleep != nil {
+		return c.sleep(ctx, delay)
+	}
+
+	return sleepContext(ctx, delay)
+}
+
+func (c *Client) attempt(
+	ctx context.Context,
+	request Request,
+	payload []byte,
+) (outcome attemptOutcome) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		request.Method,
+		c.BaseURL+request.Path,
+		bytes.NewReader(payload),
+	)
 	if err != nil {
-		return metadata, fmt.Errorf("create request: %w", err)
+		outcome.err = fmt.Errorf("create request: %w", err)
+
+		return outcome
 	}
 
-	req.URL.RawQuery = query.Encode()
+	req.URL.RawQuery = request.Query.Encode()
 	req.Header.Set("Accept", "application/json")
 
-	if body != nil {
+	if request.Body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -79,10 +186,13 @@ func (c *Client) Do(
 
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return metadata, fmt.Errorf("jupiter request: %w", err)
+		outcome.err = fmt.Errorf("jupiter request: %w", err)
+		outcome.retryable = ctx.Err() == nil
+
+		return outcome
 	}
 
-	metadata = response.Metadata{
+	outcome.metadata = response.Metadata{
 		StatusCode: resp.StatusCode,
 		RequestID:  resp.Header.Get("x-request-id"),
 		Headers:    resp.Header.Clone(),
@@ -90,55 +200,58 @@ func (c *Client) Do(
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			resultErr = errors.Join(resultErr, fmt.Errorf("close response body: %w", err))
+			outcome.err = errors.Join(outcome.err, fmt.Errorf("close response body: %w", err))
 		}
 	}()
 
 	data, err := readResponseBody(resp.Body, maxResponseBodyBytes)
 	if err != nil {
-		return metadata, fmt.Errorf("read response: %w", err)
+		outcome.err = fmt.Errorf("read response: %w", err)
+
+		return outcome
 	}
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		var detail struct {
-			Error   string          `json:"error"`
-			Message string          `json:"message"`
-			Code    json.RawMessage `json:"code"`
-		}
+		outcome.err = newAPIError(resp, data)
+		outcome.retryable = retryableStatus(resp.StatusCode)
 
-		decodeErr := json.Unmarshal(data, &detail)
-		if decodeErr != nil {
-			return metadata, &APIError{
-				Headers:    resp.Header.Clone(),
-				StatusCode: resp.StatusCode,
-				RequestID:  resp.Header.Get("x-request-id"),
-				Message:    http.StatusText(resp.StatusCode),
-				Body:       append(json.RawMessage(nil), data...),
-				Cause:      fmt.Errorf("decode error response: %w", decodeErr),
-			}
-		}
-
-		if detail.Error == "" {
-			detail.Error = detail.Message
-		}
-
-		if detail.Error == "" {
-			detail.Error = http.StatusText(resp.StatusCode)
-		}
-
-		return metadata, &APIError{
-			Headers:    resp.Header.Clone(),
-			StatusCode: resp.StatusCode,
-			RequestID:  resp.Header.Get("x-request-id"),
-			Code:       detail.Code,
-			Message:    detail.Error,
-			Body:       append(json.RawMessage(nil), data...),
-		}
+		return outcome
 	}
 
-	if err := json.Unmarshal(data, result); err != nil {
-		return metadata, fmt.Errorf("decode response: %w", err)
+	outcome.data = data
+
+	return outcome
+}
+
+func newAPIError(resp *http.Response, data []byte) *APIError {
+	apiError := &APIError{
+		Headers:    resp.Header.Clone(),
+		StatusCode: resp.StatusCode,
+		RequestID:  resp.Header.Get("x-request-id"),
+		Message:    http.StatusText(resp.StatusCode),
+		Body:       append(json.RawMessage(nil), data...),
 	}
 
-	return metadata, nil
+	var detail struct {
+		Error   string          `json:"error"`
+		Message string          `json:"message"`
+		Code    json.RawMessage `json:"code"`
+	}
+
+	if err := json.Unmarshal(data, &detail); err != nil {
+		apiError.Cause = fmt.Errorf("decode error response: %w", err)
+
+		return apiError
+	}
+
+	apiError.Code = detail.Code
+
+	switch {
+	case detail.Error != "":
+		apiError.Message = detail.Error
+	case detail.Message != "":
+		apiError.Message = detail.Message
+	}
+
+	return apiError
 }

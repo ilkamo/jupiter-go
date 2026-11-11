@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ilkamo/jupiter-go/internal/transport"
 	"github.com/ilkamo/jupiter-go/response"
 )
 
@@ -313,7 +314,14 @@ func (c *Client) Build(
 	}
 
 	var result BuildResponse
-	metadata, err := c.transport.Do(ctx, http.MethodGet, "/swap/v2/build", q, nil, &result)
+	request := transport.Request{
+		Method: http.MethodGet,
+		Path:   "/swap/v2/build",
+		Query:  q,
+		Retry:  quoteRetryPolicy,
+	}
+
+	metadata, err := c.transport.Do(ctx, request, &result)
 	result.Metadata = metadata
 	if err != nil {
 		return &result, err

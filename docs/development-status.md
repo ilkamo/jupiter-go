@@ -62,8 +62,8 @@ module until the migration strategy is finalized.
   current policy explicit; `WithReferral` configures managed-order referrals.
 - Build platform fees are explicit request fields and require a token fee account;
   managed-order referrals do not carry into builds.
-- Requests currently make one attempt. This avoids unsafe write retries; bounded
-  retries for semantically eligible operations remain to be implemented.
+- Retries are chosen per operation (see "Operation-specific retry policies").
+  Execute makes one attempt and reports ambiguous failures explicitly.
 - A custom HTTP implementation is responsible for its own redirect policy. The
   constructor documents this; caller-owned HTTP clients are never mutated.
 - No signing adapter is supplied yet. Execute accepts caller-signed base64 bytes
@@ -80,9 +80,8 @@ module until the migration strategy is finalized.
    Verify full schemas, effective authentication, pagination semantics, and
    idempotency per operation before implementing it. Discovery is complete for
    the 82 indexed references; guide-only operations still need reconciliation.
-3. Implement operation-specific bounded retry policies (see "Swap request
-   validation" below for the current one-attempt behavior), then add fixture
-   tests for build and managed execution.
+3. Add fixture tests for build and managed execution. Retry policies and
+   request validation are complete for Swap.
 4. Add signing adapters and examples for managed execution and custom builds,
    preserving blockhashes and existing signatures. Test transaction versions
    explicitly before declaring adapter support.
@@ -222,6 +221,55 @@ Decision: request validation is limited to format, range, and combination checks
 and never requires RPC access. Mint existence, token-account mint or ownership,
 and whether `nativeDestinationAccount` is used only with SOL output are left to
 the API.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Operation-specific retry policies
+
+Committed request validation as `98f57b3`. The shared transport now runs a
+bounded attempt loop driven by a `transport.RetryPolicy` that every
+`transport.Request` must specify; an unset policy is rejected before any request
+is sent, so new operations must choose their replay semantics explicitly.
+
+Policies follow operation semantics, not the HTTP method:
+
+| Operation | Policy | Reason |
+| --- | --- | --- |
+| Order, build | 3 attempts, 100–500 ms jittered backoff, Retry-After up to 1 s | Repeating changes no state; each attempt returns a fresh quote, blockhash, and request ID; results are time-sensitive. |
+| Program labels | 4 attempts, 250 ms–2 s backoff, Retry-After up to 5 s | Read-only reference data. |
+| Execute | One attempt | The pinned documentation gives no replay guarantee for a signed transaction and request ID. |
+
+Retried conditions: HTTP 429, 500, 502, 503, 504, and transport failures while
+the operation context is still live. Other statuses, body-read failures, and
+decode failures are returned immediately. Waits use full-jitter exponential
+backoff (`math/rand/v2`) unless the server sends `Retry-After` (seconds or
+HTTP-date), which is honored exactly. A Retry-After above the policy limit, or
+any wait that would pass the operation deadline, stops retrying and returns the
+last server error. `WithTimeout` bounds the whole operation including waits.
+Cancellation during a wait returns both the last server error and the context
+error. Request bodies are encoded once and replayed byte-for-byte.
+
+`response.Metadata.Attempts` reports the attempts made. `WithoutRetries()` forces
+single attempts for callers whose HTTP client already retries.
+
+Execute failures that may still have landed wrap `swap.ErrExecutionOutcomeUnknown`:
+transport failures, timeouts, 5xx responses (the documented 500 body can carry a
+signature), and unreadable success bodies. 4xx responses, including 429, are
+definitive rejections. If the context has already ended before execute, nothing
+is sent and the context error is returned without the unknown marker. The
+upstream `APIError` remains reachable with `errors.As`.
+
+Tests cover body replay, attempt limits, each retryable and non-retryable status,
+transport failures, Retry-After parsing (both forms, negative, fractional,
+overflow) and limits, deadline-aware refusal to wait, cancellation during waits,
+policy validation, jitter bounds, `WithoutRetries`, per-operation retry through
+the public API, and every execute classification. Transport tests use an
+injected wait function and need no real sleeping.
+
+Not covered: no idempotency key or status endpoint is documented for execute, so
+the SDK does not resolve unknown outcomes itself. Signature-status checking
+belongs with the signing and confirmation adapters (next step).
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.

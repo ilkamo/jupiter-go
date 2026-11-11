@@ -39,6 +39,16 @@ func WithTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithoutRetries makes every operation a single attempt. Use it when the injected
+// HTTP client already retries, so attempts do not multiply.
+func WithoutRetries() Option {
+	return func(c *config) error {
+		c.disableRetries = true
+
+		return nil
+	}
+}
+
 // WithoutMaintainerFee selects the current fee-free SDK policy.
 // Jupiter and network fees still apply.
 func WithoutMaintainerFee() Option {

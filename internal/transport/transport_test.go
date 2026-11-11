@@ -41,14 +41,18 @@ func TestMalformedErrorPreservesStatusAndCause(t *testing.T) {
 	}
 
 	var result any
-	metadata, err := client.Do(context.Background(), "GET", "/", nil, nil, &result)
+	request := Request{Method: http.MethodGet, Path: "/", Retry: NoRetry}
+	metadata, err := client.Do(context.Background(), request, &result)
 
 	if metadata.StatusCode != http.StatusBadGateway {
 		t.Fatalf("missing failure metadata: %+v", metadata)
 	}
 
 	var apiErr *APIError
-	if !errors.As(err, &apiErr) || apiErr.StatusCode != http.StatusBadGateway || apiErr.RequestID != "request" {
+	httpContextKept := errors.As(err, &apiErr) &&
+		apiErr.StatusCode == http.StatusBadGateway &&
+		apiErr.RequestID == "request"
+	if !httpContextKept {
 		t.Fatalf("HTTP context lost: %v", err)
 	}
 
@@ -77,7 +81,8 @@ func TestMetadataDoesNotAliasHTTPHeaders(t *testing.T) {
 	}
 
 	var result map[string]string
-	metadata, err := client.Do(context.Background(), http.MethodGet, "/", nil, nil, &result)
+	request := Request{Method: http.MethodGet, Path: "/", Retry: NoRetry}
+	metadata, err := client.Do(context.Background(), request, &result)
 	if err != nil {
 		t.Fatal(err)
 	}

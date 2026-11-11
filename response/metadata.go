@@ -9,4 +9,7 @@ type Metadata struct {
 	StatusCode int
 	RequestID  string
 	Headers    http.Header
+
+	// Attempts counts the HTTP attempts made for the operation, including retries.
+	Attempts int
 }

@@ -32,11 +32,14 @@ type config struct {
 	timeout         time.Duration
 	fee             swap.Referral
 	feeConfigured   bool
+	disableRetries  bool
 }
 
 type Option func(*config) error
 
 // NewClient constructs a client without network calls or a maintainer fee.
+// WithTimeout bounds each operation, including its retries. Order, build, and
+// program labels retry transient failures; execute never retries.
 // WithHTTPClient transfers redirect and credential-forwarding responsibility to the caller.
 func NewClient(options ...Option) (*Client, error) {
 	c := config{
@@ -74,10 +77,11 @@ func NewClient(options ...Option) (*Client, error) {
 	}
 
 	t := &transport.Client{
-		BaseURL: strings.TrimRight(c.baseURL, "/"),
-		APIKey:  c.apiKey,
-		HTTP:    c.http,
-		Timeout: c.timeout,
+		BaseURL:        strings.TrimRight(c.baseURL, "/"),
+		APIKey:         c.apiKey,
+		HTTP:           c.http,
+		Timeout:        c.timeout,
+		DisableRetries: c.disableRetries,
 	}
 
 	return &Client{Swap: swap.NewClient(t, c.fee)}, nil
