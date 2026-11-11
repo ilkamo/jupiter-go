@@ -6,9 +6,11 @@ import (
 	"fmt"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/system"
 
 	"github.com/ilkamo/jupiter-go/instruction"
 	"github.com/ilkamo/jupiter-go/swap"
+	"github.com/ilkamo/jupiter-go/transaction"
 )
 
 var ErrMissingBlockhash = errors.New("build response has no usable blockhash")
@@ -166,4 +168,31 @@ func buildBlockhash(build *swap.BuildResponse) (solana.Hash, error) {
 	}
 
 	return solana.HashFromBytes(metadata.Blockhash), nil
+}
+
+// TipInstruction transfers lamports from payer to a randomly chosen Jupiter tip
+// receiver, as required by transaction.Client.Send. Lamports must be at least
+// transaction.MinTipLamports; a larger tip does not improve landing. Pass it to
+// Assemble as an additional instruction, or set BuildRequest.TipAmount instead.
+func TipInstruction(payer string, lamports uint64) (solana.Instruction, error) {
+	if lamports < transaction.MinTipLamports {
+		return nil, fmt.Errorf("tip must be at least %d lamports", transaction.MinTipLamports)
+	}
+
+	from, err := solana.PublicKeyFromBase58(payer)
+	if err != nil {
+		return nil, fmt.Errorf("tip payer: %w", err)
+	}
+
+	to, err := solana.PublicKeyFromBase58(transaction.RandomTipReceiver())
+	if err != nil {
+		return nil, fmt.Errorf("tip receiver: %w", err)
+	}
+
+	instruction, err := system.NewTransferInstruction(lamports, from, to).ValidateAndBuild()
+	if err != nil {
+		return nil, fmt.Errorf("build tip transfer: %w", err)
+	}
+
+	return instruction, nil
 }

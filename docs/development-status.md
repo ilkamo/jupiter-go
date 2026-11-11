@@ -84,7 +84,7 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement transaction submission and Tokens verification. Audit the current documentation index for additional APIs.
+4. Implement Tokens verification. Audit the current documentation index for additional APIs.
    These are not implemented. Decide the compatibility boundary for upstream beta
    products (Lend, Prediction) during the compatibility review.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
@@ -717,6 +717,47 @@ types, the absence of the API key on uploads and its presence on API calls, and
 the parsed multipart form; submit outcomes (500 unknown; 400 and explicit
 failure known; single attempts); pool and fee reads with nulls; fee read retry;
 14 invalid inputs rejected before transport.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Transaction submission
+
+Committed the transport extension as `582ee62` and Studio as `71e5a6a`. The
+reference (hash matches the manifest) and guide are pinned in
+`openapi/transaction-v1`.
+
+As the inventory required, the landing service has its own endpoint instead of
+overloading the REST base URL: `WithTransactionURL` (default
+`transaction.DefaultURL`, `https://tx.jup.ag`) is validated like `WithBaseURL`
+through a shared helper, and `NewClient` builds a second transport with the same
+HTTP client, API key, timeout, and retry settings. `client.Transaction.Send`
+wraps the JSON-RPC `sendTransaction` call: `[signedTransaction, {encoding:
+"base64", swqosOnly?}]`; `skipPreflight` and `maxRetries` are left at the only
+values the service accepts.
+
+Outcomes: JSON-RPC errors returned with HTTP 200 are `*transaction.RPCError` with
+constants for the documented codes (-1013 to -1016) and are not retried.
+Resubmitting identical signed bytes cannot execute a transaction twice because
+Solana deduplicates by signature, so transport failures and 5xx responses use
+`RepeatableRetry` with the same bytes; failures that may have been forwarded
+wrap `ErrOutcomeUnknown`, as do a mismatched response envelope or a missing
+signature. A successful Send means forwarded, not landed.
+
+Tips: `transaction.TipReceivers` (16 documented accounts),
+`transaction.MinTipLamports`, and `RandomTipReceiver` (non-cryptographic; it
+only spreads write locks). `solanatx.TipInstruction` builds the transfer with
+solana-go's System Program builder and plugs into `Assemble`.
+
+Example: `examples/build` can submit through tx.jup.ag with
+`JUPITER_SUBMIT_VIA=tx`, requesting the tip with `BuildRequest.TipAmount`.
+
+Tests: JSON-RPC envelope and params for both routing modes, API key on the
+transaction host, and no requests to the API gateway; transient failure then
+success, JSON-RPC rejection, persistent 500 (three attempts, unknown), wrong
+response ID, and 401, with byte-identical retries; invalid inputs and
+transaction URLs; tip instruction program, accounts, receiver set, encoded
+lamports, minimum, and use in `Assemble`.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.

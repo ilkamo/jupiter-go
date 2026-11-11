@@ -36,7 +36,7 @@ state-changing GETs must not inherit a read-only policy.
 - swap: 4 operations; 4 methods implemented, response parity review pending.
 - tokens: 7 operations; 4 discovery operations implemented, 3 verification operations pending.
 - price: 1 operation; implemented.
-- transaction: 1 operation; not implemented.
+- transaction: 1 operation; implemented on its own service URL.
 - lend: 15 operations; all implemented (upstream beta).
 - trigger: 18 operations; all implemented.
 - prediction: 27 indexed operations plus the spec-only `GET /forecast`; all implemented (upstream beta).
@@ -62,7 +62,7 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | tokens | `GET https://api.jup.ag/tokens/v2/verify/express/craft-txn` | ApiKeyAuth | — | Pending / none | [Craft Transaction](https://developers.jup.ag/docs/api-reference/tokens/verify-craft-txn.md) |
 | tokens | `POST https://api.jup.ag/tokens/v2/verify/express/execute` | ApiKeyAuth | — | Pending / none | [Execute Verification (Tokens API)](https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md) |
 | price | `GET https://api.jup.ag/price/v3/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Price (Price API V3)](https://developers.jup.ag/docs/api-reference/price/index.md) |
-| transaction | `POST https://tx.jup.ag/` | ApiKeyAuth | — | Pending / none | [Send Transaction](https://developers.jup.ag/docs/api-reference/transaction/submit.md) |
+| transaction | `POST https://tx.jup.ag/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Send Transaction](https://developers.jup.ag/docs/api-reference/transaction/submit.md) |
 | lend | `POST https://api.jup.ag/lend/v1/earn/deposit` | ApiKeyAuth | — | Implemented / request and response contract tests | [Deposit](https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md) |
 | lend | `POST https://api.jup.ag/lend/v1/earn/withdraw` | ApiKeyAuth | — | Implemented / request and response contract tests | [Withdraw](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw.md) |
 | lend | `POST https://api.jup.ag/lend/v1/earn/mint` | ApiKeyAuth | — | Implemented / request and response contract tests | [Mint](https://developers.jup.ag/docs/api-reference/lend/earn/mint.md) |

@@ -23,6 +23,16 @@ func WithBaseURL(baseURL string) Option {
 	}
 }
 
+// WithTransactionURL overrides the transaction landing service (transaction.DefaultURL),
+// which is separate from the API gateway set by WithBaseURL.
+func WithTransactionURL(transactionURL string) Option {
+	return func(c *config) error {
+		c.transactionURL = transactionURL
+
+		return nil
+	}
+}
+
 func WithHTTPClient(client HTTPClient) Option {
 	return func(c *config) error {
 		c.http = client

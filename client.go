@@ -17,6 +17,7 @@ import (
 	"github.com/ilkamo/jupiter-go/studio"
 	"github.com/ilkamo/jupiter-go/swap"
 	"github.com/ilkamo/jupiter-go/tokens"
+	"github.com/ilkamo/jupiter-go/transaction"
 	"github.com/ilkamo/jupiter-go/trigger"
 )
 
@@ -31,18 +32,20 @@ type HTTPClient = transport.HTTPClient
 type APIError = transport.APIError
 
 type Client struct {
-	Swap       *swap.Client
-	Tokens     *tokens.Client
-	Price      *price.Client
-	Trigger    *trigger.Client
-	Lend       *lend.Client
-	Prediction *prediction.Client
-	Send       *send.Client
-	Studio     *studio.Client
+	Swap        *swap.Client
+	Tokens      *tokens.Client
+	Price       *price.Client
+	Trigger     *trigger.Client
+	Lend        *lend.Client
+	Prediction  *prediction.Client
+	Send        *send.Client
+	Studio      *studio.Client
+	Transaction *transaction.Client
 }
 
 type config struct {
 	baseURL, apiKey string
+	transactionURL  string
 	http            HTTPClient
 	timeout         time.Duration
 	fee             swap.Referral
@@ -58,8 +61,9 @@ type Option func(*config) error
 // WithHTTPClient transfers redirect and credential-forwarding responsibility to the caller.
 func NewClient(options ...Option) (*Client, error) {
 	c := config{
-		baseURL: "https://api.jup.ag",
-		timeout: defaultRequestTimeout,
+		baseURL:        "https://api.jup.ag",
+		transactionURL: transaction.DefaultURL,
+		timeout:        defaultRequestTimeout,
 		http: &http.Client{
 			CheckRedirect: func(*http.Request, []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -77,36 +81,54 @@ func NewClient(options ...Option) (*Client, error) {
 		}
 	}
 
-	u, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, fmt.Errorf("parse base URL: %w", err)
+	if err := validateServiceURL("base", c.baseURL); err != nil {
+		return nil, err
 	}
 
-	unsupportedScheme := u.Scheme != schemeHTTPS && u.Scheme != schemeHTTP
-	if u.Host == "" || unsupportedScheme || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
-		return nil, fmt.Errorf("invalid base URL")
+	if err := validateServiceURL("transaction", c.transactionURL); err != nil {
+		return nil, err
 	}
 
 	if c.timeout <= 0 || c.http == nil {
 		return nil, fmt.Errorf("positive timeout and HTTP client required")
 	}
 
-	t := &transport.Client{
-		BaseURL:        strings.TrimRight(c.baseURL, "/"),
+	t := c.transport(c.baseURL)
+
+	return &Client{
+		Swap:        swap.NewClient(t, c.fee),
+		Tokens:      tokens.NewClient(t),
+		Price:       price.NewClient(t),
+		Trigger:     trigger.NewClient(t),
+		Lend:        lend.NewClient(t),
+		Prediction:  prediction.NewClient(t),
+		Send:        send.NewClient(t),
+		Studio:      studio.NewClient(t),
+		Transaction: transaction.NewClient(c.transport(c.transactionURL)),
+	}, nil
+}
+
+// transport builds a transport for one service host with the shared settings.
+func (c config) transport(baseURL string) *transport.Client {
+	return &transport.Client{
+		BaseURL:        strings.TrimRight(baseURL, "/"),
 		APIKey:         c.apiKey,
 		HTTP:           c.http,
 		Timeout:        c.timeout,
 		DisableRetries: c.disableRetries,
 	}
+}
 
-	return &Client{
-		Swap:       swap.NewClient(t, c.fee),
-		Tokens:     tokens.NewClient(t),
-		Price:      price.NewClient(t),
-		Trigger:    trigger.NewClient(t),
-		Lend:       lend.NewClient(t),
-		Prediction: prediction.NewClient(t),
-		Send:       send.NewClient(t),
-		Studio:     studio.NewClient(t),
-	}, nil
+func validateServiceURL(name string, raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return fmt.Errorf("parse %s URL: %w", name, err)
+	}
+
+	unsupportedScheme := u.Scheme != schemeHTTPS && u.Scheme != schemeHTTP
+	if u.Host == "" || unsupportedScheme || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return fmt.Errorf("invalid %s URL", name)
+	}
+
+	return nil
 }
