@@ -32,7 +32,7 @@ func testAddress(seed byte) solana.PublicKey {
 }
 
 // unsignedFixture returns a transaction requiring the fee payer and a cosigner.
-func unsignedFixture(t *testing.T, options ...solana.TransactionOption) string {
+func unsignedFixture(t testing.TB, options ...solana.TransactionOption) string {
 	t.Helper()
 
 	instruction := solana.NewInstruction(
@@ -70,13 +70,13 @@ func parseFixture(t *testing.T, encoded string) *Transaction {
 	return tx
 }
 
-func unsignedLegacy(t *testing.T) string {
+func unsignedLegacy(t testing.TB) string {
 	t.Helper()
 
 	return unsignedFixture(t)
 }
 
-func unsignedVersion1(t *testing.T) string {
+func unsignedVersion1(t testing.TB) string {
 	t.Helper()
 
 	return unsignedFixture(t, solana.TransactionV1Config(solana.TransactionConfig{}.
@@ -92,7 +92,7 @@ const (
 func TestPartialSigningPreservesMessageAndSignatures(t *testing.T) {
 	tests := []struct {
 		name    string
-		fixture func(*testing.T) string
+		fixture func(testing.TB) string
 		version Version
 	}{
 		{name: "legacy", fixture: unsignedLegacy, version: VersionLegacy},

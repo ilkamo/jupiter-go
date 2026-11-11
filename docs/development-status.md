@@ -875,3 +875,26 @@ access key and is intentionally not recorded.
   tip-receiver account `CapuXNQo…` appears only as the Jupiter program authority,
   with a zero balance change), wallet spent 1,000,000 lamports plus a 10,043
   lamport fee. Both submission paths of the build flow are verified.
+
+## Upstream re-audit and fuzzing
+
+Re-audit of the documentation index (2026-11-11): the index still lists the same
+82 API reference pages (none added or removed), and all 82 re-fetched pages are
+byte-identical to the manifest hashes. All 11 OpenAPI specs linked from the
+index were parsed with a real YAML parser (Ruby's standard library; a regex
+pass silently missed specs that place `components` before `paths`): they
+contain exactly 83 operations, matching the inventory one-to-one (82 pages plus
+the spec-only Prediction `/forecast`). Prediction `pnl-history` and
+`events/suggested` still return 404 upstream.
+
+Fuzz targets (`make fuzz`, `FUZZTIME` default 30s):
+
+| Target | Property | Inputs tried |
+| - | - | - |
+| `solanatx.FuzzParse` | no panic; accepted transactions round-trip byte-for-byte and re-parse identically | 6.5 million (45 s) |
+| `address.FuzzValidate` | no panic; accepted addresses decode to 32 bytes and re-encode to themselves | 1.2 million |
+| `amount.FuzzParseRaw` | no panic; accepted amounts are canonical positive integers, stable on re-parse | 3.1 million |
+| `lend.FuzzParseSignedAmount` | no panic; accepted amounts match the documented pattern and the signed 128-bit range | 4.3 million |
+
+No failures. The solanatx fixture builders now take `testing.TB` so fuzz targets
+can seed from them.

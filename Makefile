@@ -1,4 +1,4 @@
-.PHONY: test vet lint lint-fix check
+.PHONY: test vet lint lint-fix check fuzz
 
 test:
 	go test -race ./...
@@ -18,3 +18,13 @@ lint-fix:
 
 # check runs everything CI runs.
 check: vet lint test
+
+# fuzz runs each fuzz target for FUZZTIME (default 30s). Go accepts one -fuzz
+# target per package invocation, so each runs separately.
+FUZZTIME ?= 30s
+
+fuzz:
+	go test -run=^$$ -fuzz=FuzzParse$$ -fuzztime=$(FUZZTIME) ./solanatx
+	go test -run=^$$ -fuzz=FuzzValidate -fuzztime=$(FUZZTIME) ./internal/address
+	go test -run=^$$ -fuzz=FuzzParseRaw -fuzztime=$(FUZZTIME) ./internal/amount
+	go test -run=^$$ -fuzz=FuzzParseSignedAmount -fuzztime=$(FUZZTIME) ./lend

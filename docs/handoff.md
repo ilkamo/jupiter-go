@@ -51,15 +51,14 @@ history of every step (decisions, tests, validation).
    example's confirmation loop succeeded end to end with a dedicated RPC
    provider. Optional: re-check the two Prediction routes that returned 404
    upstream (`pnl-history`, `events/suggested`).
-2. **Re-audit the documentation index** (`https://developers.jup.ag/docs/llms.txt`)
-   for operations added since the inventory (the Prediction spec already had one,
-   `/forecast`), and compare each pinned file in `openapi/` with upstream
-   (hashes are in `docs/api-reference-manifest.json`).
+2. **Re-audit: done** (see "Upstream re-audit and fuzzing"). Repeat right
+   before tagging if time has passed: compare the index with the manifest and
+   parse the linked OpenAPI specs with a real YAML parser.
 3. **Exported API review** before freezing v1: names, request/response shapes,
    and error types across products (the plan's "Review exported symbols" item).
    Beta packages may change later; stable ones may not without v2.
 4. **Optional:** `solanatx.Assemble` support for version 1 builds (needs a
    compute-unit-limit policy, since builds return a unit price but no limit);
-   fuzz tests for `solanatx.Parse`, `internal/address`, and amount parsing.
+   fuzz tests are done (`make fuzz`).
 5. **Release:** open a PR from `v1` to `main`, let CI pass, merge, and tag
    `v1.0.0`; update the CHANGELOG date.
