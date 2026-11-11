@@ -268,11 +268,23 @@ endorsed by Jupiter. The Go gopher was designed by
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the mascot artwork in
 `docs/assets/` is a derivative of it and carries the same license.
 
-## Donate
+## Sponsors
 
-If you find this library useful and want to support its development, consider donating some JUP/Solana to the following address:
+jupiter-go is free, charges no fee, and is maintained in my own time. If it saves
+you work, please consider [sponsoring it on GitHub](https://github.com/sponsors/ilkamo).
 
-`BXzmfHxfEMcMj8hDccUNdrwXVNeybyfb2iV2nktE1VnJ`
+| Monthly tier | What you get |
+| - | - |
+| $10, $50 | My gratitude, and more time for the library. |
+| $200 | Your name or small logo listed below. |
+| $500 | Your logo at the top of this section, a vote on what gets built next, and your issues reviewed first. |
+| $1,000 | A large logo here and in the release notes, plus a monthly roadmap update. |
+
+<!-- Sponsors from the $200 tier up are listed here. -->
+No sponsors yet. [Become the first one](https://github.com/sponsors/ilkamo).
+
+You can also donate JUP or SOL to
+`BXzmfHxfEMcMj8hDccUNdrwXVNeybyfb2iV2nktE1VnJ`.
 
 ## Star History
 
