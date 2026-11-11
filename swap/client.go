@@ -135,7 +135,7 @@ func (c *Client) Order(
 
 	if result.ErrorCode != nil {
 		return &result, &ExecutionError{
-			Code:      *result.ErrorCode,
+			Code:      result.ErrorCode,
 			Message:   result.ErrorMessage,
 			RequestID: result.RequestID,
 		}
@@ -169,10 +169,15 @@ func (c *Client) Execute(
 		return &result, err
 	}
 
-	if result.Status != ExecutionStatusSuccess || result.Code != executionSuccessCode {
+	if result.Status != ExecutionStatusSuccess || result.Code == nil || *result.Code != executionSuccessCode {
+		message := result.Error
+		if message == "" {
+			message = fmt.Sprintf("execution did not confirm success (status %q)", result.Status)
+		}
+
 		return &result, &ExecutionError{
 			Code:      result.Code,
-			Message:   result.Error,
+			Message:   message,
 			RequestID: r.RequestID,
 			Signature: result.Signature,
 		}
@@ -193,10 +198,14 @@ func (c *Client) ProgramLabels(ctx context.Context) (*ProgramLabelsResponse, err
 }
 
 type ExecutionError struct {
-	Code                          int
+	Code                          *int
 	Message, RequestID, Signature string
 }
 
 func (e *ExecutionError) Error() string {
-	return fmt.Sprintf("jupiter execution %d: %s", e.Code, e.Message)
+	if e.Code == nil {
+		return fmt.Sprintf("jupiter execution: %s", e.Message)
+	}
+
+	return fmt.Sprintf("jupiter execution %d: %s", *e.Code, e.Message)
 }

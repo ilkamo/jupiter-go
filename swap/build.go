@@ -57,16 +57,20 @@ type BuildResponse struct {
 	OtherInstructions             []Instruction       `json:"otherInstructions"`
 	TipInstruction                *Instruction        `json:"tipInstruction"`
 	AddressesByLookupTableAddress map[string][]string `json:"addressesByLookupTableAddress"`
-	TransactionVersion            uint8               `json:"transactionVersion"`
+	TransactionVersion            *uint8              `json:"transactionVersion"`
 	ComputeUnitPrice              string              `json:"computeUnitPrice"`
-	BlockhashWithMetadata         struct {
-		Blockhash            []uint8 `json:"blockhash"`
-		LastValidBlockHeight uint64  `json:"lastValidBlockHeight"`
-		FetchedAt            struct {
-			Seconds     uint64 `json:"secs_since_epoch"`
-			Nanoseconds uint32 `json:"nanos_since_epoch"`
-		} `json:"fetchedAt"`
-	} `json:"blockhashWithMetadata"`
+	BlockhashWithMetadata         *BlockhashMetadata  `json:"blockhashWithMetadata"`
+}
+
+type BlockhashMetadata struct {
+	Blockhash            []uint8             `json:"blockhash"`
+	LastValidBlockHeight *uint64             `json:"lastValidBlockHeight"`
+	FetchedAt            *BlockhashTimestamp `json:"fetchedAt"`
+}
+
+type BlockhashTimestamp struct {
+	Seconds     *uint64 `json:"secs_since_epoch"`
+	Nanoseconds *uint32 `json:"nanos_since_epoch"`
 }
 
 // Build returns instructions; it does not sign, submit, or apply managed-order referral settings.

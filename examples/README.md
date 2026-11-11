@@ -35,3 +35,8 @@ The HTTP request ID is separate from `OrderResponse.RequestID`, which belongs to
 order execution. Program labels are available as `result.Labels` alongside the
 same metadata. Always check the error before using response data; a non-nil
 response may accompany an error so its metadata remains inspectable.
+
+Optional scalar response fields use pointers where zero is meaningful. Check for
+nil before reading `Gasless`, execution `Code`, build `TransactionVersion`, or
+`BlockhashWithMetadata`. A missing execution code does not confirm success.
+`ExecutionError.Code` is nil when the upstream response supplied no code.

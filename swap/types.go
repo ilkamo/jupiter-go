@@ -57,7 +57,7 @@ type OrderResponse struct {
 	TransactionVersion        *uint8            `json:"transactionVersion"`
 	RequestID                 string            `json:"requestId"`
 	LastValidBlockHeight      string            `json:"lastValidBlockHeight"`
-	Gasless                   bool              `json:"gasless"`
+	Gasless                   *bool             `json:"gasless"`
 	FeeBps                    json.Number       `json:"feeBps"`
 	FeeMint                   string            `json:"feeMint"`
 	PlatformFee               *PlatformFee      `json:"platformFee"`
@@ -77,7 +77,7 @@ type ExecuteResponse struct {
 	Status             string            `json:"status"`
 	Signature          string            `json:"signature"`
 	Slot               string            `json:"slot"`
-	Code               int               `json:"code"`
+	Code               *int              `json:"code"`
 	Error              string            `json:"error"`
 	TotalInputAmount   string            `json:"totalInputAmount"`
 	TotalOutputAmount  string            `json:"totalOutputAmount"`

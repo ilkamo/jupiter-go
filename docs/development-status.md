@@ -155,3 +155,25 @@ does not mark the full Swap milestone or v1 release complete.
 
 Validation for this update: `go test -race ./...`, `go vet ./...`, and
 `git diff --check` passed. No live trading requests were sent.
+
+## Optional scalar presence and execution confirmation
+
+Committed the preceding inventory and response-metadata work as `d13fab5`.
+The next change preserves optional execution code, gasless flag, build transaction
+version, blockhash metadata, and timestamp component presence using pointers.
+Blockhash metadata now has named types instead of anonymous nested structs.
+
+Execute requires both an explicit Success status and an explicitly supplied zero
+code. Missing/null codes, unknown/missing statuses, and contradictory status/code
+pairs return an error with the response and metadata intact. ExecutionError.Code
+is also a pointer, so missing codes are not reported as upstream zero codes.
+Omitted and null optional scalars both mean unavailable; explicit zero/false are
+preserved. No distinct null-versus-absent meaning is assumed for these scalars.
+
+Regression coverage includes missing/null codes, unknown status, contradictory
+success, explicit false, transaction version zero, and zero-valued blockhash time
+components. This does not complete address validation, retry policy, or signing
+adapters; these remain the next implementation work.
+
+Validation: `go test -race ./...`, `go vet ./...`, and `git diff --check` passed
+for the optional-field update. No live trades were performed.
