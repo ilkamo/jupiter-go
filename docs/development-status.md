@@ -869,3 +869,9 @@ access key and is intentionally not recorded.
   confirmed. Signature (signature omitted), finalized, USDC 252,360 → 336,170 (above
   the 83,484 minimum), no error.
 - Final balance: 0.03837467 SOL and 336,170 USDC raw.
+- Standard RPC submission (`examples/build` without `JUPITER_SUBMIT_VIA`, sent
+  with `sendTransaction` to the dedicated node) also confirmed in 2.5 s:
+  signature (signature omitted), finalized, USDC 336,170 → 420,139, no tip paid (the
+  tip-receiver account `CapuXNQo…` appears only as the Jupiter program authority,
+  with a zero balance change), wallet spent 1,000,000 lamports plus a 10,043
+  lamport fee. Both submission paths of the build flow are verified.
