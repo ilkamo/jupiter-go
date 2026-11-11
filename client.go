@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ilkamo/jupiter-go/internal/transport"
+	"github.com/ilkamo/jupiter-go/lend"
 	"github.com/ilkamo/jupiter-go/price"
 	"github.com/ilkamo/jupiter-go/swap"
 	"github.com/ilkamo/jupiter-go/tokens"
@@ -31,6 +32,7 @@ type Client struct {
 	Tokens  *tokens.Client
 	Price   *price.Client
 	Trigger *trigger.Client
+	Lend    *lend.Client
 }
 
 type config struct {
@@ -96,5 +98,6 @@ func NewClient(options ...Option) (*Client, error) {
 		Tokens:  tokens.NewClient(t),
 		Price:   price.NewClient(t),
 		Trigger: trigger.NewClient(t),
+		Lend:    lend.NewClient(t),
 	}, nil
 }

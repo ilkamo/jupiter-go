@@ -84,9 +84,10 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Lend, then Prediction, Send, Studio, transaction submission, and
-   Tokens verification. Audit the current documentation index for additional
-   APIs. These are not implemented.
+4. Implement Prediction, Send, Studio, transaction submission, and Tokens
+   verification. Audit the current documentation index for additional APIs.
+   These are not implemented. Decide the compatibility boundary for upstream beta
+   products (Lend, Prediction) during the compatibility review.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
    migration documentation, and compatibility review from `v1-plan.md`.
 6. Resolve the maintainer fee recipient/default and beta API compatibility before
@@ -529,3 +530,53 @@ Replaced all 17 `errors.As` calls in handwritten code (3 production helpers,
 module's `go 1.26.0` directive. Behavior is unchanged. The convention is recorded
 in `AGENTS.md`. Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`,
 and `git diff --check` passed.
+
+## Lend (Earn and Borrow)
+
+Committed the `errors.AsType` refactor as `b700a6e`. All 15 Lend references
+(hashes match the manifest) and both API guides are pinned in `openapi/lend-v1`.
+Both guides label the APIs beta; the package documents this, and the
+compatibility boundary is left to the review.
+
+`client.Lend.Earn`: `Deposit`, `Withdraw`, `Mint`, `Redeem` (unsigned
+transactions), their `*Instructions` variants (one instruction each), `Tokens`,
+`Positions(users)`, and `Earnings(user, positions)`. Amounts and shares are
+positive raw integers; assets, signers, users, and positions are validated.
+`client.Lend.Borrow`: `Vaults(VaultsRequest)`, `Positions(market, users)`,
+`Operate`, and `OperateInstructions`. Operate amounts follow the documented
+`^-?[0-9]+$` pattern and the signed 128-bit range, are canonicalized, and at least
+one must be non-zero. `WithdrawAllCollateral`/`RepayAllDebt` name the MIN_I128
+sentinel; `NewPosition` is position 0. Markets (`main`, `ethena` constants) pass
+through like other enum filters; an empty market uses the default. The optional
+`rpcUrl` must be absolute and is documented as being sent to Jupiter.
+
+Schema conflicts handled explicitly: numeric fields declared as strings appear as
+numbers in examples (and some are declared string-or-integer), so all numeric
+quantities are `json.Number`, which accepts both and keeps exact text. Earn
+`chain_id` is declared a string but the example is `0`; `lend.ChainID` accepts
+both. Earnings is declared an object but the example is an array; both decode
+into a slice.
+
+Shared refactors: `instruction.Instruction`/`AccountMeta` (swap keeps aliases;
+`solanatx.ConvertInstruction` takes the shared type, so Lend instructions convert
+too) and `transport.RepeatableRetry`, now used by Swap order/build, the
+repeatable Trigger operations, and Lend builders. Lend submits nothing, so there
+are no unknown-outcome cases; reads use `ReadOnlyRetry`.
+
+Consistency fix: Trigger operations now return their result (with metadata)
+alongside HTTP errors, like Swap, Tokens, Price, and Lend; validation failures
+still return nil.
+
+Example: `examples/lend` (read-only; builds an unsigned deposit when
+`WALLET_ADDRESS` is set).
+
+Tests: request bodies and canonical quantities for all Earn builders; single
+instruction decoding and conversion; mixed number forms, chain IDs, and both
+earnings shapes; borrow vault decoding (string and integer durations, raw oracle
+source type), market and RPC URL encoding, default market omission; operate body
+with sentinel and canonical amounts, instruction responses with lookup table
+addresses; builder retry; signed-range boundaries accepted; 18 invalid inputs
+rejected before transport; metadata kept on Lend and Trigger failures.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.

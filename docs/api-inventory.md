@@ -37,7 +37,7 @@ state-changing GETs must not inherit a read-only policy.
 - tokens: 7 operations; 4 discovery operations implemented, 3 verification operations pending.
 - price: 1 operation; implemented.
 - transaction: 1 operation; not implemented.
-- lend: 15 operations; not implemented.
+- lend: 15 operations; all implemented (upstream beta).
 - trigger: 18 operations; all implemented.
 - prediction: 27 operations; not implemented.
 - send: 4 operations; not implemented.
@@ -63,21 +63,21 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | tokens | `POST https://api.jup.ag/tokens/v2/verify/express/execute` | ApiKeyAuth | — | Pending / none | [Execute Verification (Tokens API)](https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md) |
 | price | `GET https://api.jup.ag/price/v3/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Price (Price API V3)](https://developers.jup.ag/docs/api-reference/price/index.md) |
 | transaction | `POST https://tx.jup.ag/` | ApiKeyAuth | — | Pending / none | [Send Transaction](https://developers.jup.ag/docs/api-reference/transaction/submit.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/deposit` | ApiKeyAuth | — | Pending / none | [Deposit](https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/withdraw` | ApiKeyAuth | — | Pending / none | [Withdraw](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/mint` | ApiKeyAuth | — | Pending / none | [Mint](https://developers.jup.ag/docs/api-reference/lend/earn/mint.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/redeem` | ApiKeyAuth | — | Pending / none | [Redeem](https://developers.jup.ag/docs/api-reference/lend/earn/redeem.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/deposit-instructions` | ApiKeyAuth | — | Pending / none | [Deposit Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/deposit-instructions.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/withdraw-instructions` | ApiKeyAuth | — | Pending / none | [Withdraw Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw-instructions.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/mint-instructions` | ApiKeyAuth | — | Pending / none | [Mint Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/mint-instructions.md) |
-| lend | `POST https://api.jup.ag/lend/v1/earn/redeem-instructions` | ApiKeyAuth | — | Pending / none | [Redeem Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/redeem-instructions.md) |
-| lend | `GET https://api.jup.ag/lend/v1/earn/tokens` | ApiKeyAuth | — | Pending / none | [Tokens](https://developers.jup.ag/docs/api-reference/lend/earn/tokens.md) |
-| lend | `GET https://api.jup.ag/lend/v1/earn/positions` | ApiKeyAuth | — | Pending / none | [Earn Positions](https://developers.jup.ag/docs/api-reference/lend/earn/positions.md) |
-| lend | `GET https://api.jup.ag/lend/v1/earn/earnings` | ApiKeyAuth | — | Pending / none | [Earnings](https://developers.jup.ag/docs/api-reference/lend/earn/earnings.md) |
-| lend | `GET https://api.jup.ag/lend/v1/borrow/vaults` | ApiKeyAuth | — | Pending / none | [Vaults](https://developers.jup.ag/docs/api-reference/lend/borrow/vaults.md) |
-| lend | `GET https://api.jup.ag/lend/v1/borrow/positions` | ApiKeyAuth | — | Pending / none | [Borrow Positions](https://developers.jup.ag/docs/api-reference/lend/borrow/positions.md) |
-| lend | `POST https://api.jup.ag/lend/v1/borrow/operate` | ApiKeyAuth | — | Pending / none | [Operate](https://developers.jup.ag/docs/api-reference/lend/borrow/operate.md) |
-| lend | `POST https://api.jup.ag/lend/v1/borrow/operate-instructions` | ApiKeyAuth | — | Pending / none | [Operate Instructions](https://developers.jup.ag/docs/api-reference/lend/borrow/operate-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/deposit` | ApiKeyAuth | — | Implemented / request and response contract tests | [Deposit](https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/withdraw` | ApiKeyAuth | — | Implemented / request and response contract tests | [Withdraw](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/mint` | ApiKeyAuth | — | Implemented / request and response contract tests | [Mint](https://developers.jup.ag/docs/api-reference/lend/earn/mint.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/redeem` | ApiKeyAuth | — | Implemented / request and response contract tests | [Redeem](https://developers.jup.ag/docs/api-reference/lend/earn/redeem.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/deposit-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Deposit Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/deposit-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/withdraw-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Withdraw Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/mint-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Mint Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/mint-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/redeem-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Redeem Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/redeem-instructions.md) |
+| lend | `GET https://api.jup.ag/lend/v1/earn/tokens` | ApiKeyAuth | — | Implemented / request and response contract tests | [Tokens](https://developers.jup.ag/docs/api-reference/lend/earn/tokens.md) |
+| lend | `GET https://api.jup.ag/lend/v1/earn/positions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Earn Positions](https://developers.jup.ag/docs/api-reference/lend/earn/positions.md) |
+| lend | `GET https://api.jup.ag/lend/v1/earn/earnings` | ApiKeyAuth | — | Implemented / request and response contract tests | [Earnings](https://developers.jup.ag/docs/api-reference/lend/earn/earnings.md) |
+| lend | `GET https://api.jup.ag/lend/v1/borrow/vaults` | ApiKeyAuth | — | Implemented / request and response contract tests | [Vaults](https://developers.jup.ag/docs/api-reference/lend/borrow/vaults.md) |
+| lend | `GET https://api.jup.ag/lend/v1/borrow/positions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Borrow Positions](https://developers.jup.ag/docs/api-reference/lend/borrow/positions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/borrow/operate` | ApiKeyAuth | — | Implemented / request and response contract tests | [Operate](https://developers.jup.ag/docs/api-reference/lend/borrow/operate.md) |
+| lend | `POST https://api.jup.ag/lend/v1/borrow/operate-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Operate Instructions](https://developers.jup.ag/docs/api-reference/lend/borrow/operate-instructions.md) |
 | trigger | `POST https://api.jup.ag/trigger/v2/auth/challenge` | ApiKeyAuth | — | Implemented / request and response contract tests | [Request Challenge](https://developers.jup.ag/docs/api-reference/trigger/challenge.md) |
 | trigger | `POST https://api.jup.ag/trigger/v2/auth/verify` | ApiKeyAuth | — | Implemented / request and response contract tests | [Verify Challenge](https://developers.jup.ag/docs/api-reference/trigger/verify.md) |
 | trigger | `POST https://api.jup.ag/trigger/v2/auth/refresh` | ApiKeyAuth | — | Implemented / request and response contract tests | [Refresh Token](https://developers.jup.ag/docs/api-reference/trigger/refresh.md) |

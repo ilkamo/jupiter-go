@@ -61,6 +61,22 @@ expiry and once after a 401. Pass `SessionOptions.OnRefresh` to persist rotated
 tokens and `client.Trigger.Resume` to restore them; a stale refresh token returns
 `trigger.ErrSessionExpired`.
 
+## Lend
+
+```sh
+JUPITER_API_KEY=your-key WALLET_ADDRESS=... go run ./examples/lend
+```
+
+Lists Earn tokens and Borrow vaults and, when `WALLET_ADDRESS` is set, builds an
+unsigned Earn deposit. Lend is beta upstream. `client.Lend.Earn` builds deposit,
+withdraw, mint, and redeem transactions or single instructions;
+`client.Lend.Borrow.Operate` builds one transaction from signed collateral and debt
+deltas (`lend.NewPosition`, `lend.WithdrawAllCollateral`, `lend.RepayAllDebt`).
+Nothing is submitted: sign the transaction with `solanatx` and send it through
+your RPC node. Borrow instruction responses list lookup table addresses only, so
+compiling them needs an RPC node; `solanatx.ConvertInstruction` converts the
+instructions. Borrow does not wrap native SOL.
+
 ## Signing and execution
 
 Signing uses `solanatx`, the only new-SDK package that depends on solana-go.

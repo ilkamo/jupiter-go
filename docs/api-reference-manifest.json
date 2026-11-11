@@ -185,7 +185,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -198,7 +198,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -211,7 +211,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -224,7 +224,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -237,7 +237,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -250,7 +250,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -263,7 +263,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -276,7 +276,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -289,7 +289,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -302,7 +302,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -315,7 +315,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -328,7 +328,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -341,7 +341,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -354,7 +354,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "lend",
@@ -367,7 +367,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "trigger",
