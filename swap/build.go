@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/ilkamo/jupiter-go/internal/amount"
 	"github.com/ilkamo/jupiter-go/internal/listparam"
 	"github.com/ilkamo/jupiter-go/internal/transport"
 	"github.com/ilkamo/jupiter-go/response"
@@ -248,7 +249,7 @@ func (r BuildRequest) query() (url.Values, error) {
 		return nil, err
 	}
 
-	amount, err := parseRawAmount(r.Amount)
+	rawAmount, err := amount.ParseRaw(r.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +257,7 @@ func (r BuildRequest) query() (url.Values, error) {
 	q := url.Values{
 		"inputMint":  {r.InputMint},
 		"outputMint": {r.OutputMint},
-		"amount":     {amount},
+		"amount":     {rawAmount},
 		"taker":      {r.Taker},
 	}
 

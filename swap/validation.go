@@ -2,7 +2,6 @@ package swap
 
 import (
 	"fmt"
-	"math/big"
 
 	"github.com/ilkamo/jupiter-go/internal/address"
 )
@@ -40,22 +39,4 @@ func validateMintPair(inputMint string, outputMint string) error {
 	}
 
 	return nil
-}
-
-// parseRawAmount accepts positive base-10 integers in raw token units and returns them canonically.
-func parseRawAmount(amount string) (string, error) {
-	if amount == "" {
-		return "", fmt.Errorf("amount required")
-	}
-
-	rawAmount, ok := new(big.Int).SetString(amount, decimalBase)
-	if !ok {
-		return "", fmt.Errorf("amount must be a base-10 raw integer")
-	}
-
-	if rawAmount.Sign() <= 0 {
-		return "", fmt.Errorf("amount must be positive")
-	}
-
-	return rawAmount.String(), nil
 }

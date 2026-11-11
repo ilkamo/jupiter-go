@@ -58,6 +58,9 @@ type Request struct {
 	Query  url.Values
 	Body   any
 	Retry  RetryPolicy
+
+	// Header adds request-specific headers, such as a wallet session's Authorization.
+	Header http.Header
 }
 
 type attemptOutcome struct {
@@ -174,6 +177,13 @@ func (c *Client) attempt(
 	}
 
 	req.URL.RawQuery = request.Query.Encode()
+
+	for name, values := range request.Header {
+		for _, value := range values {
+			req.Header.Add(name, value)
+		}
+	}
+
 	req.Header.Set("Accept", "application/json")
 
 	if request.Body != nil {
