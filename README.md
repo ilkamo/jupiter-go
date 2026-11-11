@@ -169,6 +169,12 @@ run `make check` (vet, golangci-lint, race tests) before opening a pull request.
 
 This library is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+This is an unofficial, community-maintained library and is not affiliated with or
+endorsed by Jupiter. The Go gopher was designed by
+[Renée French](https://reneefrench.blogspot.com/) and is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the mascot artwork in
+`assets/` is a derivative of it and carries the same license.
+
 ## Donate
 
 If you find this library useful and want to support its development, consider donating some JUP/Solana to the following address:
