@@ -58,8 +58,8 @@ func TestExecutionRequiresExplicitSuccess(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				var executionError *ExecutionError
-				if !errors.As(err, &executionError) {
+				executionError, ok := errors.AsType[*ExecutionError](err)
+				if !ok {
 					t.Fatalf("expected execution error, got %v", err)
 				}
 

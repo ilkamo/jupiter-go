@@ -265,8 +265,8 @@ func TestTriggerSubmissionOutcomes(t *testing.T) {
 					t.Fatalf("unexpected outcome classification: %v", err)
 				}
 
-				var apiError *jupiter.APIError
-				if !errors.As(err, &apiError) || apiError.StatusCode != status.status {
+				apiError, ok := errors.AsType[*jupiter.APIError](err)
+				if !ok || apiError.StatusCode != status.status {
 					t.Fatalf("HTTP error lost: %v", err)
 				}
 

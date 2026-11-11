@@ -126,8 +126,8 @@ func TestWithoutRetriesMakesOneAttempt(t *testing.T) {
 
 	result, err := client.Swap.ProgramLabels(context.Background())
 
-	var apiError *jupiter.APIError
-	if !errors.As(err, &apiError) || apiError.StatusCode != http.StatusServiceUnavailable {
+	apiError, ok := errors.AsType[*jupiter.APIError](err)
+	if !ok || apiError.StatusCode != http.StatusServiceUnavailable {
 		t.Fatalf("expected unavailable error, got %v", err)
 	}
 
@@ -189,9 +189,9 @@ func TestExecuteFailureClassification(t *testing.T) {
 				t.Fatalf("unexpected outcome classification: %v", err)
 			}
 
-			var apiError *jupiter.APIError
+			_, hasAPIError := errors.AsType[*jupiter.APIError](err)
 			isHTTPFailure := test.status != http.StatusOK
-			if errors.As(err, &apiError) != isHTTPFailure {
+			if hasAPIError != isHTTPFailure {
 				t.Fatalf("HTTP error not preserved: %v", err)
 			}
 		})

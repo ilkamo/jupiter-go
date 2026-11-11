@@ -45,6 +45,8 @@
   the operation and cleanup fail.
 - Preserve useful error context and causes so callers can use `errors.Is` and
   `errors.As`.
+- Match error types with Go 1.26's type-safe `errors.AsType[*T](err)` instead
+  of declaring a target variable for `errors.As`.
 - Avoid magic numbers and clever or hacky shortcuts. Give policy values
   descriptive names and explicit units, and prefer standard-library mechanisms
   over manual tricks such as sentinel-byte arithmetic for response limits.

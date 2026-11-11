@@ -118,16 +118,15 @@ func TestErrorsAndNoRetry(t *testing.T) {
 			}
 
 			if test.statusCode == http.StatusOK {
-				var executionError *swap.ExecutionError
-				if !errors.As(err, &executionError) {
+				if _, ok := errors.AsType[*swap.ExecutionError](err); !ok {
 					t.Fatalf("expected execution error, got %v", err)
 				}
 
 				return
 			}
 
-			var apiError *jupiter.APIError
-			if !errors.As(err, &apiError) || apiError.StatusCode != test.statusCode {
+			apiError, ok := errors.AsType[*jupiter.APIError](err)
+			if !ok || apiError.StatusCode != test.statusCode {
 				t.Fatalf("expected HTTP error with status %d, got %v", test.statusCode, err)
 			}
 		})
@@ -190,8 +189,8 @@ func TestRedirectDoesNotLeakKey(t *testing.T) {
 	}
 
 	_, err = c.Swap.ProgramLabels(context.Background())
-	var api *jupiter.APIError
-	if !errors.As(err, &api) || api.StatusCode != http.StatusFound {
+	api, ok := errors.AsType[*jupiter.APIError](err)
+	if !ok || api.StatusCode != http.StatusFound {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

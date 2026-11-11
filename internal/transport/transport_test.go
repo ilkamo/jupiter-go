@@ -48,16 +48,15 @@ func TestMalformedErrorPreservesStatusAndCause(t *testing.T) {
 		t.Fatalf("missing failure metadata: %+v", metadata)
 	}
 
-	var apiErr *APIError
-	httpContextKept := errors.As(err, &apiErr) &&
+	apiErr, ok := errors.AsType[*APIError](err)
+	httpContextKept := ok &&
 		apiErr.StatusCode == http.StatusBadGateway &&
 		apiErr.RequestID == "request"
 	if !httpContextKept {
 		t.Fatalf("HTTP context lost: %v", err)
 	}
 
-	var syntaxErr *json.SyntaxError
-	if !errors.As(err, &syntaxErr) {
+	if _, ok := errors.AsType[*json.SyntaxError](err); !ok {
 		t.Fatalf("decode cause lost: %v", err)
 	}
 

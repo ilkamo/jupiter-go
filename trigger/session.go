@@ -218,9 +218,9 @@ func withBearer(request transport.Request, token string) transport.Request {
 }
 
 func isUnauthorized(err error) bool {
-	var apiError *transport.APIError
+	apiError, ok := errors.AsType[*transport.APIError](err)
 
-	return errors.As(err, &apiError) && apiError.StatusCode == http.StatusUnauthorized
+	return ok && apiError.StatusCode == http.StatusUnauthorized
 }
 
 // Logout revokes this session's refresh token and closes the session. Access

@@ -271,8 +271,7 @@ func newAPIError(resp *http.Response, data []byte) *APIError {
 // transport failures, timeouts, server errors, and unreadable success responses
 // leave the outcome unknown.
 func MayHaveBeenProcessed(err error) bool {
-	var apiError *APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[*APIError](err); ok {
 		return apiError.StatusCode >= http.StatusInternalServerError
 	}
 

@@ -139,8 +139,8 @@ func TestRetryStopsAtMaxAttempts(t *testing.T) {
 	request := Request{Method: http.MethodGet, Path: "/", Retry: testPolicy}
 	metadata, err := client.Do(context.Background(), request, &result)
 
-	var apiError *APIError
-	if !errors.As(err, &apiError) || apiError.StatusCode != http.StatusBadGateway {
+	apiError, ok := errors.AsType[*APIError](err)
+	if !ok || apiError.StatusCode != http.StatusBadGateway {
 		t.Fatalf("expected final HTTP error, got %v", err)
 	}
 
@@ -240,8 +240,8 @@ func TestRetryAfterBeyondLimitsStopsRetrying(t *testing.T) {
 			request := Request{Method: http.MethodGet, Path: "/", Retry: testPolicy}
 			metadata, err := client.Do(context.Background(), request, &result)
 
-			var apiError *APIError
-			if !errors.As(err, &apiError) || apiError.StatusCode != http.StatusServiceUnavailable {
+			apiError, ok := errors.AsType[*APIError](err)
+			if !ok || apiError.StatusCode != http.StatusServiceUnavailable {
 				t.Fatalf("expected the server's error, got %v", err)
 			}
 
@@ -270,8 +270,7 @@ func TestCancellationDuringRetryWait(t *testing.T) {
 		t.Fatalf("cancellation lost: %v", err)
 	}
 
-	var apiError *APIError
-	if !errors.As(err, &apiError) {
+	if _, ok := errors.AsType[*APIError](err); !ok {
 		t.Fatalf("last response error lost: %v", err)
 	}
 }

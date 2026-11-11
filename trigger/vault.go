@@ -93,9 +93,9 @@ func (s *Session) EnsureVault(ctx context.Context) (*Vault, error) {
 }
 
 func statusIs(err error, statusCode int) bool {
-	var apiError *transport.APIError
+	apiError, ok := errors.AsType[*transport.APIError](err)
 
-	return errors.As(err, &apiError) && apiError.StatusCode == statusCode
+	return ok && apiError.StatusCode == statusCode
 }
 
 // DepositRequest crafts a deposit of Amount raw input units from the session's

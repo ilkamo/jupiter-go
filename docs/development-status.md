@@ -521,3 +521,11 @@ marked unknown; DCA interval and Earn While You Wait boundaries accepted.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## errors.AsType adoption
+
+Replaced all 17 `errors.As` calls in handwritten code (3 production helpers,
+14 test assertions) with Go 1.26's type-safe `errors.AsType`, available under the
+module's `go 1.26.0` directive. Behavior is unchanged. The convention is recorded
+in `AGENTS.md`. Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`,
+and `git diff --check` passed.

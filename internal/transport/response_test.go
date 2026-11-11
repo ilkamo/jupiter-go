@@ -26,8 +26,8 @@ func TestReadResponseBodyLimit(t *testing.T) {
 			data, err := readResponseBody(body, maxBytes)
 
 			if test.oversized {
-				var sizeErr *http.MaxBytesError
-				if !errors.As(err, &sizeErr) || sizeErr.Limit != maxBytes {
+				sizeErr, ok := errors.AsType[*http.MaxBytesError](err)
+				if !ok || sizeErr.Limit != maxBytes {
 					t.Fatalf("expected size error, got %v", err)
 				}
 

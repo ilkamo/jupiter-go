@@ -64,8 +64,8 @@ func runValidationCases[T any](
 				t.Fatalf("unexpected address error classification: %v", err)
 			}
 
-			var parseError *strconv.NumError
-			if errors.As(err, &parseError) != test.parseError {
+			_, isParseError := errors.AsType[*strconv.NumError](err)
+			if isParseError != test.parseError {
 				t.Fatalf("unexpected parse cause: %v", err)
 			}
 		})
