@@ -1,0 +1,84 @@
+// Package jupiter provides clients for Jupiter APIs. Signing remains the caller's responsibility.
+package jupiter
+
+import (
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/ilkamo/jupiter-go/internal/transport"
+	"github.com/ilkamo/jupiter-go/swap"
+)
+
+const (
+	defaultRequestTimeout = 30 * time.Second
+	schemeHTTP            = "http"
+	schemeHTTPS           = "https"
+)
+
+type HTTPClient = transport.HTTPClient
+
+type APIError = transport.APIError
+
+type Client struct {
+	Swap *swap.Client
+}
+
+type config struct {
+	baseURL, apiKey string
+	http            HTTPClient
+	timeout         time.Duration
+	fee             swap.Referral
+	feeConfigured   bool
+}
+
+type Option func(*config) error
+
+// NewClient constructs a client without network calls or a maintainer fee.
+// WithHTTPClient transfers redirect and credential-forwarding responsibility to the caller.
+func NewClient(options ...Option) (*Client, error) {
+	c := config{
+		baseURL: "https://api.jup.ag",
+		timeout: defaultRequestTimeout,
+		http: &http.Client{
+			CheckRedirect: func(*http.Request, []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		},
+	}
+
+	for _, option := range options {
+		if option == nil {
+			return nil, fmt.Errorf("nil client option")
+		}
+
+		if err := option(&c); err != nil {
+			return nil, err
+		}
+	}
+
+	u, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse base URL: %w", err)
+	}
+
+	unsupportedScheme := u.Scheme != schemeHTTPS && u.Scheme != schemeHTTP
+	if u.Host == "" || unsupportedScheme || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return nil, fmt.Errorf("invalid base URL")
+	}
+
+	if c.timeout <= 0 || c.http == nil {
+		return nil, fmt.Errorf("positive timeout and HTTP client required")
+	}
+
+	t := &transport.Client{
+		BaseURL: strings.TrimRight(c.baseURL, "/"),
+		APIKey:  c.apiKey,
+		HTTP:    c.http,
+		Timeout: c.timeout,
+	}
+
+	return &Client{Swap: swap.NewClient(t, c.fee)}, nil
+}

@@ -1,5 +1,7 @@
 # Jupiter-go
 
+> The new root-package client is under development. See the [v1 development status](docs/development-status.md), [implementation plan](docs/v1-plan.md), and [new examples](examples/README.md). The current root client collects no maintainer fee. The usage below describes the legacy subpackages.
+
 ### Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GoDoc](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go?status.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go?tab=doc)
