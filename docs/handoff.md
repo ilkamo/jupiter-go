@@ -47,10 +47,10 @@ history of every step (decisions, tests, validation).
 ## Remaining work, in order
 
 1. **Smoke test: done** (see "Funded smoke test" in `development-status.md`):
-   managed swap and two tx.jup.ag build swaps finalized on mainnet. Optional
-   follow-ups: run `examples/build` once with a dedicated RPC provider to watch
-   the confirmation loop succeed end to end, and re-check the two Prediction
-   routes that returned 404 upstream (`pnl-history`, `events/suggested`).
+   a managed swap and three tx.jup.ag build swaps finalized on mainnet, and the
+   example's confirmation loop succeeded end to end with a dedicated RPC
+   provider. Optional: re-check the two Prediction routes that returned 404
+   upstream (`pnl-history`, `events/suggested`).
 2. **Re-audit the documentation index** (`https://developers.jup.ag/docs/llms.txt`)
    for operations added since the inventory (the Prediction spec already had one,
    `/forecast`), and compare each pinned file in `openapi/` with upstream

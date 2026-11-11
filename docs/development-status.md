@@ -855,3 +855,17 @@ Findings:
   Solana's public endpoint blocked `getSignatureStatuses` (and simulation) by
   IP, so full confirmation-loop verification needs a dedicated RPC provider.
 - Balance after the tests: 0.040392785 SOL and 252,360 USDC raw (0.25236 USDC).
+
+### Confirmation loop with a dedicated RPC provider
+
+Repeated with a dedicated (Ankr) RPC endpoint, which reports the true block
+height and serves `getSignatureStatuses`. The endpoint URL contains the owner's
+access key and is intentionally not recorded.
+
+- Simulation of a real build signed by the funded wallet succeeded (59,579
+  compute units) with signature verification.
+- `examples/build` with `JUPITER_SUBMIT_VIA=tx` ran end to end in 2.4 s: build,
+  assemble, sign, tx.jup.ag submit, and the example's confirmation loop reported
+  confirmed. Signature (signature omitted), finalized, USDC 252,360 → 336,170 (above
+  the 83,484 minimum), no error.
+- Final balance: 0.03837467 SOL and 336,170 USDC raw.
