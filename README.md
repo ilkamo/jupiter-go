@@ -1,17 +1,61 @@
-# Jupiter-go
+# jupiter-go: Jupiter Go SDK for Solana
 
-### Go library to interact with [Jupiter](https://jup.ag) to get quotes, perform swaps and send them on-chain
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GoDoc](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go?status.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go?tab=doc)
+### Swap tokens, get prices, place limit orders and DCA on Solana from Go, with the [Jupiter](https://jup.ag) APIs
+
+[![Go](https://github.com/ilkamo/jupiter-go/actions/workflows/workflow.yml/badge.svg)](https://github.com/ilkamo/jupiter-go/actions/workflows/workflow.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ilkamo/jupiter-go)](https://goreportcard.com/report/ilkamo/jupiter-go)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This library provides a simple way to interact with the [Jupiter](https://jup.ag) API to get quotes and perform swaps. 
+<img align="right" width="200" src="docs/assets/jup-gopher.png" alt="jupiter-go mascot: the Go gopher holding a JUP coin">
 
-It also provides: 
-- A [solana client](solana/client.go) to send the swap transaction on-chain and check its status.
-- A [solana monitor](solana/monitor.go) to wait for a transaction to reach a specific commitment status.
+**jupiter-go** is a Go (Golang) SDK for [Jupiter](https://jup.ag), the leading
+DEX aggregator and trading platform on Solana. Use it to get swap quotes and
+execute token swaps through Jupiter's Swap API (Ultra / Swap V2), look up token
+metadata and USD prices, place limit orders and dollar-cost averaging (DCA)
+orders, earn yield and borrow with Jupiter Lend, trade prediction markets, and
+land transactions fast through Jupiter's landing service, all from idiomatic,
+typed Go code.
 
-<img align="right" width="200" src="assets/jup-gopher.png">
+## Features
+
+- **Complete Jupiter API coverage:** Swap V2, Tokens V2, Price V3, Trigger V2
+  (limit orders, OCO, OTOCO, DCA), Lend, Prediction, Send, Studio, and
+  transaction landing (`tx.jup.ag`).
+- **Managed swaps without an RPC node:** order, sign locally, and let Jupiter
+  land the transaction.
+- **Custom swap transactions:** build instructions, add your own, and submit
+  through your RPC node or Jupiter's landing infrastructure.
+- **Safe signing** with any ed25519 `crypto.Signer` (local keys, HSM, KMS):
+  messages and existing signatures are never modified. Legacy, v0, and v1
+  Solana transactions are supported.
+- **Production behavior:** typed errors, request IDs and rate-limit headers on
+  every result, per-operation retries with backoff and `Retry-After`, and no
+  blind retries of anything that moves funds.
+- **Exact numbers:** raw token amounts and prices never pass through `float64`.
+- **No SDK fee**, MIT licensed, verified against Solana mainnet.
+
+## Supported Jupiter APIs
+
+| Product | Package | Status |
+| - | - | - |
+| Swap V2 (order, execute, build, program labels) | [`swap`](swap) | Stable |
+| Tokens V2 (search, tags, categories, Express Verification) | [`tokens`](tokens) | Stable |
+| Price V3 | [`price`](price) | Stable |
+| Trigger V2 (limit orders, OCO/OTOCO, DCA) | [`trigger`](trigger) | Stable |
+| Transaction landing (`tx.jup.ag`) | [`transaction`](transaction) | Stable |
+| Lend (Earn and Borrow) | [`lend`](lend) | **Beta** |
+| Prediction markets | [`prediction`](prediction) | **Beta** |
+| Send (invite transfers) | [`send`](send) | **Beta** |
+| Studio (token launches) | [`studio`](studio) | **Beta** |
+
+> **Beta products.** Jupiter labels Lend, Prediction, Send, and Studio as beta and
+> may change them without notice. Their Go types follow upstream and can change in
+> minor releases until Jupiter declares them stable.
+
+**The SDK charges no fee.** You only pay Jupiter's and the network's fees. If you
+run your own Jupiter referral account, `WithReferral` adds your fee to managed swap
+orders.
 
 ## Installation
 
@@ -19,251 +63,194 @@ It also provides:
 go get github.com/ilkamo/jupiter-go
 ```
 
-## Usage
+Go 1.26 or newer is required.
 
-Here's a simple example to get a quote and the related swap instructions from Jupiter:
+## Quick start
 
 ```go
-package main
-
-import (
-	"context"
-	"net/http"
-
-	"github.com/ilkamo/jupiter-go/jupiter"
-)
-
-func main() {
-	// Initialize client with API key (automatically added to all requests)
-	apiKey := "{YOUR_JUPITER_API_KEY}"
-	jupClient, err := jupiter.NewClientWithResponses(
-		jupiter.DefaultAPIURL,
-		jupiter.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-			req.Header.Set("x-api-key", apiKey)
-			return nil
-		}),
-	)
-	// handle the error
-
-	ctx := context.TODO()
-
-	slippageBps := uint64(250)
-
-	// Get the current quote for a swap.
-	// Ensure that the input and output mints are valid.
-	// The amount is the smallest unit of the input token.
-	quoteResponse, err := jupClient.QuoteGetWithResponse(ctx, &jupiter.QuoteGetParams{
-		InputMint:   "So11111111111111111111111111111111111111112",
-		OutputMint:  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-		Amount:      100000,
-		SlippageBps: &slippageBps,
-	})
-	// handle the error
-	
-	quote := quoteResponse.JSON200
-
-	// Define the prioritization fee in lamports.
-	prioritizationFeeLamports := &struct {
-		JitoTipLamports              *uint64 `json:"jitoTipLamports,omitempty"`
-		PriorityLevelWithMaxLamports *struct {
-			MaxLamports   *uint64                                                                                   `json:"maxLamports,omitempty"`
-			PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
-		} `json:"priorityLevelWithMaxLamports,omitempty"`
-	}{
-		PriorityLevelWithMaxLamports: &struct {
-			MaxLamports   *uint64                                                                                   `json:"maxLamports,omitempty"`
-			PriorityLevel *jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel `json:"priorityLevel,omitempty"`
-		}{
-			MaxLamports:   new(uint64),
-			PriorityLevel: new(jupiter.SwapRequestPrioritizationFeeLamportsPriorityLevelWithMaxLamportsPriorityLevel),
-		},
-	}
-
-	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.MaxLamports = 1000
-	*prioritizationFeeLamports.PriorityLevelWithMaxLamports.PriorityLevel = jupiter.High
-	
-	// If you prefer to set a Jito tip, you can use the following line instead of the above block.
-	// Look at _examples/jitoswap/main.go for more details.
-	// *prioritizationFeeLamports.JitoTipLamports = 1000
-
-	dynamicComputeUnitLimit := true
-	// Get instructions for a swap.
-	// Ensure your public key is valid.
-	swapResponse, err := jupClient.SwapPostWithResponse(ctx, jupiter.SwapPostJSONRequestBody{
-		PrioritizationFeeLamports: prioritizationFeeLamports,
-		QuoteResponse:             *quote,
-		UserPublicKey:             "{YOUR_PUBLIC_KEY}",
-		DynamicComputeUnitLimit:   &dynamicComputeUnitLimit,
-	})
-	// handle the error
-	
-	swap := swapResponse.JSON200
+client, err := jupiter.NewClient(jupiter.WithAPIKey(os.Getenv("JUPITER_API_KEY")))
+if err != nil {
+	return err
 }
-```
 
-Once you have the swap instructions, you can use the [solana client](solana/client.go) to sign and send the transaction on-chain.
-Please remember, when a transaction is sent on-chain it doesn't mean that the swap is completed. The instruction could error, that's why you [should monitor the transaction status](_examples/txmonitor/main.go) and confirm the transaction is finalized without errors.
-
-```go
-package main
-
-import (
-	"time"
-
-	"github.com/ilkamo/jupiter-go/jupiter"
-	"github.com/ilkamo/jupiter-go/solana"
-)
-
-func main() {
-	// ... previous code
-	// swap := swapResponse.JSON200
-
-	// Create a wallet from private key
-	walletPrivateKey := "{YOUR_PRIVATE_KEY}"
-	wallet, err := solana.NewWalletFromPrivateKeyBase58(walletPrivateKey)
-	// handle the error
-
-	// Create a Solana client. Change the URL to the desired Solana node.
-	solanaClient, err := solana.NewClient(wallet, "https://api.mainnet-beta.solana.com")
-	// handle the error
-
-	// Sign and send the transaction.
-	signedTx, err := solanaClient.SendTransactionOnChain(ctx, swap.SwapTransaction)
-	// handle the error
-
-	// Wait a bit to let the transaction propagate to the network.
-	// This is just an example and not a best practice.
-	// You could use a ticker or initialize a monitor to wait for the transaction to be confirmed.
-	time.Sleep(20 * time.Second)
-
-	// Get the status of the transaction (pull the status from the blockchain at intervals 
-	// until the transaction is confirmed).
-	confirmed, err := solanaClient.CheckSignature(ctx, signedTx)
-	// handle the error
+quote, err := client.Swap.Order(ctx, swap.OrderRequest{
+	InputMint:  "So11111111111111111111111111111111111111112", // SOL
+	OutputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+	Amount:     "100000000",                                    // raw units: 0.1 SOL
+})
+if err != nil {
+	return err
 }
+
+fmt.Println("output:", quote.OutAmount)
 ```
 
-A full swap example is available in the [examples/swap](_examples/swap) folder. For a swap with Jito tips, check the [examples/jitoswap](_examples/jitoswap) folder.
+Get an API key at [developers.jup.ag/portal](https://developers.jup.ag/portal).
 
-A transaction monitoring example using websocket is available in the [examples/txmonitor](_examples/txmonitor) folder.
+## Client options
 
-## API Key Usage
+| Option | Purpose |
+| - | - |
+| `WithAPIKey(key)` | Jupiter API key sent as `x-api-key`. |
+| `WithTimeout(d)` | Bounds each operation, including its retries (default 30s). |
+| `WithHTTPClient(c)` | Your own `Do(*http.Request)` implementation. The default refuses redirects so the API key never leaves Jupiter's host; a custom client owns that policy. |
+| `WithoutRetries()` | One attempt per operation, for clients that already retry. |
+| `WithReferral(account, bps)` | Your Jupiter referral fee (50–255 bps) on managed swap orders. |
+| `WithBaseURL(url)` / `WithTransactionURL(url)` | Override `https://api.jup.ag` / `https://tx.jup.ag`, for example for tests. |
 
-To use Jupiter's API, you need an API key. The recommended way is to configure the client once with `WithRequestEditorFn`, which automatically injects the API key into every request:
+Clients are safe for concurrent use and make no network calls when constructed.
+
+## Managed swap
+
+`Order` with a `Taker` returns a transaction; sign it and hand it back to Jupiter.
+Signing lives in [`solanatx`](solanatx), which accepts any ed25519 `crypto.Signer`
+(local keys, HSMs, remote signers) and never alters the message or other signatures.
 
 ```go
-apiKey := "{YOUR_JUPITER_API_KEY}"
-jupClient, err := jupiter.NewClientWithResponses(
-	jupiter.DefaultAPIURL,
-	jupiter.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-		req.Header.Set("x-api-key", apiKey)
-		return nil
-	}),
-)
+order, err := client.Swap.Order(ctx, swap.OrderRequest{
+	InputMint:  sol,
+	OutputMint: usdc,
+	Amount:     "10000000",
+	Taker:      wallet.PublicKey().String(),
+})
+if err != nil {
+	return err
+}
+
+tx, err := solanatx.Parse(*order.Transaction)
+if err != nil {
+	return err
+}
+
+if err := tx.Sign(ed25519.PrivateKey(wallet)); err != nil {
+	return err
+}
+
+result, err := client.Swap.Execute(ctx, swap.ExecuteRequest{
+	RequestID:         order.RequestID,
+	SignedTransaction: tx.Base64(),
+})
 ```
 
-With this approach, you don't need to pass the API key to individual method calls—it's handled automatically.
+For full control use `client.Swap.Build`, assemble with `solanatx.Assemble`, and
+submit through your RPC node or `client.Transaction.Send` (tx.jup.ag, which needs
+a 0.001 SOL tip: set `BuildRequest.TipAmount` or add `solanatx.TipInstruction`).
 
-## Jupiter client
-
-The Jupiter client is generated from the [official Jupiter openapi definition](https://github.com/jup-ag/jupiter-quote-api-node/blob/main/swagger.yaml) and provides the following methods to interact with the Jupiter API:
+## Other products at a glance
 
 ```go
-// ProgramIdToLabelGetWithResponse request
-ProgramIdToLabelGetWithResponse(
-	ctx context.Context, 
-	reqEditors ...RequestEditorFn,
-) (*ProgramIdToLabelGetResponse, error)
+// Tokens and prices
+tokens, err := client.Tokens.Search(ctx, "JUP")
+prices, err := client.Price.Get(ctx, []string{sol, usdc}) // prices.Missing lists unpriced mints
 
-// QuoteGetWithResponse request
-QuoteGetWithResponse(
-	ctx context.Context, 
-	params *QuoteGetParams, 
-	reqEditors ...RequestEditorFn, 
-) (*QuoteGetResponse, error)
+// Trigger V2: a wallet-scoped session with rotating refresh tokens
+session, err := client.Trigger.Login(ctx, ed25519.PrivateKey(wallet), trigger.SessionOptions{})
+vault, err := session.EnsureVault(ctx)
 
-// SwapPostWithBodyWithResponse request with any body
-SwapPostWithBodyWithResponse(
-	ctx context.Context, 
-	contentType string, 
-	body io.Reader, 
-	reqEditors ...RequestEditorFn, 
-) (*SwapPostResponse, error)
+// Lend (beta): unsigned Earn deposit
+deposit, err := client.Lend.Earn.Deposit(ctx, lend.AmountRequest{Asset: usdc, Signer: owner, Amount: "1000000"})
 
-SwapPostWithResponse(
-	ctx context.Context, 
-	body SwapPostJSONRequestBody, 
-	reqEditors ...RequestEditorFn,
-) (*SwapPostResponse, error)
+// Prediction (beta): markets priced in micro USD
+events, err := client.Prediction.Events(ctx, prediction.EventsRequest{Filter: prediction.FilterTrending})
 
-// SwapInstructionsPostWithBodyWithResponse request with any body
-SwapInstructionsPostWithBodyWithResponse(
-	ctx context.Context, 
-	contentType string, 
-	body io.Reader, 
-	reqEditors ...RequestEditorFn,
-) (*SwapInstructionsPostResponse, error)
+// Send (beta): invite codes never leave your process and print redacted
+code, err := send.NewInviteCode()
 
-SwapInstructionsPostWithResponse(
-	ctx context.Context, 
-	body SwapInstructionsPostJSONRequestBody, 
-	reqEditors ...RequestEditorFn, 
-) (*SwapInstructionsPostResponse, error)
+// Studio (beta): token launch transaction plus presigned upload URLs
+pool, err := client.Studio.CreatePool(ctx, poolRequest)
 ```
 
-## Solana client
+Runnable programs for every product are in [`examples/`](examples). Examples that
+move funds only do so behind an explicit environment flag.
 
-The Solana client provides the following methods to interact with the Solana blockchain:
+## Errors, retries, and safety
 
-```go
-// SendTransactionOnChain signs and sends a transaction on-chain.
-SendTransactionOnChain(
-	ctx context.Context, 
-	txBase64 string,
-) (TxID, error)
+- **HTTP errors** are `*jupiter.APIError` (status, Jupiter error code and message,
+  request ID, headers). Validation errors are returned before any request is sent;
+  malformed addresses match `errors.Is(err, swap.ErrInvalidAddress)`.
+- **Response metadata.** Every result carries `Metadata` (status, request ID,
+  headers including rate limits, attempts), also alongside errors.
+- **Retries follow each operation's semantics**, not its HTTP method: reads and
+  operations that only build unsigned transactions retry transient failures with
+  jittered backoff and honour `Retry-After`.
+- **Submissions never retry blindly.** Operations that submit signed transactions
+  (Swap and Prediction execute, Trigger order creation and cancellation, Studio
+  submit, Express Verification) make one attempt. When a transaction might still
+  land, the error wraps that package's `ErrOutcomeUnknown`: check on-chain state
+  before trying again. `transaction.Send` retries because resubmitting identical
+  signed bytes cannot execute twice.
+- **Exact numbers.** Raw token amounts are validated integer strings; prices and
+  USD values are `json.Number` or strings, never `float64`.
 
-// CheckSignature checks the status of a transaction on-chain.
-CheckSignature(
-	ctx context.Context, 
-	tx TxID,
-) (bool, error)
+## FAQ
 
-// GetTokenAccountBalance returns the balance of an SPL token account.
-GetTokenAccountBalance(
-	ctx context.Context, 
-	tokenAccount string, 
-) (TokenAccount, error)
+### How do I swap tokens on Solana in Go?
 
-// Close closes the client.
-Close() error
-```
+Call `client.Swap.Order` with the input mint, output mint, raw amount, and your
+wallet as `Taker`; sign the returned transaction with `solanatx.Parse(...).Sign`;
+then call `client.Swap.Execute`. Jupiter routes the swap across Solana DEXes and
+lands the transaction for you. See [Managed swap](#managed-swap) and
+[`examples/managed`](examples/managed).
 
-## Solana monitor
+### How do I get a Solana token price in Go?
 
-The Solana monitor provides the following methods to monitor the Solana blockchain:
+`client.Price.Get(ctx, mints)` returns USD prices from Jupiter's Price API V3
+for up to 50 mints; mints without a reliable price are listed in `Missing`.
+`client.Swap.Order` without a `Taker` returns a swap quote.
 
-```go
-// WaitForCommitmentStatus waits for a transaction to reach a specific commitment status.
-WaitForCommitmentStatus(
-    context.Context, 
-    TxID, 
-    CommitmentStatus,
-) (MonitorResponse, error)
-```
+### Can I place limit orders or DCA orders on Jupiter from Go?
 
-## Notes
-- Starting with **v0.2.0**, methods and parameters were renamed to align with the Jupiter OpenAPI definition.
-- Starting with **v0.1.0**, _jupiter-go_ supports the new Jupiter API as documented at [station.jup.ag/docs](https://station.jup.ag/docs/).
-  - It supports both **prioritization fee** and **Jito tips**.
-- For those who need to use the legacy API, **v0.0.24** is the final version supporting it. Note that legacy Jupiter API hostnames will be fully deprecated on **June 1, 2025**.
+Yes. `client.Trigger.Login` opens a wallet session for the Trigger V2 API, which
+supports single limit orders, take-profit/stop-loss pairs (OCO), OTOCO,
+trailing stops, and time-based or price-conditional DCA. See
+[`examples/trigger`](examples/trigger).
+
+### Do I need a Jupiter API key?
+
+Requests work without a key at a lower rate limit. For production, get a key
+at [developers.jup.ag/portal](https://developers.jup.ag/portal) and pass it with
+`jupiter.WithAPIKey`.
+
+### Do I need a Solana RPC node?
+
+Not for managed swaps (`Swap.Order` and `Swap.Execute`) or any read API. You
+need one to confirm transactions you submit yourself, for example custom swaps
+built with `Swap.Build`; use a dedicated RPC provider for that.
+
+### Which Solana transaction versions are supported?
+
+`solanatx` parses and signs legacy, version 0 (with address lookup tables), and
+version 1 transactions without modifying the message or other signatures.
+
+### Is jupiter-go an official Jupiter SDK?
+
+No. It is an independent, community-maintained open-source library. It charges
+no fee and has been verified with real swaps on Solana mainnet.
+
+### Which Go versions are supported?
+
+Go 1.26 and newer. CI tests Go 1.26 and 1.27.
+
+## Migrating from v0
+
+v1 is a rewrite. The `jupiter` (generated client) and `solana` subpackages are
+removed. See [CHANGELOG.md](CHANGELOG.md#migrating-from-v0) for the mapping.
 
 ## Contribute
 
-Contributions are welcome! Feel free to open an issue or submit a pull request if you find a bug or want to add a new feature.
+Contributions are welcome. Read [AGENTS.md](AGENTS.md) for the code conventions and
+run `make check` (vet, golangci-lint, `go.mod` tidiness, race tests) before opening
+a pull request. `make help` lists the other tasks, such as `cover` and `fuzz`.
 
 ## License
 
 This library is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This is an unofficial, community-maintained library and is not affiliated with or
+endorsed by Jupiter. The Go gopher was designed by
+[Renée French](https://reneefrench.blogspot.com/) and is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the mascot artwork in
+`docs/assets/` is a derivative of it and carries the same license.
 
 ## Donate
 

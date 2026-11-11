@@ -1,0 +1,178 @@
+# Jupiter API endpoint inventory
+
+Reviewed 2026-11-11 on branch `v1`. This inventories all 82 API-reference pages
+linked from the official [documentation index](https://developers.jup.ag/docs/llms.txt).
+Every linked reference was fetched successfully and its OpenAPI operation header
+and server inspected. This is a discovery and contract inventory, not a claim
+that every operation is implemented or that its full schema has been audited.
+
+## Provenance and interpretation
+
+[`api-reference-manifest.json`](api-reference-manifest.json) records the source URL,
+OpenAPI schema identifier, operation, server, security declarations, pagination
+parameter names, implementation status, and SHA-256 of each retrieved Markdown
+reference. Hashes identify the reviewed content; only the existing three Swap
+snapshots are vendored. Fetch and compare the reference hash before implementing
+an operation; review changed contracts rather than silently accepting drift.
+
+Authentication below reports the published security declarations, not a verified
+live authorization result. Gateway documentation permits keyless access for some
+products while individual specs still declare API-key security. Keep API keys
+optional at the transport level and verify each product's effective requirements.
+Bearer credentials must belong to a wallet session, not a shared global client.
+
+Pagination lists candidate query controls from each operation reference. A limit
+alone does not imply that the result supports fetching successive pages. `—`
+means no named pagination control was found, not that results are unlimited.
+
+No write-operation replay guarantee has been established by this inventory.
+Every operation declares its own retry policy in the transport request. Swap
+order, build, and program labels retry transient failures; Swap execute makes one
+attempt. Operations in other products must be reviewed before choosing a policy;
+state-changing GETs must not inherit a read-only policy.
+
+## Coverage
+
+- swap: 4 operations; 4 methods implemented, response parity review pending.
+- tokens: 7 operations; all implemented (Express Verification on `Client.Express`).
+- price: 1 operation; implemented.
+- transaction: 1 operation; implemented on its own service URL.
+- lend: 15 operations; all implemented (upstream beta).
+- trigger: 18 operations; all implemented.
+- prediction: 27 indexed operations plus the spec-only `GET /forecast`; all implemented (upstream beta).
+- send: 4 operations; all implemented (upstream beta).
+- studio: 5 operations; all implemented (upstream beta).
+
+## Operations
+
+`Partial` means a public method exists but the plan's full contract acceptance
+criteria are still outstanding. `Pending` means no new SDK method exists.
+
+| Product | Method and URL | Declared security | Pagination controls | SDK / tests | Reference |
+| --- | --- | --- | --- | --- | --- |
+| swap | `GET https://api.jup.ag/swap/v2/order` | ApiKeyAuth | — | Partial / request and response contract tests | [Get Order (Swap API)](https://developers.jup.ag/docs/api-reference/swap/order.md) |
+| swap | `POST https://api.jup.ag/swap/v2/execute` | ApiKeyAuth | — | Partial / request and response contract tests | [Execute Transaction](https://developers.jup.ag/docs/api-reference/swap/execute.md) |
+| swap | `GET https://api.jup.ag/swap/v2/build` | ApiKeyAuth | — | Partial / request and response contract tests | [Build Transaction](https://developers.jup.ag/docs/api-reference/swap/build.md) |
+| swap | `GET https://api.jup.ag/swap/v2/program-id-to-label` | ApiKeyAuth | — | Partial / success metadata and redirect tests | [Program ID to Label](https://developers.jup.ag/docs/api-reference/swap/program-id-to-label.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/search` | ApiKeyAuth | — | Implemented / request and response contract tests | [Search](https://developers.jup.ag/docs/api-reference/tokens/search.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/tag` | ApiKeyAuth | — | Implemented / request and response contract tests | [Tag](https://developers.jup.ag/docs/api-reference/tokens/tag.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/{category}/{interval}` | ApiKeyAuth | limit | Implemented / request and response contract tests | [Category](https://developers.jup.ag/docs/api-reference/tokens/category.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/recent` | ApiKeyAuth | — | Implemented / request and response contract tests | [Recent](https://developers.jup.ag/docs/api-reference/tokens/recent.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/verify/express/check-eligibility` | ApiKeyAuth | — | Implemented / request and response contract tests | [Check Eligibility](https://developers.jup.ag/docs/api-reference/tokens/verify-check-eligibility.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/verify/express/craft-txn` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Transaction](https://developers.jup.ag/docs/api-reference/tokens/verify-craft-txn.md) |
+| tokens | `POST https://api.jup.ag/tokens/v2/verify/express/execute` | ApiKeyAuth | — | Implemented / request and response contract tests | [Execute Verification (Tokens API)](https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md) |
+| price | `GET https://api.jup.ag/price/v3/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Price (Price API V3)](https://developers.jup.ag/docs/api-reference/price/index.md) |
+| transaction | `POST https://tx.jup.ag/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Send Transaction](https://developers.jup.ag/docs/api-reference/transaction/submit.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/deposit` | ApiKeyAuth | — | Implemented / request and response contract tests | [Deposit](https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/withdraw` | ApiKeyAuth | — | Implemented / request and response contract tests | [Withdraw](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/mint` | ApiKeyAuth | — | Implemented / request and response contract tests | [Mint](https://developers.jup.ag/docs/api-reference/lend/earn/mint.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/redeem` | ApiKeyAuth | — | Implemented / request and response contract tests | [Redeem](https://developers.jup.ag/docs/api-reference/lend/earn/redeem.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/deposit-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Deposit Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/deposit-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/withdraw-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Withdraw Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/mint-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Mint Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/mint-instructions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/earn/redeem-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Redeem Instructions](https://developers.jup.ag/docs/api-reference/lend/earn/redeem-instructions.md) |
+| lend | `GET https://api.jup.ag/lend/v1/earn/tokens` | ApiKeyAuth | — | Implemented / request and response contract tests | [Tokens](https://developers.jup.ag/docs/api-reference/lend/earn/tokens.md) |
+| lend | `GET https://api.jup.ag/lend/v1/earn/positions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Earn Positions](https://developers.jup.ag/docs/api-reference/lend/earn/positions.md) |
+| lend | `GET https://api.jup.ag/lend/v1/earn/earnings` | ApiKeyAuth | — | Implemented / request and response contract tests | [Earnings](https://developers.jup.ag/docs/api-reference/lend/earn/earnings.md) |
+| lend | `GET https://api.jup.ag/lend/v1/borrow/vaults` | ApiKeyAuth | — | Implemented / request and response contract tests | [Vaults](https://developers.jup.ag/docs/api-reference/lend/borrow/vaults.md) |
+| lend | `GET https://api.jup.ag/lend/v1/borrow/positions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Borrow Positions](https://developers.jup.ag/docs/api-reference/lend/borrow/positions.md) |
+| lend | `POST https://api.jup.ag/lend/v1/borrow/operate` | ApiKeyAuth | — | Implemented / request and response contract tests | [Operate](https://developers.jup.ag/docs/api-reference/lend/borrow/operate.md) |
+| lend | `POST https://api.jup.ag/lend/v1/borrow/operate-instructions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Operate Instructions](https://developers.jup.ag/docs/api-reference/lend/borrow/operate-instructions.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/challenge` | ApiKeyAuth | — | Implemented / request and response contract tests | [Request Challenge](https://developers.jup.ag/docs/api-reference/trigger/challenge.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/verify` | ApiKeyAuth | — | Implemented / request and response contract tests | [Verify Challenge](https://developers.jup.ag/docs/api-reference/trigger/verify.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/refresh` | ApiKeyAuth | — | Implemented / request and response contract tests | [Refresh Token](https://developers.jup.ag/docs/api-reference/trigger/refresh.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/logout` | ApiKeyAuth | — | Implemented / request and response contract tests | [Log Out](https://developers.jup.ag/docs/api-reference/trigger/logout.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/auth/logout-all` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Log Out All](https://developers.jup.ag/docs/api-reference/trigger/logout-all.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/vault` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Get Vault](https://developers.jup.ag/docs/api-reference/trigger/vault.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/vault/register` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Register Vault](https://developers.jup.ag/docs/api-reference/trigger/vault-register.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/deposit/craft` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Craft Deposit](https://developers.jup.ag/docs/api-reference/trigger/deposit-craft.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/price` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Create Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/create-order.md) |
+| trigger | `PATCH https://api.jup.ag/trigger/v2/orders/price/{orderId}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Update Order](https://developers.jup.ag/docs/api-reference/trigger/update-order.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/price/cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Cancel Order (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/cancel-order.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/price/confirm-cancel/{orderId}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Confirm Cancel](https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Create DCA Order](https://developers.jup.ag/docs/api-reference/trigger/create-dca.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca/cancel/{id}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Cancel DCA Order](https://developers.jup.ag/docs/api-reference/trigger/cancel-dca.md) |
+| trigger | `POST https://api.jup.ag/trigger/v2/orders/dca/confirm-cancel/{id}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Confirm Cancel DCA Order](https://developers.jup.ag/docs/api-reference/trigger/confirm-cancel-dca.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/orders/history/dca` | ApiKeyAuth, BearerAuth | limit, offset | Implemented / request and response contract tests | [List DCA Orders](https://developers.jup.ag/docs/api-reference/trigger/dca-history.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/orders/history/dca/{id}` | ApiKeyAuth, BearerAuth | — | Implemented / request and response contract tests | [Get DCA Order](https://developers.jup.ag/docs/api-reference/trigger/dca-order.md) |
+| trigger | `GET https://api.jup.ag/trigger/v2/orders/history` | ApiKeyAuth, BearerAuth | limit, offset | Implemented / request and response contract tests | [Order History (Trigger API)](https://developers.jup.ag/docs/api-reference/trigger/order-history.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events` | ApiKeyAuth | end, start | Implemented / request and response contract tests | [Get Events](https://developers.jup.ag/docs/api-reference/prediction/get-events.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/search` | ApiKeyAuth | limit | Implemented / request and response contract tests | [Search Events](https://developers.jup.ag/docs/api-reference/prediction/search-events.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/{eventId}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Event](https://developers.jup.ag/docs/api-reference/prediction/get-event.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/suggested/{pubkey}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Suggested Events](https://developers.jup.ag/docs/api-reference/prediction/get-suggested-events.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/scores` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Live Scores](https://developers.jup.ag/docs/api-reference/prediction/get-event-scores.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/{eventId}/score` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Event Score](https://developers.jup.ag/docs/api-reference/prediction/get-event-score.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/{eventId}/markets` | ApiKeyAuth | end, start | Implemented / request and response contract tests | [Get Event Markets](https://developers.jup.ag/docs/api-reference/prediction/get-event-markets.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/events/{eventId}/markets/{marketId}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Event Market](https://developers.jup.ag/docs/api-reference/prediction/get-event-market.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/markets/{marketId}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Market](https://developers.jup.ag/docs/api-reference/prediction/get-market.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/orders` | ApiKeyAuth | end, start | Implemented / request and response contract tests | [Get Orders](https://developers.jup.ag/docs/api-reference/prediction/get-orders.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/orders/{orderPubkey}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Order (Prediction API)](https://developers.jup.ag/docs/api-reference/prediction/get-order.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/orders/status/{orderPubkey}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Order Status](https://developers.jup.ag/docs/api-reference/prediction/get-order-status.md) |
+| prediction | `POST https://api.jup.ag/prediction/v1/orders` | ApiKeyAuth | — | Implemented / request and response contract tests | [Create Order (Prediction API)](https://developers.jup.ag/docs/api-reference/prediction/create-order.md) |
+| prediction | `POST https://api.jup.ag/prediction/v1/execute` | ApiKeyAuth | — | Implemented / request and response contract tests | [Execute Order (Prediction API)](https://developers.jup.ag/docs/api-reference/prediction/execute.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/positions` | ApiKeyAuth | end, start | Implemented / request and response contract tests | [Get Positions (Prediction API)](https://developers.jup.ag/docs/api-reference/prediction/get-positions.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/positions/{positionPubkey}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Position](https://developers.jup.ag/docs/api-reference/prediction/get-position.md) |
+| prediction | `DELETE https://api.jup.ag/prediction/v1/positions/{positionPubkey}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Close Position](https://developers.jup.ag/docs/api-reference/prediction/close-position.md) |
+| prediction | `DELETE https://api.jup.ag/prediction/v1/positions` | ApiKeyAuth | — | Implemented / request and response contract tests | [Close All Positions](https://developers.jup.ag/docs/api-reference/prediction/close-all-positions.md) |
+| prediction | `POST https://api.jup.ag/prediction/v1/positions/{positionPubkey}/claim` | ApiKeyAuth | — | Implemented / request and response contract tests | [Claim Position](https://developers.jup.ag/docs/api-reference/prediction/claim-position.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/history` | ApiKeyAuth | end, start | Implemented / request and response contract tests | [Get History](https://developers.jup.ag/docs/api-reference/prediction/get-history.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/orderbook/{marketId}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Orderbook](https://developers.jup.ag/docs/api-reference/prediction/get-orderbook.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/trading-status` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Trading Status](https://developers.jup.ag/docs/api-reference/prediction/get-trading-status.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/profiles/{ownerPubkey}` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Profile](https://developers.jup.ag/docs/api-reference/prediction/get-profile.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/profiles/{ownerPubkey}/pnl-history` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get PnL History](https://developers.jup.ag/docs/api-reference/prediction/get-pnl-history.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/trades` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Trades](https://developers.jup.ag/docs/api-reference/prediction/get-trades.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/leaderboards` | ApiKeyAuth | limit | Implemented / request and response contract tests | [Get Leaderboards](https://developers.jup.ag/docs/api-reference/prediction/get-leaderboards.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/vault-info` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Vault Info](https://developers.jup.ag/docs/api-reference/prediction/get-vault-info.md) |
+| prediction | `GET https://api.jup.ag/prediction/v1/forecast` | ApiKeyAuth | — | Implemented / request and response contract tests | Spec only: [prediction.yaml](https://developers.jup.ag/docs/openapi-spec/prediction/prediction.yaml) |
+| send | `POST https://api.jup.ag/send/v1/craft-send` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Send](https://developers.jup.ag/docs/api-reference/send/craft-send.md) |
+| send | `POST https://api.jup.ag/send/v1/craft-clawback` | ApiKeyAuth | — | Implemented / request and response contract tests | [Craft Clawback](https://developers.jup.ag/docs/api-reference/send/craft-clawback.md) |
+| send | `GET https://api.jup.ag/send/v1/pending-invites` | ApiKeyAuth | page | Implemented / request and response contract tests | [Pending Invites](https://developers.jup.ag/docs/api-reference/send/pending-invites.md) |
+| send | `GET https://api.jup.ag/send/v1/invite-history` | ApiKeyAuth | page | Implemented / request and response contract tests | [Invite History](https://developers.jup.ag/docs/api-reference/send/invite-history.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc-pool/create-tx` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Pool Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-create-tx.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc-pool/submit` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Pool Submit](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-submit.md) |
+| studio | `GET https://api.jup.ag/studio/v1/dbc-pool/addresses/{mint}` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Pool Addresses by Mint](https://developers.jup.ag/docs/api-reference/studio/dbc-pool-addresses-by-mint.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc/fee` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Fee](https://developers.jup.ag/docs/api-reference/studio/dbc-fee.md) |
+| studio | `POST https://api.jup.ag/studio/v1/dbc/fee/create-tx` | ApiKeyAuth | — | Implemented / request and response contract tests | [DBC Fee Create TX](https://developers.jup.ag/docs/api-reference/studio/dbc-fee-create-tx.md) |
+
+## Structural decisions before more clients
+
+- **Transaction submission:** the reference specifies JSON-RPC `sendTransaction`
+  at `https://tx.jup.ag`, rather than a REST request under the shared API gateway.
+  Introduce an explicit transaction-service endpoint and JSON-RPC envelope/error
+  handling before implementing it. Do not overload the REST path or base URL.
+- **Trigger authentication:** model challenge, verification, refresh rotation,
+  logout, and wallet-authorized operations together. Vault registration is a GET
+  with a side effect, so HTTP-method-based retries are insufficient.
+- **Tokens verification:** discovery and verification share a product but have
+  different lifecycles. Verification crafts and submits payment transactions;
+  it must not inherit a read-only discovery retry policy.
+- **Lend:** transaction-building and instruction-building operations must expose
+  distinct response types. Borrow amounts require their documented sign and
+  sentinel semantics; do not reuse the positive-only swap amount validator.
+- **Prediction:** beta endpoints still need a deliberate SDK compatibility
+  boundary. Model transaction creation, execution, and position management with
+  their actual response semantics before advertising support.
+- **Studio:** creation includes upload URLs and submission. Separate authenticated
+  API requests from external upload requests to prevent credential forwarding.
+- **Perps and Lock:** on-chain integrations remain outside this REST inventory.
+  Older Trigger/Recurring APIs remain migration topics rather than new defaults.
+
+## Contract review and implementation order
+
+1. Finish Swap schema parity and success metadata, including optional-field presence semantics. The existing snapshot and public types are the comparison
+   baseline, not proof of complete response coverage.
+2. Tokens discovery and Price are implemented with exact numeric response types
+   and explicit missing-price reporting. Add verification after its payment workflow.
+3. Trigger V2 is implemented with wallet-scoped sessions.
+4. Add Lend, Prediction, Send, Studio, and transaction submission using the
+   boundaries above. Confirm schema stability, nullability, response envelopes,
+   pagination semantics, and replay guarantees per operation before coding.
+5. Reconcile guide-only endpoints and newly added index entries before claiming
+   complete Jupiter coverage. This inventory covers the linked API references,
+   not undocumented or independently advertised services.
+
+Validation: all 82 index reference URLs were fetched; operation headers and
+server URLs were present for every page; reference URLs and method/URL pairs are
+unique. Counts and security/pagination metadata were derived from the downloaded
+references, not from guessed endpoint names. No authenticated API requests or
+on-chain transactions were made.
