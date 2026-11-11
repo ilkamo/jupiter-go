@@ -270,7 +270,9 @@ endorsed by Jupiter. The Go gopher was designed by
 
 ## Donate
 
-If you find this library useful and want to support its development, consider donating some JUP/Solana to the following address:
+If you find this library useful and want to support its development, sponsor it on
+[GitHub Sponsors](https://github.com/sponsors/ilkamo) or donate some JUP/Solana to
+the following address:
 
 `BXzmfHxfEMcMj8hDccUNdrwXVNeybyfb2iV2nktE1VnJ`
 
