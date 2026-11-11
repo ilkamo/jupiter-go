@@ -34,8 +34,8 @@ state-changing GETs must not inherit a read-only policy.
 ## Coverage
 
 - swap: 4 operations; 4 methods implemented, response parity review pending.
-- tokens: 7 operations; not implemented.
-- price: 1 operation; not implemented.
+- tokens: 7 operations; 4 discovery operations implemented, 3 verification operations pending.
+- price: 1 operation; implemented.
 - transaction: 1 operation; not implemented.
 - lend: 15 operations; not implemented.
 - trigger: 18 operations; not implemented.
@@ -54,14 +54,14 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 | swap | `POST https://api.jup.ag/swap/v2/execute` | ApiKeyAuth | — | Partial / request and response contract tests | [Execute Transaction](https://developers.jup.ag/docs/api-reference/swap/execute.md) |
 | swap | `GET https://api.jup.ag/swap/v2/build` | ApiKeyAuth | — | Partial / request and response contract tests | [Build Transaction](https://developers.jup.ag/docs/api-reference/swap/build.md) |
 | swap | `GET https://api.jup.ag/swap/v2/program-id-to-label` | ApiKeyAuth | — | Partial / success metadata and redirect tests | [Program ID to Label](https://developers.jup.ag/docs/api-reference/swap/program-id-to-label.md) |
-| tokens | `GET https://api.jup.ag/tokens/v2/search` | ApiKeyAuth | — | Pending / none | [Search](https://developers.jup.ag/docs/api-reference/tokens/search.md) |
-| tokens | `GET https://api.jup.ag/tokens/v2/tag` | ApiKeyAuth | — | Pending / none | [Tag](https://developers.jup.ag/docs/api-reference/tokens/tag.md) |
-| tokens | `GET https://api.jup.ag/tokens/v2/{category}/{interval}` | ApiKeyAuth | limit | Pending / none | [Category](https://developers.jup.ag/docs/api-reference/tokens/category.md) |
-| tokens | `GET https://api.jup.ag/tokens/v2/recent` | ApiKeyAuth | — | Pending / none | [Recent](https://developers.jup.ag/docs/api-reference/tokens/recent.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/search` | ApiKeyAuth | — | Implemented / request and response contract tests | [Search](https://developers.jup.ag/docs/api-reference/tokens/search.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/tag` | ApiKeyAuth | — | Implemented / request and response contract tests | [Tag](https://developers.jup.ag/docs/api-reference/tokens/tag.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/{category}/{interval}` | ApiKeyAuth | limit | Implemented / request and response contract tests | [Category](https://developers.jup.ag/docs/api-reference/tokens/category.md) |
+| tokens | `GET https://api.jup.ag/tokens/v2/recent` | ApiKeyAuth | — | Implemented / request and response contract tests | [Recent](https://developers.jup.ag/docs/api-reference/tokens/recent.md) |
 | tokens | `GET https://api.jup.ag/tokens/v2/verify/express/check-eligibility` | ApiKeyAuth | — | Pending / none | [Check Eligibility](https://developers.jup.ag/docs/api-reference/tokens/verify-check-eligibility.md) |
 | tokens | `GET https://api.jup.ag/tokens/v2/verify/express/craft-txn` | ApiKeyAuth | — | Pending / none | [Craft Transaction](https://developers.jup.ag/docs/api-reference/tokens/verify-craft-txn.md) |
 | tokens | `POST https://api.jup.ag/tokens/v2/verify/express/execute` | ApiKeyAuth | — | Pending / none | [Execute Verification (Tokens API)](https://developers.jup.ag/docs/api-reference/tokens/verify-execute.md) |
-| price | `GET https://api.jup.ag/price/v3/` | ApiKeyAuth | — | Pending / none | [Get Price (Price API V3)](https://developers.jup.ag/docs/api-reference/price/index.md) |
+| price | `GET https://api.jup.ag/price/v3/` | ApiKeyAuth | — | Implemented / request and response contract tests | [Get Price (Price API V3)](https://developers.jup.ag/docs/api-reference/price/index.md) |
 | transaction | `POST https://tx.jup.ag/` | ApiKeyAuth | — | Pending / none | [Send Transaction](https://developers.jup.ag/docs/api-reference/transaction/submit.md) |
 | lend | `POST https://api.jup.ag/lend/v1/earn/deposit` | ApiKeyAuth | — | Pending / none | [Deposit](https://developers.jup.ag/docs/api-reference/lend/earn/deposit.md) |
 | lend | `POST https://api.jup.ag/lend/v1/earn/withdraw` | ApiKeyAuth | — | Pending / none | [Withdraw](https://developers.jup.ag/docs/api-reference/lend/earn/withdraw.md) |
@@ -160,8 +160,8 @@ criteria are still outstanding. `Pending` means no new SDK method exists.
 
 1. Finish Swap schema parity and success metadata, including optional-field presence semantics. The existing snapshot and public types are the comparison
    baseline, not proof of complete response coverage.
-2. Implement Tokens discovery and Price with exact numeric response types and
-   explicit missing-price behavior. Add verification after its payment workflow.
+2. Tokens discovery and Price are implemented with exact numeric response types
+   and explicit missing-price reporting. Add verification after its payment workflow.
 3. Design wallet-scoped Trigger sessions before adding its order methods.
 4. Add Lend, Prediction, Send, Studio, and transaction submission using the
    boundaries above. Confirm schema stability, nullability, response envelopes,

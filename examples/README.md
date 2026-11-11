@@ -19,6 +19,18 @@ A key may be omitted where Jupiter permits keyless access. The example requests
 0.1 SOL in raw units and prints the USDC output amount in raw units. It omits a
 `taker`, so the response is a quote without a signable transaction.
 
+## Tokens and prices
+
+```sh
+JUPITER_API_KEY=your-key go run ./examples/tokens
+```
+
+Searches tokens by symbol and prints USD prices for SOL and USDC. `Tokens.Search`
+takes one symbol, name, or mint; use `Tokens.Lookup` for up to 100 mints.
+`Price.Get` accepts up to 50 mints and lists those without a reliable price in
+`Missing`, since Jupiter omits them from the response. Numbers are
+`json.Number`; an empty value means the API reported null.
+
 ## Signing and execution
 
 Signing uses `solanatx`, the only new-SDK package that depends on solana-go.

@@ -84,9 +84,9 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Tokens and Price, then Trigger V2 authentication/vaults/orders/DCA,
-   Lend, Prediction, Send, Studio, and transaction submission. Audit the current
-   documentation index for additional APIs. These clients are not implemented.
+4. Implement Trigger V2 authentication/vaults/orders/DCA, then Lend, Prediction,
+   Send, Studio, transaction submission, and Tokens verification. Audit the
+   current documentation index for additional APIs. These are not implemented.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
    migration documentation, and compatibility review from `v1-plan.md`.
 6. Resolve the maintainer fee recipient/default and beta API compatibility before
@@ -360,3 +360,49 @@ missing signature bytes, trailing data, and header-only input.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4.
+
+## Tokens and Price clients
+
+Committed the solana-go upgrade as `894971d` and signing adapters as `2319b9e`.
+Pinned the Tokens V2 discovery and Price V3 references in `openapi/tokens-v2`
+and `openapi/price-v3` on 2026-11-11; their SHA-256 hashes match the inventory
+manifest, which now marks the five operations implemented.
+
+`client.Tokens` (package `tokens`):
+
+- `Search(query)` for a symbol, name, or single mint. Comma-containing queries
+  are rejected and pointed at `Lookup`, because the API treats commas as a
+  mint-only list.
+- `Lookup(mints)` for 1–100 validated mint addresses, sent as that list.
+- `Tag(tag)`, `Category(CategoryRequest)` with optional limit 1–100, and
+  `Recent()`.
+- Documented tags, categories, and intervals are constants, but other values are
+  accepted (format-checked, path-escaped for path segments), matching the router
+  decision, so upstream additions keep working.
+- Verification operations are deliberately absent: they craft and pay for
+  transactions and need their own workflow.
+
+`client.Price` (package `price`): `Get(mints)` for 1–50 validated mints. The
+response maps mint to `Price` and reports requested mints Jupiter omitted (no
+reliable price) in `Missing`, in request order.
+
+Types: numbers are `json.Number` to keep precision; an empty value means null or
+absent, explicit zero is preserved. Nullable booleans and `blockId` are pointers;
+`Audit.IsSus` must be checked for presence. Timestamps stay as upstream strings
+to avoid decode failures on format drift. All operations use the shared
+`transport.ReadOnlyRetry` policy (moved from the Swap package, unchanged values).
+Comma-list validation moved from `swap` to `internal/listparam` and is shared.
+Both `ErrInvalidAddress` re-exports are the same value as `swap.ErrInvalidAddress`.
+
+Example: `examples/tokens` (search and prices; nothing signed).
+
+Tests: decoding of precision, null versus zero numbers, audit presence, and
+optional objects; exact path and query encoding for every operation, including
+100 lookup mints, the maximum category limit, upstream-added tags, and escaped
+path segments; rejection before transport of empty or comma queries, 0 or 101
+mints, malformed mints (`ErrInvalidAddress`), separator tags, missing interval,
+and limits 0 and 101; read-only retry; price missing-mint reporting, null
+`blockId` and change, 50-mint maximum, and 0, 51, and malformed inputs.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.

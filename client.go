@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/ilkamo/jupiter-go/internal/transport"
+	"github.com/ilkamo/jupiter-go/price"
 	"github.com/ilkamo/jupiter-go/swap"
+	"github.com/ilkamo/jupiter-go/tokens"
 )
 
 const (
@@ -24,7 +26,9 @@ type HTTPClient = transport.HTTPClient
 type APIError = transport.APIError
 
 type Client struct {
-	Swap *swap.Client
+	Swap   *swap.Client
+	Tokens *tokens.Client
+	Price  *price.Client
 }
 
 type config struct {
@@ -39,8 +43,8 @@ type config struct {
 type Option func(*config) error
 
 // NewClient constructs a client without network calls or a maintainer fee.
-// WithTimeout bounds each operation, including its retries. Order, build, and
-// program labels retry transient failures; execute never retries.
+// WithTimeout bounds each operation, including its retries. Read-only operations,
+// order, and build retry transient failures; Swap execute never retries.
 // WithHTTPClient transfers redirect and credential-forwarding responsibility to the caller.
 func NewClient(options ...Option) (*Client, error) {
 	c := config{
@@ -85,5 +89,9 @@ func NewClient(options ...Option) (*Client, error) {
 		DisableRetries: c.disableRetries,
 	}
 
-	return &Client{Swap: swap.NewClient(t, c.fee)}, nil
+	return &Client{
+		Swap:   swap.NewClient(t, c.fee),
+		Tokens: tokens.NewClient(t),
+		Price:  price.NewClient(t),
+	}, nil
 }
