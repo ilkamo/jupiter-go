@@ -239,7 +239,8 @@ removed. See [CHANGELOG.md](CHANGELOG.md#migrating-from-v0) for the mapping.
 ## Contribute
 
 Contributions are welcome. Read [AGENTS.md](AGENTS.md) for the code conventions and
-run `make check` (vet, golangci-lint, race tests) before opening a pull request.
+run `make check` (vet, golangci-lint, `go.mod` tidiness, race tests) before opening
+a pull request. `make help` lists the other tasks, such as `cover` and `fuzz`.
 
 ## License
 
