@@ -2,13 +2,8 @@ package jupiter_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"sync"
 	"testing"
 
 	jupiter "github.com/ilkamo/jupiter-go"
@@ -28,63 +23,6 @@ const (
   "data": "AQID"
 }`
 )
-
-type lendRequest struct {
-	method string
-	path   string
-	query  url.Values
-	body   map[string]json.RawMessage
-}
-
-// lendServer serves fixed bodies by path and records every request.
-func lendServer(t *testing.T, replies map[string]string) (*jupiter.Client, func() []lendRequest) {
-	t.Helper()
-
-	var (
-		mu       sync.Mutex
-		requests []lendRequest
-	)
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		raw, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("read body: %v", err)
-		}
-
-		recorded := lendRequest{method: r.Method, path: r.URL.Path, query: r.URL.Query()}
-		if len(raw) > 0 {
-			if err := json.Unmarshal(raw, &recorded.body); err != nil {
-				t.Errorf("decode body: %v", err)
-			}
-		}
-
-		mu.Lock()
-		requests = append(requests, recorded)
-		mu.Unlock()
-
-		reply, ok := replies[r.URL.Path]
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
-		}
-
-		if _, err := w.Write([]byte(reply)); err != nil {
-			t.Errorf("write response: %v", err)
-		}
-	}))
-	t.Cleanup(server.Close)
-
-	client, err := jupiter.NewClient(jupiter.WithBaseURL(server.URL))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return client, func() []lendRequest {
-		mu.Lock()
-		defer mu.Unlock()
-
-		return append([]lendRequest(nil), requests...)
-	}
-}
 
 func TestEarnBuildersEncodeRequests(t *testing.T) {
 	amount := lend.AmountRequest{Asset: usdcMint, Signer: takerAddress, Amount: "0001000000"}
@@ -136,7 +74,7 @@ func TestEarnBuildersEncodeRequests(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.path, func(t *testing.T) {
-			client, recorded := lendServer(t, map[string]string{test.path: `{"transaction":"AQ=="}`})
+			client, recorded := pathServer(t, map[string]string{test.path: `{"transaction":"AQ=="}`})
 
 			if err := test.call(context.Background(), client.Lend.Earn); err != nil {
 				t.Fatal(err)
@@ -157,7 +95,7 @@ func TestEarnBuildersEncodeRequests(t *testing.T) {
 }
 
 func TestEarnInstructionsConvertForSigning(t *testing.T) {
-	client, _ := lendServer(t, map[string]string{"/lend/v1/earn/deposit-instructions": instructionReply})
+	client, _ := pathServer(t, map[string]string{"/lend/v1/earn/deposit-instructions": instructionReply})
 
 	request := lend.AmountRequest{Asset: usdcMint, Signer: takerAddress, Amount: "1"}
 	result, err := client.Lend.Earn.DepositInstructions(context.Background(), request)
@@ -186,7 +124,7 @@ func TestEarnReadsDecodeMixedNumberForms(t *testing.T) {
    "asset": {"chain_id": 0, "price": 171.34}},
   {"id": 2, "asset": {"chain_id": "solana", "price": "0.9999"}}
 ]`
-	client, recorded := lendServer(t, map[string]string{
+	client, recorded := pathServer(t, map[string]string{
 		"/lend/v1/earn/tokens":    tokens,
 		"/lend/v1/earn/positions": `[{"ownerAddress": "owner", "shares": "42", "token": {"id": 1}}]`,
 		"/lend/v1/earn/earnings":  `{"address": "token", "earnings": 34483000, "slot": 1}`,
@@ -238,7 +176,7 @@ func TestEarnReadsDecodeMixedNumberForms(t *testing.T) {
 }
 
 func TestEarnEarningsAcceptsDocumentedArrayExample(t *testing.T) {
-	client, _ := lendServer(t, map[string]string{
+	client, _ := pathServer(t, map[string]string{
 		"/lend/v1/earn/earnings": `[{"earnings": 1}, {"earnings": 2}]`,
 	})
 
@@ -262,7 +200,7 @@ func TestBorrowReads(t *testing.T) {
   "oracleSources": [{"source": "s", "sourceType": {"chainlink": {}}}],
   "metadata": {"multiply": {"enabled": true, "reduceFactor": 300}}
 }]`
-	client, recorded := lendServer(t, map[string]string{
+	client, recorded := pathServer(t, map[string]string{
 		"/lend/v1/borrow/vaults":    vaults,
 		"/lend/v1/borrow/positions": `[{"id": 3518, "tick": -2147483648, "config": {"k": "v"}}]`,
 	})
@@ -306,7 +244,7 @@ func TestBorrowReads(t *testing.T) {
 }
 
 func TestBorrowOperate(t *testing.T) {
-	client, recorded := lendServer(t, map[string]string{
+	client, recorded := pathServer(t, map[string]string{
 		"/lend/v1/borrow/operate": `{"nftId": 9062, "transaction": "AQ=="}`,
 		"/lend/v1/borrow/operate-instructions": `{"nftId": 9062, "instructions": [` + instructionReply +
 			`], "addressLookupTableAddresses": ["3eB86bwSJanGwLo5WoMQZL7Bk7uubCRggZKshJKJVKwx"]}`,
@@ -377,7 +315,7 @@ func TestLendBuildersRetryTransientFailures(t *testing.T) {
 func TestOperateAcceptsSignedRangeBoundaries(t *testing.T) {
 	for _, value := range []string{lend.WithdrawAllCollateral, maxSignedAmount, "-1"} {
 		t.Run(value, func(t *testing.T) {
-			client, _ := lendServer(t, map[string]string{"/lend/v1/borrow/operate": `{"nftId": 1}`})
+			client, _ := pathServer(t, map[string]string{"/lend/v1/borrow/operate": `{"nftId": 1}`})
 
 			request := lend.OperateRequest{
 				VaultID:    1,
@@ -532,7 +470,7 @@ func TestInvalidLendRequestsDoNotReachTransport(t *testing.T) {
 }
 
 func TestLendFailuresKeepResponseMetadata(t *testing.T) {
-	client, _ := lendServer(t, map[string]string{})
+	client, _ := pathServer(t, map[string]string{})
 
 	result, err := client.Lend.Earn.Tokens(context.Background())
 	if err == nil || result == nil || result.Metadata.StatusCode != http.StatusNotFound {
