@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org).
 
+## [1.1.0](https://github.com/ilkamo/jupiter-go/compare/v1.0.1...v1.1.0) (2026-11-11)
+
+
+### Features
+
+* **solanatx:** add Jito sandwich mitigation for assembled transactions ([#64](https://github.com/ilkamo/jupiter-go/issues/64)) ([5a860a5](https://github.com/ilkamo/jupiter-go/commit/5a860a5b0fb3a5b94adb9ba1da35a7f88ec52f64)), closes [#47](https://github.com/ilkamo/jupiter-go/issues/47)
+
 ## [1.0.1](https://github.com/ilkamo/jupiter-go/compare/v1.0.0...v1.0.1) (2026-11-11)
 
 
