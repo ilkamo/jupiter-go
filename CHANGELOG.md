@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org).
 
+## [1.0.1](https://github.com/ilkamo/jupiter-go/compare/v1.0.0...v1.0.1) (2026-11-11)
+
+
+### Bug fixes
+
+* **deps:** bump klauspost/compress to v1.20.2 for GO-2026-6865 ([#62](https://github.com/ilkamo/jupiter-go/issues/62)) ([64d0bf8](https://github.com/ilkamo/jupiter-go/commit/64d0bf8705b822bc168119ea084e6616c63d093f))
+
 ## v1.0.0 (2026-11-11)
 
 v1 is a rewrite around a single root client, `jupiter.NewClient`, with typed
