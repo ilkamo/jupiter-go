@@ -43,14 +43,15 @@ type Pagination struct {
 }
 
 type EventMetadata struct {
-	EventID   string `json:"eventId"`
-	Title     string `json:"title"`
-	Subtitle  string `json:"subtitle"`
-	Slug      string `json:"slug"`
-	Series    string `json:"series"`
-	CloseTime string `json:"closeTime"`
-	ImageURL  string `json:"imageUrl"`
-	IsLive    bool   `json:"isLive"`
+	EventID  string `json:"eventId"`
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	Slug     string `json:"slug"`
+	Series   string `json:"series"`
+	// CloseTime is declared a string, but the live API sends Unix seconds.
+	CloseTime StringOrNumber `json:"closeTime"`
+	ImageURL  string         `json:"imageUrl"`
+	IsLive    bool           `json:"isLive"`
 }
 
 type MarketOption struct {

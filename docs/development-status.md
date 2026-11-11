@@ -793,3 +793,39 @@ legacy support.
 
 Validation: `go test -race ./...` on Go 1.26.0 and 1.27.4, `go vet ./...`,
 golangci-lint and gofumpt (0 issues), and `git diff --check` passed.
+
+## Live verification (tiers 1 and 2)
+
+Jupiter's APIs are mainnet-only (the docs index lists devnet only for a Lend
+program ID), so verification used free mainnet reads and unsubmitted
+transactions. No funds were spent; all calls were keyless.
+
+- Read-only examples (`quote`, `tokens`, `prediction`, `lend`) ran and decoded.
+- A sweep of read endpoints decoded: Swap program labels, order with taker, and
+  build; Tokens tag, category, recent, lookup, and Express eligibility; Price;
+  Lend Earn positions and earnings, Borrow positions and Ethena vaults;
+  Prediction search, events, event, markets, market, orderbook, forecast, scores,
+  orders, order, order status, positions, position, history, profile, trades,
+  leaderboards, and vault info; Send pending invites and history.
+- **Spec mismatches found and fixed:** Prediction `eventMetadata.closeTime` is an
+  integer live (spec: string), which broke `Positions` and `History` decoding; it
+  is now `StringOrNumber` with a regression test. Prediction `Orders`,
+  `Positions`, and `History` require `ownerPubkey` live (spec: optional); the SDK
+  now requires an owner and tests it.
+- **Upstream 404s, not SDK bugs:** Prediction `pnl-history` and
+  `events/suggested` return 404 for active wallets even with plain curl; the
+  method docs note the suggested-events behaviour. Re-check before release.
+- Managed orders for an empty wallet return Jupiter error code 1 ("Insufficient
+  funds"), surfaced as `swap.ExecutionError`.
+- `solanatx.Parse` handled real order transactions: JupiterZ RFQ v0 (two signers,
+  taker and market maker), Metis v0 (one signer), and Metis v1 (forced with
+  `MaxSupportedTransactionVersion=1` and excluded routers), including the exact
+  re-encoding check.
+- `examples/build` gained `JUPITER_SIMULATE=yes`: a real build was assembled,
+  signed with an empty throwaway key, and simulated with signature verification
+  on a public RPC; it failed only with `AccountNotFound` (no fee-payer account),
+  which happens after signature verification. Solana's own public RPC refused
+  the request (IP blocked); publicnode worked.
+
+Remaining live work is tier 3 (funded): one managed swap and one build submitted
+through tx.jup.ag, as described in `handoff.md`.

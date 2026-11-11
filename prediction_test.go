@@ -351,7 +351,10 @@ func TestPredictionExecute(t *testing.T) {
 }
 
 func TestPredictionAccountReads(t *testing.T) {
+	// eventMetadata.closeTime is a number in live responses although the spec
+	// declares a string.
 	position := `{"pubkey": "p", "valueUsd": null, "pnlUsdPercent": null, "claimableAt": null,
+"eventMetadata": {"closeTime": 1735689600},
 "settlementDate": 1735689600, "realizedPnlUsd": -1500000, "contractsMicro": "5777773"}`
 	pnlPath := predictionPath("/profiles/" + takerAddress + "/pnl-history")
 	client, recorded := pathServer(t, map[string]string{
@@ -399,6 +402,7 @@ func TestPredictionAccountReads(t *testing.T) {
 			if err == nil {
 				p := positions.Positions[0]
 				if p.ValueUSD != "" || p.ClaimableAt != nil || *p.SettlementDate != 1735689600 ||
+					p.EventMetadata.CloseTime != "1735689600" ||
 					p.RealizedPnLUSD.String() != "-1500000" || p.ContractsMicro != "5777773" {
 					t.Errorf("position = %+v", p)
 				}
@@ -651,9 +655,33 @@ func TestInvalidPredictionRequestsDoNotReachTransport(t *testing.T) {
 			want: prediction.ErrInvalidAddress,
 		},
 		{
+			name: "orders without owner",
+			call: func() error {
+				_, err := p.Orders(ctx, "", prediction.Page{})
+				return err
+			},
+			want: prediction.ErrInvalidAddress,
+		},
+		{
+			name: "positions without owner",
+			call: func() error {
+				_, err := p.Positions(ctx, prediction.PositionsRequest{MarketID: "POLY-1"})
+				return err
+			},
+			want: prediction.ErrInvalidAddress,
+		},
+		{
+			name: "history without owner",
+			call: func() error {
+				_, err := p.History(ctx, prediction.HistoryRequest{PositionPubkey: positionAddress})
+				return err
+			},
+			want: prediction.ErrInvalidAddress,
+		},
+		{
 			name: "history event zero",
 			call: func() error {
-				_, err := p.History(ctx, prediction.HistoryRequest{EventID: &zeroEvent})
+				_, err := p.History(ctx, prediction.HistoryRequest{Owner: takerAddress, EventID: &zeroEvent})
 				return err
 			},
 		},

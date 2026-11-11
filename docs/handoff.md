@@ -46,11 +46,14 @@ history of every step (decisions, tests, validation).
 
 ## Remaining work, in order
 
-1. **Live smoke test** with a funded wallet before tagging: quote, managed swap
-   (`examples/managed` with `JUPITER_EXECUTE_SWAP=yes`), and build + tx.jup.ag
-   (`examples/build` with `JUPITER_SUBMIT_VIA=tx`). Also run the read-only
-   examples (`quote`, `tokens`, `lend`, `prediction`) against the live API. Record
-   results in `development-status.md`; fix any schema drift they reveal.
+1. **Funded smoke test (tier 3).** Free tiers are done (see "Live verification"
+   in `development-status.md`): reads decode, and real transactions parse, sign,
+   and simulate. Still needed, with a throwaway wallet holding about 0.05 SOL:
+   one managed swap (`examples/managed`, `JUPITER_EXECUTE_SWAP=yes`, lower the
+   amount to 0.001 SOL) and one build submitted through tx.jup.ag
+   (`examples/build`, `JUPITER_EXECUTE_SWAP=yes`, `JUPITER_SUBMIT_VIA=tx`,
+   `SOLANA_RPC_URL`). Also re-check the two Prediction routes that returned 404
+   upstream (`pnl-history`, `events/suggested`).
 2. **Re-audit the documentation index** (`https://developers.jup.ag/docs/llms.txt`)
    for operations added since the inventory (the Prediction spec already had one,
    `/forecast`), and compare each pinned file in `openapi/` with upstream

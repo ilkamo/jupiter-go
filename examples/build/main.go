@@ -3,7 +3,9 @@
 // Jupiter's landing service (tx.jup.ag) when JUPITER_SUBMIT_VIA=tx.
 //
 // It spends real funds only when JUPITER_EXECUTE_SWAP=yes; otherwise it stops after
-// signing. Build transactions cannot use Jupiter's execute endpoint. Submitting
+// signing. JUPITER_SIMULATE=yes instead simulates the signed transaction on
+// SOLANA_RPC_URL, which verifies the signatures and runs it against current
+// mainnet state without sending it. Build transactions cannot use Jupiter's execute endpoint. Submitting
 // through tx.jup.ag adds the required 0.001 SOL tip; confirmation always uses
 // SOLANA_RPC_URL because the landing service is send-only.
 package main
@@ -28,13 +30,16 @@ import (
 )
 
 const (
-	operationTimeout    = 90 * time.Second
-	confirmationPoll    = 2 * time.Second
-	wrappedSOLMint      = "So11111111111111111111111111111111111111112"
-	usdcMint            = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-	swapAmountLamports  = "10000000"
-	executeConfirmation = "yes"
-	submitViaJupiter    = "tx"
+	operationTimeout     = 90 * time.Second
+	confirmationPoll     = 2 * time.Second
+	wrappedSOLMint       = "So11111111111111111111111111111111111111112"
+	usdcMint             = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+	swapAmountLamports   = "10000000"
+	executeConfirmation  = "yes"
+	simulateConfirmation = "yes"
+	simulationLogLines   = 5
+	decimalBase          = 10
+	submitViaJupiter     = "tx"
 )
 
 var errBlockhashExpired = errors.New("blockhash expired before confirmation")
@@ -104,6 +109,10 @@ func run() error {
 		return err
 	}
 
+	if os.Getenv("JUPITER_SIMULATE") == simulateConfirmation {
+		return simulate(ctx, tx)
+	}
+
 	if os.Getenv("JUPITER_EXECUTE_SWAP") != executeConfirmation {
 		_, err = fmt.Println("Dry run: set JUPITER_EXECUTE_SWAP=yes and SOLANA_RPC_URL to submit.")
 
@@ -133,6 +142,50 @@ func run() error {
 	_, err = fmt.Printf("Confirmed %s\n", signature)
 
 	return err
+}
+
+// simulate runs the signed transaction on the RPC node without sending it. An
+// unfunded wallet fails with an insufficient-funds error, which still shows that
+// the transaction was well formed and correctly signed.
+func simulate(ctx context.Context, tx *solanatx.Transaction) error {
+	rpcURL := os.Getenv("SOLANA_RPC_URL")
+	if rpcURL == "" {
+		return fmt.Errorf("SOLANA_RPC_URL is required to simulate")
+	}
+
+	options := &rpc.SimulateTransactionOpts{
+		SigVerify:  true,
+		Commitment: rpc.CommitmentConfirmed,
+	}
+
+	result, err := rpc.New(rpcURL).SimulateRawTransactionWithOpts(ctx, tx.Bytes(), options)
+	if err != nil {
+		return fmt.Errorf("simulate: %w", err)
+	}
+
+	simulation := result.Value
+	units := "unknown"
+	if simulation.UnitsConsumed != nil {
+		units = strconv.FormatUint(*simulation.UnitsConsumed, decimalBase)
+	}
+
+	outcome := "succeeded"
+	if simulation.Err != nil {
+		outcome = fmt.Sprintf("failed: %v", simulation.Err)
+	}
+
+	if _, err := fmt.Printf("Simulation %s, %s compute units\n", outcome, units); err != nil {
+		return err
+	}
+
+	logs := simulation.Logs[max(0, len(simulation.Logs)-simulationLogLines):]
+	for _, line := range logs {
+		if _, err := fmt.Println("  " + line); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // submit sends the signed transaction through tx.jup.ag or the RPC node.

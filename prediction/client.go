@@ -238,7 +238,8 @@ func (c *Client) SearchEvents(ctx context.Context, r SearchRequest) (*EventList,
 	return c.eventList(ctx, "/events/search", query)
 }
 
-// SuggestedEvents returns events suggested from a wallet's past orders.
+// SuggestedEvents returns events suggested from a wallet's past orders. The live
+// API answers HTTP 404 for a wallet without Prediction activity.
 func (c *Client) SuggestedEvents(ctx context.Context, wallet string, provider string) (*EventList, error) {
 	if err := validatePubkey("wallet", wallet); err != nil {
 		return nil, err

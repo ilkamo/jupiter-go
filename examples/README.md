@@ -180,6 +180,12 @@ submitted signature alone does not prove success. `solanatx.Assemble` accepts
 extra instructions to run after Jupiter's, and `solanatx.Instructions` and
 `solanatx.AddressTables` support assembling the transaction yourself.
 
+Set `JUPITER_SIMULATE=yes` with `SOLANA_RPC_URL` to simulate the signed
+transaction on your node instead of sending it: signatures are verified and the
+swap runs against current mainnet state at no cost. An unfunded wallet fails with
+`AccountNotFound` or insufficient funds, which still shows the transaction was
+well formed and correctly signed.
+
 Set `JUPITER_SUBMIT_VIA=tx` to submit through Jupiter's landing service
 (`client.Transaction.Send`, `https://tx.jup.ag`) instead of the RPC node. Every
 transaction sent there must tip at least `transaction.MinTipLamports` (0.001 SOL)

@@ -38,16 +38,14 @@ type OrderList struct {
 	Metadata response.Metadata `json:"-"`
 }
 
-// Orders lists orders registered on-chain, optionally for one owner.
+// Orders lists an owner's orders. The specification marks the owner optional, but
+// the live API requires it.
 func (c *Client) Orders(ctx context.Context, owner string, page Page) (*OrderList, error) {
-	query := url.Values{}
-	if owner != "" {
-		if err := validatePubkey("owner", owner); err != nil {
-			return nil, err
-		}
-
-		query.Set("ownerPubkey", owner)
+	if err := validatePubkey("owner", owner); err != nil {
+		return nil, err
 	}
+
+	query := url.Values{"ownerPubkey": {owner}}
 
 	if err := page.apply(query); err != nil {
 		return nil, err
@@ -96,7 +94,9 @@ func (c *Client) OrderStatus(ctx context.Context, orderPubkey string) (*OrderSta
 	return &status, nil
 }
 
-// PositionsRequest filters positions. IsYes, when set, selects one side.
+// PositionsRequest filters an owner's positions. Owner is required: the
+// specification marks it optional, but the live API rejects requests without it.
+// IsYes, when set, selects one side.
 type PositionsRequest struct {
 	Owner        string
 	MarketPubkey string
@@ -115,6 +115,10 @@ type PositionList struct {
 // Positions lists positions with P&L in micro USD.
 func (c *Client) Positions(ctx context.Context, r PositionsRequest) (*PositionList, error) {
 	query := url.Values{}
+
+	if err := validatePubkey("owner", r.Owner); err != nil {
+		return nil, err
+	}
 
 	for _, pubkey := range []struct {
 		field string
@@ -173,8 +177,9 @@ func (c *Client) Position(ctx context.Context, positionPubkey string) (*Position
 	return &position, nil
 }
 
-// HistoryRequest filters order, fill, settlement, and claim events. Set EventID
-// (at least MinHistoryEventID) to fetch a single event.
+// HistoryRequest filters an owner's order, fill, settlement, and claim events.
+// Owner is required by the live API although the specification marks it optional.
+// Set EventID (at least MinHistoryEventID) to fetch a single event.
 type HistoryRequest struct {
 	Owner          string
 	PositionPubkey string
@@ -191,15 +196,11 @@ type HistoryList struct {
 
 // History lists order, fill, settlement, and claim events.
 func (c *Client) History(ctx context.Context, r HistoryRequest) (*HistoryList, error) {
-	query := url.Values{}
-	if r.Owner != "" {
-		if err := validatePubkey("owner", r.Owner); err != nil {
-			return nil, err
-		}
-
-		query.Set("ownerPubkey", r.Owner)
+	if err := validatePubkey("owner", r.Owner); err != nil {
+		return nil, err
 	}
 
+	query := url.Values{"ownerPubkey": {r.Owner}}
 	if r.PositionPubkey != "" {
 		if err := validatePubkey("position", r.PositionPubkey); err != nil {
 			return nil, err
