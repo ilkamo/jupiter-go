@@ -1,14 +1,41 @@
-# Jupiter-go
+# jupiter-go: Jupiter Go SDK for Solana
 
-### Go SDK for the [Jupiter](https://jup.ag) APIs on Solana
+### Swap tokens, get prices, place limit orders and DCA on Solana from Go, with the [Jupiter](https://jup.ag) APIs
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GoDoc](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go?status.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go?tab=doc)
+[![Go](https://github.com/ilkamo/jupiter-go/actions/workflows/workflow.yml/badge.svg)](https://github.com/ilkamo/jupiter-go/actions/workflows/workflow.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ilkamo/jupiter-go)](https://goreportcard.com/report/ilkamo/jupiter-go)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<img align="right" width="200" src="docs/assets/jup-gopher.png">
+<img align="right" width="200" src="docs/assets/jup-gopher.png" alt="jupiter-go mascot: the Go gopher holding a JUP coin">
 
-A typed, dependency-light client for every public Jupiter REST API:
+**jupiter-go** is a Go (Golang) SDK for [Jupiter](https://jup.ag), the leading
+DEX aggregator and trading platform on Solana. Use it to get swap quotes and
+execute token swaps through Jupiter's Swap API (Ultra / Swap V2), look up token
+metadata and USD prices, place limit orders and dollar-cost averaging (DCA)
+orders, earn yield and borrow with Jupiter Lend, trade prediction markets, and
+land transactions fast through Jupiter's landing service, all from idiomatic,
+typed Go code.
+
+## Features
+
+- **Complete Jupiter API coverage:** Swap V2, Tokens V2, Price V3, Trigger V2
+  (limit orders, OCO, OTOCO, DCA), Lend, Prediction, Send, Studio, and
+  transaction landing (`tx.jup.ag`).
+- **Managed swaps without an RPC node:** order, sign locally, and let Jupiter
+  land the transaction.
+- **Custom swap transactions:** build instructions, add your own, and submit
+  through your RPC node or Jupiter's landing infrastructure.
+- **Safe signing** with any ed25519 `crypto.Signer` (local keys, HSM, KMS):
+  messages and existing signatures are never modified. Legacy, v0, and v1
+  Solana transactions are supported.
+- **Production behavior:** typed errors, request IDs and rate-limit headers on
+  every result, per-operation retries with backoff and `Retry-After`, and no
+  blind retries of anything that moves funds.
+- **Exact numbers:** raw token amounts and prices never pass through `float64`.
+- **No SDK fee**, MIT licensed, verified against Solana mainnet.
+
+## Supported Jupiter APIs
 
 | Product | Package | Status |
 | - | - | - |
@@ -154,6 +181,55 @@ move funds only do so behind an explicit environment flag.
   signed bytes cannot execute twice.
 - **Exact numbers.** Raw token amounts are validated integer strings; prices and
   USD values are `json.Number` or strings, never `float64`.
+
+## FAQ
+
+### How do I swap tokens on Solana in Go?
+
+Call `client.Swap.Order` with the input mint, output mint, raw amount, and your
+wallet as `Taker`; sign the returned transaction with `solanatx.Parse(...).Sign`;
+then call `client.Swap.Execute`. Jupiter routes the swap across Solana DEXes and
+lands the transaction for you. See [Managed swap](#managed-swap) and
+[`examples/managed`](examples/managed).
+
+### How do I get a Solana token price in Go?
+
+`client.Price.Get(ctx, mints)` returns USD prices from Jupiter's Price API V3
+for up to 50 mints; mints without a reliable price are listed in `Missing`.
+`client.Swap.Order` without a `Taker` returns a swap quote.
+
+### Can I place limit orders or DCA orders on Jupiter from Go?
+
+Yes. `client.Trigger.Login` opens a wallet session for the Trigger V2 API, which
+supports single limit orders, take-profit/stop-loss pairs (OCO), OTOCO,
+trailing stops, and time-based or price-conditional DCA. See
+[`examples/trigger`](examples/trigger).
+
+### Do I need a Jupiter API key?
+
+Requests work without a key at a lower rate limit. For production, get a key
+at [developers.jup.ag/portal](https://developers.jup.ag/portal) and pass it with
+`jupiter.WithAPIKey`.
+
+### Do I need a Solana RPC node?
+
+Not for managed swaps (`Swap.Order` and `Swap.Execute`) or any read API. You
+need one to confirm transactions you submit yourself, for example custom swaps
+built with `Swap.Build`; use a dedicated RPC provider for that.
+
+### Which Solana transaction versions are supported?
+
+`solanatx` parses and signs legacy, version 0 (with address lookup tables), and
+version 1 transactions without modifying the message or other signatures.
+
+### Is jupiter-go an official Jupiter SDK?
+
+No. It is an independent, community-maintained open-source library. It charges
+no fee and has been verified with real swaps on Solana mainnet.
+
+### Which Go versions are supported?
+
+Go 1.26 and newer. CI tests Go 1.26 and 1.27.
 
 ## Migrating from v0
 
