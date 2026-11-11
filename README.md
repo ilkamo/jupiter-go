@@ -4,7 +4,6 @@
 
 [![Go](https://github.com/ilkamo/jupiter-go/actions/workflows/workflow.yml/badge.svg)](https://github.com/ilkamo/jupiter-go/actions/workflows/workflow.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ilkamo/jupiter-go.svg)](https://pkg.go.dev/github.com/ilkamo/jupiter-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ilkamo/jupiter-go)](https://goreportcard.com/report/ilkamo/jupiter-go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <img align="right" width="200" src="docs/assets/jup-gopher.png" alt="jupiter-go mascot: the Go gopher holding a JUP coin">
