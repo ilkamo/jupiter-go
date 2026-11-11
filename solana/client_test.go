@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/base58"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
@@ -246,9 +247,8 @@ func TestNewClient(t *testing.T) {
 			context.TODO(),
 			"invalid token account address",
 		)
-		require.EqualError(t, err,
-			"could not parse token account public key: decode: invalid base58 digit ('l')",
-		)
+		require.ErrorIs(t, err, base58.ErrInvalidChar)
+		require.ErrorContains(t, err, "could not parse token account public key")
 
 		_, err = c.GetTokenAccountBalance(
 			context.TODO(),

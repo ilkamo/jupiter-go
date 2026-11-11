@@ -52,22 +52,24 @@ func (s subscriber) Pull(
 
 	defer sub.Unsubscribe()
 
-	select {
-	case <-ctx.Done():
-		return SubResponse{}, fmt.Errorf("context cancelled")
-	case res := <-sub.Response():
-		resp := SubResponse{
-			Slot: res.Context.Slot,
-		}
-
-		if res.Value.Err != nil {
-			resp.InstructionErr = fmt.Errorf("transaction confirmed with error: %v", res.Value.Err)
-		}
-
-		return resp, nil
-	case subErr := <-sub.Err():
-		return SubResponse{}, fmt.Errorf("subscription error: %w", subErr)
+	res, err := sub.Recv(ctx)
+	if ctx.Err() != nil {
+		return SubResponse{}, fmt.Errorf("context cancelled: %w", ctx.Err())
 	}
+
+	if err != nil {
+		return SubResponse{}, fmt.Errorf("subscription error: %w", err)
+	}
+
+	resp := SubResponse{
+		Slot: res.Context.Slot,
+	}
+
+	if res.Value.Err != nil {
+		resp.InstructionErr = fmt.Errorf("transaction confirmed with error: %v", res.Value.Err)
+	}
+
+	return resp, nil
 }
 
 type MonitorResponse struct {
