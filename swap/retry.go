@@ -3,7 +3,6 @@ package swap
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/ilkamo/jupiter-go/internal/transport"
@@ -37,11 +36,8 @@ var executeRetryPolicy = transport.NoRetry
 // a new order creates a new transaction that could also land.
 var ErrExecutionOutcomeUnknown = errors.New("swap execution outcome unknown")
 
-// classifyExecuteFailure treats client errors as definitive rejections and every
-// other transport failure as an unknown outcome.
 func classifyExecuteFailure(err error) error {
-	var apiError *transport.APIError
-	if errors.As(err, &apiError) && apiError.StatusCode < http.StatusInternalServerError {
+	if !transport.MayHaveBeenProcessed(err) {
 		return err
 	}
 

@@ -265,3 +265,16 @@ func newAPIError(resp *http.Response, data []byte) *APIError {
 
 	return apiError
 }
+
+// MayHaveBeenProcessed reports whether a failed request might still have taken
+// effect upstream. Only an HTTP response below 500 proves the server rejected it;
+// transport failures, timeouts, server errors, and unreadable success responses
+// leave the outcome unknown.
+func MayHaveBeenProcessed(err error) bool {
+	var apiError *APIError
+	if errors.As(err, &apiError) {
+		return apiError.StatusCode >= http.StatusInternalServerError
+	}
+
+	return true
+}
