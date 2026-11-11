@@ -637,7 +637,7 @@
         "end",
         "start"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -652,7 +652,7 @@
       "pagination_parameters": [
         "limit"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -665,7 +665,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -678,7 +678,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -691,7 +691,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -704,7 +704,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -720,7 +720,7 @@
         "end",
         "start"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -733,7 +733,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -746,7 +746,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -762,7 +762,7 @@
         "end",
         "start"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -775,7 +775,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -788,7 +788,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -801,7 +801,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -814,7 +814,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -830,7 +830,7 @@
         "end",
         "start"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -843,7 +843,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -856,7 +856,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -869,7 +869,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -882,7 +882,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -898,7 +898,7 @@
         "end",
         "start"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -911,7 +911,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -924,7 +924,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -937,7 +937,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -950,7 +950,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -963,7 +963,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -978,7 +978,7 @@
       "pagination_parameters": [
         "limit"
       ],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "prediction",
@@ -991,7 +991,7 @@
         "ApiKeyAuth"
       ],
       "pagination_parameters": [],
-      "implemented": false
+      "implemented": true
     },
     {
       "product": "send",

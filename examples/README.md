@@ -77,6 +77,26 @@ your RPC node. Borrow instruction responses list lookup table addresses only, so
 compiling them needs an RPC node; `solanatx.ConvertInstruction` converts the
 instructions. Borrow does not wrap native SOL.
 
+## Prediction markets
+
+```sh
+JUPITER_API_KEY=your-key go run ./examples/prediction
+```
+
+Checks the exchange status and prints trending events with YES prices. The API is
+beta upstream and blocks United States and South Korea IP addresses. Prices and
+USD values are micro USD (`850000` is $0.85); contract quantities in `*Micro`
+fields use 1000000 per contract.
+
+Trading: `client.Prediction.CreateOrder` builds a buy (market, side, deposit in
+JupUSD or USDC, 5 USD minimum) or a sell (position and exactly one contract
+quantity). `ClosePosition`, `CloseAllPositions`, and `ClaimPosition` build sells
+and payout claims. Sign the transaction with `solanatx` for every key in
+`RequiredSigners`, then submit it with `Execute`, passing `Execution.Context`
+unchanged. Execute makes one attempt, requires an explicit `Success`, and wraps
+`prediction.ErrOutcomeUnknown` when the transaction may still land. An executed
+order is open, not filled; poll `OrderStatus`.
+
 ## Signing and execution
 
 Signing uses `solanatx`, the only new-SDK package that depends on solana-go.

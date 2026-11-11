@@ -84,8 +84,7 @@ module until the migration strategy is finalized.
    examples. Remaining Swap work: version 1 assembly for build responses (needs a
    compute-unit-limit policy) and a live smoke test with a funded wallet before
    release.
-4. Implement Prediction, Send, Studio, transaction submission, and Tokens
-   verification. Audit the current documentation index for additional APIs.
+4. Implement Send, Studio, transaction submission, and Tokens verification. Audit the current documentation index for additional APIs.
    These are not implemented. Decide the compatibility boundary for upstream beta
    products (Lend, Prediction) during the compatibility review.
 5. Complete pinned schema tooling, generation checks, fuzz tests, examples, CI,
@@ -577,6 +576,61 @@ source type), market and RPC URL encoding, default market omission; operate body
 with sentinel and canonical amounts, instruction responses with lookup table
 addresses; builder retry; signed-range boundaries accepted; 18 invalid inputs
 rejected before transport; metadata kept on Lend and Trigger failures.
+
+Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
+`git diff --check` passed with Go 1.27.4. No live requests were sent.
+
+## Prediction markets
+
+Committed the instruction/retry refactor as `d5aa288`, the Trigger metadata fix
+as `14d38cf`, and Lend as `f1b4929`. Fetched the Prediction OpenAPI spec linked
+from the documentation index and all 27 reference pages (hashes match the
+manifest), and pinned them with the trading guides in `openapi/prediction-v1`.
+The spec contains `GET /forecast`, which has no reference page and was missing
+from the inventory; it is implemented and listed as spec-only. The API is beta
+and geo-restricted (US, South Korea); the package documents both.
+
+`client.Prediction` covers discovery (`Events`, `SearchEvents`, `Event`,
+`SuggestedEvents`, `EventScores`, `EventScore`, `EventMarkets`, `EventMarket`,
+`Market`, `Orderbook`, `TradingStatus`, `Forecast`), trading (`CreateOrder`,
+`ClosePosition`, `CloseAllPositions`, `ClaimPosition`, `Execute`), and account
+reads (`Orders`, `Order`, `OrderStatus`, `Positions`, `Position`, `History`,
+`Profile`, `PnLHistory`, `Trades`, `Leaderboards`, `VaultInfo`).
+
+Decisions:
+
+- Builders share one `TransactionBuild` type; `Order` is set for order and sell
+  builds and `Position` for claims, which also covers the mixed close-all array.
+  `Execution.Context` is `json.RawMessage` and is sent back byte-for-byte.
+- `Execute` makes one attempt, requires an explicit `Success` status
+  (`*ExecutionError` otherwise), and wraps `ErrOutcomeUnknown` via
+  `transport.MayHaveBeenProcessed`; an already ended context sends nothing.
+  Builders use `RepeatableRetry`; reads use `ReadOnlyRetry`.
+- Orders: buys need a market, a positive raw deposit, and an optional valid mint
+  (`MintJupUSD`, `MintUSDC`); sells need a position and exactly one quantity
+  (whole, micro, or a positive decimal validated like USD prices). The 5 USD
+  minimum is left to the API.
+- Field types follow the schema: declared strings (micro USD, i128 strings) stay
+  strings, declared numbers are `json.Number`, nullable integers are pointers,
+  `resolveAt` uses `StringOrNumber`, and null scores and orderbooks are nil.
+- Filters (provider, category, filter, sort, tags, intervals, periods, metrics)
+  pass upstream additions through with format checks; documented values are
+  constants. Search queries are 1–200 characters (runes); pages reject an end
+  before the start; IDs are path-escaped; wallets, positions, and orders are
+  validated addresses.
+
+Test helpers: the recording server moved to `servers_test.go` as `pathServer`
+(escaped paths) with `statusServer`.
+
+Example: `examples/prediction` (read-only trending events and prices).
+
+Tests: discovery encoding and decoding (mixed `resolveAt`, null pricing, null
+score and orderbook, escaped IDs, joined event IDs); buy and sell bodies with
+canonical quantities and no cross-mode fields; DELETE close bodies; mixed
+close-all results; claims; Execute success, failed and missing status, 500 as
+unknown, 400 as known, single attempts, and opaque context; account reads with
+query encoding and nullable fields; 25 invalid inputs rejected before transport
+and never marked unknown.
 
 Validation: `go test -race ./...`, `go vet ./...`, `gofmt -l`, and
 `git diff --check` passed with Go 1.27.4. No live requests were sent.
